@@ -1,0 +1,300 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A543C396148FBAAC0070E986 /* XCodeTVBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = A543C395148FBAAC0070E986 /* XCodeTVBridge.m */; };
+		A543C39A148FBBB10070E986 /* XVimController.m in Sources */ = {isa = PBXBuildFile; fileRef = A543C399148FBBB10070E986 /* XVimController.m */; };
+		A56CE210148F640100A06106 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A56CE20F148F640100A06106 /* Cocoa.framework */; };
+		A56CE21A148F640100A06106 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = A56CE218148F640100A06106 /* InfoPlist.strings */; };
+		A56CE223148F644800A06106 /* XVimPlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = A56CE222148F644800A06106 /* XVimPlugin.m */; };
+		A598ED54148F798900C86EC9 /* xVim.bundle in CopyFiles */ = {isa = PBXBuildFile; fileRef = A56CE20C148F640100A06106 /* xVim.bundle */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		A598ED53148F797600C86EC9 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "~/Library/Application Support/SIMBL/Plugins";
+			dstSubfolderSpec = 0;
+			files = (
+				A598ED54148F798900C86EC9 /* xVim.bundle in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		A543C394148FBAAC0070E986 /* XCodeTVBridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XCodeTVBridge.h; sourceTree = "<group>"; };
+		A543C395148FBAAC0070E986 /* XCodeTVBridge.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XCodeTVBridge.m; sourceTree = "<group>"; };
+		A543C398148FBBB10070E986 /* XVimController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XVimController.h; sourceTree = "<group>"; };
+		A543C399148FBBB10070E986 /* XVimController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XVimController.m; sourceTree = "<group>"; };
+		A56CE20C148F640100A06106 /* xVim.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = xVim.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
+		A56CE20F148F640100A06106 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+		A56CE212148F640100A06106 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		A56CE213148F640100A06106 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
+		A56CE214148F640100A06106 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		A56CE217148F640100A06106 /* xVim-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "xVim-Info.plist"; sourceTree = "<group>"; };
+		A56CE219148F640100A06106 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		A56CE21B148F640100A06106 /* xVim-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "xVim-Prefix.pch"; sourceTree = "<group>"; };
+		A56CE221148F644800A06106 /* XVimPlugin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XVimPlugin.h; sourceTree = "<group>"; };
+		A56CE222148F644800A06106 /* XVimPlugin.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XVimPlugin.m; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A56CE209148F640100A06106 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A56CE210148F640100A06106 /* Cocoa.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A56CE201148F640100A06106 = {
+			isa = PBXGroup;
+			children = (
+				A56CE215148F640100A06106 /* xVim */,
+				A56CE20E148F640100A06106 /* Frameworks */,
+				A56CE20D148F640100A06106 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A56CE20D148F640100A06106 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A56CE20C148F640100A06106 /* xVim.bundle */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A56CE20E148F640100A06106 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				A56CE20F148F640100A06106 /* Cocoa.framework */,
+				A56CE211148F640100A06106 /* Other Frameworks */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		A56CE211148F640100A06106 /* Other Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				A56CE212148F640100A06106 /* AppKit.framework */,
+				A56CE213148F640100A06106 /* CoreData.framework */,
+				A56CE214148F640100A06106 /* Foundation.framework */,
+			);
+			name = "Other Frameworks";
+			sourceTree = "<group>";
+		};
+		A56CE215148F640100A06106 /* xVim */ = {
+			isa = PBXGroup;
+			children = (
+				A56CE216148F640100A06106 /* Supporting Files */,
+				A56CE221148F644800A06106 /* XVimPlugin.h */,
+				A56CE222148F644800A06106 /* XVimPlugin.m */,
+				A543C394148FBAAC0070E986 /* XCodeTVBridge.h */,
+				A543C395148FBAAC0070E986 /* XCodeTVBridge.m */,
+				A543C398148FBBB10070E986 /* XVimController.h */,
+				A543C399148FBBB10070E986 /* XVimController.m */,
+			);
+			path = xVim;
+			sourceTree = "<group>";
+		};
+		A56CE216148F640100A06106 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				A56CE218148F640100A06106 /* InfoPlist.strings */,
+				A56CE217148F640100A06106 /* xVim-Info.plist */,
+				A56CE21B148F640100A06106 /* xVim-Prefix.pch */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A56CE20B148F640100A06106 /* xVim */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A56CE21E148F640100A06106 /* Build configuration list for PBXNativeTarget "xVim" */;
+			buildPhases = (
+				A56CE208148F640100A06106 /* Sources */,
+				A56CE209148F640100A06106 /* Frameworks */,
+				A56CE20A148F640100A06106 /* Resources */,
+				A598ED53148F797600C86EC9 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = xVim;
+			productName = xVim;
+			productReference = A56CE20C148F640100A06106 /* xVim.bundle */;
+			productType = "com.apple.product-type.bundle";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A56CE203148F640100A06106 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0420;
+			};
+			buildConfigurationList = A56CE206148F640100A06106 /* Build configuration list for PBXProject "xVim" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = A56CE201148F640100A06106;
+			productRefGroup = A56CE20D148F640100A06106 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A56CE20B148F640100A06106 /* xVim */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A56CE20A148F640100A06106 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A56CE21A148F640100A06106 /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A56CE208148F640100A06106 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A56CE223148F644800A06106 /* XVimPlugin.m in Sources */,
+				A543C396148FBAAC0070E986 /* XCodeTVBridge.m in Sources */,
+				A543C39A148FBBB10070E986 /* XVimController.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		A56CE218148F640100A06106 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				A56CE219148F640100A06106 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		A56CE21C148F640100A06106 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		A56CE21D148F640100A06106 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		A56CE21F148F640100A06106 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				GCC_ENABLE_OBJC_GC = supported;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "xVim/xVim-Prefix.pch";
+				INFOPLIST_FILE = "xVim/xVim-Info.plist";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = bundle;
+			};
+			name = Debug;
+		};
+		A56CE220148F640100A06106 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				GCC_ENABLE_OBJC_GC = supported;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "xVim/xVim-Prefix.pch";
+				INFOPLIST_FILE = "xVim/xVim-Info.plist";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = bundle;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A56CE206148F640100A06106 /* Build configuration list for PBXProject "xVim" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A56CE21C148F640100A06106 /* Debug */,
+				A56CE21D148F640100A06106 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A56CE21E148F640100A06106 /* Build configuration list for PBXNativeTarget "xVim" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A56CE21F148F640100A06106 /* Debug */,
+				A56CE220148F640100A06106 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A56CE203148F640100A06106 /* Project object */;
+}
