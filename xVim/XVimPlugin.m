@@ -30,6 +30,7 @@ NSMutableDictionary* bridgeDict = 0;
 // The entry point of our plugin
 +(void) load
 {
+    [XVimController setup];
     bridgeDict = [[NSMutableDictionary alloc] init];
     
     NSString* id = [[NSBundle mainBundle] bundleIdentifier];

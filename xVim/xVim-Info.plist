@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleName</key>
-	<string>${PRODUCT_NAME}</string>
+	<string>xVim</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.warwithinme.${PRODUCT_NAME:rfc1034identifier}</string>
+	<string>com.warwithinme.xvim</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleVersion</key>

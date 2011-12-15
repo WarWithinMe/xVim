@@ -7,19 +7,13 @@
 
 @class XTextViewBridge;
 
-typedef enum e_VimMode
-{
-    Normal,
-    Insert,
-    Visual
-} VimMode;
-
 // The controller is used to process the key input
 @interface XVimController : NSObject
 
-@property (readonly) VimMode mode;
++(void) setup;
 
 -(XVimController*) initWithBridge:(XTextViewBridge*) bridge;
 -(BOOL) processKeyEvent:(NSEvent*) event;
+-(void) dealloc;
 
 @end

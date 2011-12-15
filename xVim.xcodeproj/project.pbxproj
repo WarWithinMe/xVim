@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A52E943B1499A95F00FA6045 /* keymap in Resources */ = {isa = PBXBuildFile; fileRef = A52E943A1499A95F00FA6045 /* keymap */; };
 		A543C396148FBAAC0070E986 /* XCodeTVBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = A543C395148FBAAC0070E986 /* XCodeTVBridge.m */; };
 		A543C39A148FBBB10070E986 /* XVimController.m in Sources */ = {isa = PBXBuildFile; fileRef = A543C399148FBBB10070E986 /* XVimController.m */; };
 		A56CE210148F640100A06106 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A56CE20F148F640100A06106 /* Cocoa.framework */; };
@@ -29,6 +30,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		A52E943A1499A95F00FA6045 /* keymap */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = keymap; path = Resources/keymap; sourceTree = "<group>"; };
 		A543C394148FBAAC0070E986 /* XCodeTVBridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XCodeTVBridge.h; sourceTree = "<group>"; };
 		A543C395148FBAAC0070E986 /* XCodeTVBridge.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XCodeTVBridge.m; sourceTree = "<group>"; };
 		A543C398148FBBB10070E986 /* XVimController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XVimController.h; sourceTree = "<group>"; };
@@ -103,6 +105,7 @@
 				A543C395148FBAAC0070E986 /* XCodeTVBridge.m */,
 				A543C398148FBBB10070E986 /* XVimController.h */,
 				A543C399148FBBB10070E986 /* XVimController.m */,
+				A52E943A1499A95F00FA6045 /* keymap */,
 			);
 			path = xVim;
 			sourceTree = "<group>";
@@ -169,6 +172,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A56CE21A148F640100A06106 /* InfoPlist.strings in Resources */,
+				A52E943B1499A95F00FA6045 /* keymap in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

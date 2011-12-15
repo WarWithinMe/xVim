@@ -1,0 +1,12 @@
+i <C-S-Up> <Esc>yyphi
+n <C-S-Up> <Esc>yyph
+
+i jk <Esc>
+i lk <Right>
+n > *
+n < #
+n 0 ^
+i 0 ^
+
+n s i_<Esc>r
+n S a_<Esc>r

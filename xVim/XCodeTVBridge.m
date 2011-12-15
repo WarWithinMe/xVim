@@ -69,7 +69,6 @@ void xc_keyDown(void* self, SEL sel, NSEvent* event)
 {
     XTextViewBridge* bridge = [[XVimPlugin bridgeFor:self] retain];
     if (NO == [bridge processKeyEvent:event]) {
-        DLog(@"HJ_KeyDown: the original text view should process %@", [event characters]);
         orig_keyDown(self, sel, event);
     }
     [bridge release];
