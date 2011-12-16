@@ -13,6 +13,8 @@
 @end
 
 @interface XVimNormalModeHandler : XVimModeHandler
+-(id) init;
+-(void) reset;
 -(void) processKey:(NSString *)key For:(XVimController *)controller;
 @end
 

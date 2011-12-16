@@ -345,7 +345,7 @@ static NSMutableDictionary* keyMapDicts[4];
             [self processKey:normalizedKey];
             
             NSUInteger modifiers = [event modifierFlags];
-            if (modifiers & NSDeviceIndependentModifierFlagsMask)
+            if (modifiers & (NSControlKeyMask | NSAlternateKeyMask | NSCommandKeyMask | NSFunctionKeyMask))
             {
                 // If the key contains any modifiers, let
                 // the original text view handle it.
@@ -392,7 +392,6 @@ static NSMutableDictionary* keyMapDicts[4];
 // We break down that buffer and process each of them.
 -(void) processKey:(NSString *)key
 {
-    DLog(@"Process Key: %@", key);
     [handlers[vi_mode] processKey:key For:self];
 }
 

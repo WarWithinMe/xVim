@@ -75,20 +75,39 @@
 }
 @end
 
-typedef enum e_SubMode{
-    Opening
-} SubMode;
 @interface XVimNormalModeHandler()
 {
     @private
-        SubMode smode;
         int commandCount;
         int motionCount;
+        unichar commandChar;
+        unichar motionChar;
 }
 @end
 
 @implementation XVimNormalModeHandler
-// A set of methods to perform vim actions.
+-(id) init
+{
+    [super init];
+    commandCount = 1;
+    motionCount = 1;
+    commandChar = 0;
+    motionChar = 0;
+    return self;
+}
+-(void) reset
+{
+    commandCount = 1;
+    motionCount = 1;
+    commandChar = 0;
+    motionChar = 0;
+}
+
+//h	 Moves caret to the left
+//j	 Moves caret down
+//k	 Moves caret up
+//l	 Moves caret to the left
+//i	 Enters insert mode
 //a	 Enters insert mode after the current character
 //I	 Enters insert mode at the start of the indentation of current line
 //A	 Enters insert mode at the end of line
@@ -101,7 +120,7 @@ typedef enum e_SubMode{
 //w	 Moves to the start of the next word
 //b	 Moves (back) to the start of the current (or previous) word.
 //e	 Moves to the end of the current (or next) word.
-//WBE Similar to wbe commands, but words are separated by white space, so ABC+X(Y) is considered a single word.
+//WBE	 Similar to wbe commands, but words are separated by white space, so ABC+X(Y) is considered a single word.
 //[	 (Editra only) Moves back one word part
 // ]	 (Editra only) Move one word part forward
 //{	 Goto start of current (or previous) paragraph
@@ -141,15 +160,94 @@ typedef enum e_SubMode{
 //>	 Indent
 //<	 Un-Indent
 //.	 Repeat last change/insert command (doesn't repeat motions or other things).
-//Y	 Yank from current position to the end of line
-//D	 Delete from current position to the end of line
-//C	 Change from current position to the end of line
-//s	 Substitute: deletes character under caret and enter insert mode.
-//S	 Change current line (substitute line)
+//   Y	 Yank from current position to the end of line
+//   D	 Delete from current position to the end of line
+//   C	 Change from current position to the end of line
+//   s	 Substitute: deletes character under caret and enter insert mode.
+//   S	 Change current line (substitute line)
 -(void) processKey:(NSString*) key For:(XVimController*) controller
 {
+    if ([key compare:@"<Esc>"] == NSOrderedSame) {
+        [self reset];
+        return;
+    }
+    
     XTextViewBridge* bridge  = [controller bridge];
     NSTextView* hijackedView = [bridge targetView];
+    
+    if ([key length] == 1)
+    {
+        unichar ch = [key characterAtIndex:0];
+        if (ch > '0' && ch < '9')
+        {
+            DLog(@"This key is a digit");
+            if (commandChar == 0) {
+                commandCount = commandCount * 10 + digittoint(ch);
+                DLog(@"Current command count is: %d", commandCount);
+            } else if(motionChar == 0) {
+                motionCount = motionCount * 10 + digittoint(ch);
+                DLog(@"Current motion count is: %d", motionCount);
+            } else {
+                // Bad command, ignore it.
+                [self reset];
+                DLog(@"Bad command, ignoring.");
+            }
+        } else {
+            if (commandChar == 0) {
+                // We don't receive any motion command yet (ydc).
+                
+                switch (ch) {
+                    case 'h':
+                        for (int i = 0; i < commandCount; ++i)
+                            [hijackedView moveLeft:nil];
+                        break;
+                    case 'j': 
+                        for (int i = 0; i < commandCount; ++i)
+                            [hijackedView moveDown:nil];
+                        break;
+                    case 'k':
+                        for (int i = 0; i < commandCount; ++i)
+                            [hijackedView moveUp:nil];
+                        break;
+                    case 'l': 
+                        for (int i = 0; i < commandCount; ++i)
+                            [hijackedView moveRight:nil];
+                        break;
+
+                    case 'a':
+                        [hijackedView moveRight:nil]; // Fall through to 'i'
+                    case 'i':
+                        [controller switchToMode:InsertMode];
+                        break;
+                    case 'A':
+                        [hijackedView moveToEndOfLine:nil];
+                        [controller switchToMode:InsertMode];
+                        break;
+                    case 'I':
+                        [hijackedView moveToBeginningOfLine:nil];
+                        NSRange insertionPoint = [hijackedView selectedRange];
+                        NSScanner* scanner = [NSScanner scannerWithString:[[hijackedView textStorage] string]];
+                        [scanner setScanLocation:insertionPoint.location];
+                        [scanner setCharactersToBeSkipped:nil];
+                        [scanner scanCharactersFromSet:[NSCharacterSet whitespaceCharacterSet] intoString:nil];
+                        insertionPoint.location = [scanner scanLocation];
+                        [hijackedView setSelectedRange:insertionPoint];
+                        [controller switchToMode:InsertMode];
+                        break;
+                }
+                
+                commandCount = 1; // We don't have to reset the other properties.
+                
+                
+            } else {
+                // Handle the motion command.
+            }
+            
+        }
+    } else {
+        
+    }
+    
 }
 @end
 
