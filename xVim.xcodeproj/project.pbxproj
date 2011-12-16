@@ -14,6 +14,7 @@
 		A56CE21A148F640100A06106 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = A56CE218148F640100A06106 /* InfoPlist.strings */; };
 		A56CE223148F644800A06106 /* XVimPlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = A56CE222148F644800A06106 /* XVimPlugin.m */; };
 		A598ED54148F798900C86EC9 /* xVim.bundle in CopyFiles */ = {isa = PBXBuildFile; fileRef = A56CE20C148F640100A06106 /* xVim.bundle */; };
+		A5FA0F9C149AF56B0020C76A /* XVimMode.m in Sources */ = {isa = PBXBuildFile; fileRef = A5FA0F9B149AF56B0020C76A /* XVimMode.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -45,6 +46,8 @@
 		A56CE21B148F640100A06106 /* xVim-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "xVim-Prefix.pch"; sourceTree = "<group>"; };
 		A56CE221148F644800A06106 /* XVimPlugin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XVimPlugin.h; sourceTree = "<group>"; };
 		A56CE222148F644800A06106 /* XVimPlugin.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XVimPlugin.m; sourceTree = "<group>"; };
+		A5FA0F9A149AF56B0020C76A /* XVimMode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XVimMode.h; sourceTree = "<group>"; };
+		A5FA0F9B149AF56B0020C76A /* XVimMode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XVimMode.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -105,6 +108,8 @@
 				A543C395148FBAAC0070E986 /* XCodeTVBridge.m */,
 				A543C398148FBBB10070E986 /* XVimController.h */,
 				A543C399148FBBB10070E986 /* XVimController.m */,
+				A5FA0F9A149AF56B0020C76A /* XVimMode.h */,
+				A5FA0F9B149AF56B0020C76A /* XVimMode.m */,
 				A52E943A1499A95F00FA6045 /* keymap */,
 			);
 			path = xVim;
@@ -186,6 +191,7 @@
 				A56CE223148F644800A06106 /* XVimPlugin.m in Sources */,
 				A543C396148FBAAC0070E986 /* XCodeTVBridge.m in Sources */,
 				A543C39A148FBBB10070E986 /* XVimController.m in Sources */,
+				A5FA0F9C149AF56B0020C76A /* XVimMode.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

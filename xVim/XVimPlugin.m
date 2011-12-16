@@ -70,6 +70,11 @@ NSMutableDictionary* bridgeDict = 0;
 
 @implementation XTextViewBridge
 
+-(NSTextView*) targetView
+{
+    return targetView;
+}
+
 -(XTextViewBridge*) initWithTextView:(NSTextView*) view
 {
     if (self = [super init]) {
@@ -90,10 +95,13 @@ NSMutableDictionary* bridgeDict = 0;
     DLog(@"XTextViewBridge Finalized");
 }
 
--(BOOL) processKeyEvent:(NSEvent *)event
+-(void) processKeyEvent:(NSEvent *)event
 {
-    return [controller processKeyEvent:event];
+    [controller processKeyEvent:event];
 }
+
+-(void) handleFakeKeyEvent:(NSEvent*) fakeEvent {}
+-(BOOL) closePopup { return NO; }
 
 @end
 

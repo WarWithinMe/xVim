@@ -67,11 +67,7 @@ void xc_finalize(void* self, SEL sel)
 
 void xc_keyDown(void* self, SEL sel, NSEvent* event)
 {
-    XTextViewBridge* bridge = [[XVimPlugin bridgeFor:self] retain];
-    if (NO == [bridge processKeyEvent:event]) {
-        orig_keyDown(self, sel, event);
-    }
-    [bridge release];
+    [[XVimPlugin bridgeFor:self] processKeyEvent:event] ;
 }
 
 
@@ -102,5 +98,11 @@ void xc_keyDown(void* self, SEL sel, NSEvent* event)
                                  @selector(keyDown:), 
                                  xc_keyDown);
 }
+
+-(void) handleFakeKeyEvent:(NSEvent*) fakeEvent
+{
+    orig_keyDown([super targetView], @selector(keyDown:), fakeEvent);
+}
+
 @end
 

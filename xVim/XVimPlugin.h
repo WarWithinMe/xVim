@@ -31,10 +31,8 @@ void* methodSwizzle(Class c, SEL sel, void* overrideFunction);
 
 // Associate a bridge with a textview in the hijacked init method.
 +(void) storeBridge:(XTextViewBridge*) bridge ForView:(NSTextView*) textView;
-
 // Retreive the associated bridge object in the hijacked keydown method.
 +(XTextViewBridge*) bridgeFor:(NSTextView*) textView;
-
 // Free the bridge for a textview in the hijacked finalize method.
 +(void) removeBridgeForView:(NSTextView*) textView;
 
@@ -45,11 +43,17 @@ void* methodSwizzle(Class c, SEL sel, void* overrideFunction);
 @interface XTextViewBridge : NSObject
 
 -(XTextViewBridge*) initWithTextView:(NSTextView*) view;
-
-// If return NO, the hijacked NSTextView should itself process this event.
-// If return YES, the NSTextView should do nothing.
--(BOOL) processKeyEvent:(NSEvent*) event;
-
 -(void) dealloc;
 
+-(void) processKeyEvent:(NSEvent*) event;
+
+// This method is called by the XVimController, subclass should override
+// this method to let the hijacked textview to handle the fakeEvent.
+-(void) handleFakeKeyEvent:(NSEvent*) fakeEvent;
+
+// Return the hijacked targetView
+-(NSTextView*) targetView;
+
+// Ask the textview to close any popup, return YES if a popup is closed.
+-(BOOL) closePopup;
 @end
