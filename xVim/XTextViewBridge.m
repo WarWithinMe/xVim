@@ -17,10 +17,8 @@
 
 @implementation XTextViewBridge
 
--(NSTextView*) targetView
-{
-    return targetView;
-}
+-(NSTextView*)     targetView    { return targetView; }
+-(XVimController*) vimController { return controller; }
 
 -(XTextViewBridge*) initWithTextView:(NSTextView*) view
 {
@@ -31,22 +29,9 @@
     return self;
 }
 
--(void) dealloc
-{
-    DLog(@"XTextViewBridge Dealloced");
-    [controller release];
-}
-
--(void) finalize
-{
-    DLog(@"XTextViewBridge Finalized");
-}
-
--(void) processKeyEvent:(NSEvent *)event
-{
-    [controller processKeyEvent:event];
-}
-
+-(void) dealloc  { DLog(@"XTextViewBridge Dealloced"); [controller release]; }
+-(void) finalize { DLog(@"XTextViewBridge Finalized"); }
+-(void) processKeyEvent:(NSEvent*)event { [controller processKeyEvent:event]; }
 -(void) handleFakeKeyEvent:(NSEvent*) fakeEvent {}
 -(BOOL) closePopup { return NO; }
 

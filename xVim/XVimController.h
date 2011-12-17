@@ -7,8 +7,8 @@
 
 typedef enum e_VimMode
 {
-    NormalMode = 0,
-    InsertMode = 1,
+    InsertMode = 0,
+    NormalMode = 1,
     VisualMode = 2,
     ExMode     = 3,
     ReplaceMode = 4,
@@ -26,6 +26,7 @@ typedef enum e_VimMode
 
 -(void) processKeyEvent:(NSEvent*) event;
 -(void) switchToMode:(VimMode) mode;
+-(VimMode) mode;
 
 // Return the current key event that we are working with.
 // Or nil, if we are working with a mapped key, in this case,

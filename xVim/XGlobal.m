@@ -4,7 +4,6 @@
 //
 
 #import "XGlobal.h"
-#import "XVimPlugin.h"
 #import "XCodeTVBridge.h"
 #import "XVimController.h"
 #import <objc/runtime.h>

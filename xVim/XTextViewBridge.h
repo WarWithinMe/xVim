@@ -3,6 +3,8 @@
 //  Copyright (c) 2011年 http://warwithinme.com . All rights reserved.
 //
 
+@class XVimController;
+
 @interface XTextViewBridge : NSObject
 
 -(XTextViewBridge*) initWithTextView:(NSTextView*) view;
@@ -10,6 +12,8 @@
 
 // Return the hijacked targetView
 -(NSTextView*) targetView;
+// Return the vim controller that is with this textview.
+-(XVimController*) vimController;
 
 -(void) processKeyEvent:(NSEvent*) event;
 

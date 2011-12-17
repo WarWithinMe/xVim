@@ -99,6 +99,7 @@ NSCharacterSet* characterSetForChar(unichar ch)
 {
     if (isdigit(ch)) return [NSCharacterSet decimalDigitCharacterSet];
     if (isalpha(ch)) return [NSCharacterSet letterCharacterSet];
+    if (ch == ' ' || ch == '\t') return [NSCharacterSet whitespaceCharacterSet];
     if (isascii(ch)) return [NSCharacterSet characterSetWithCharactersInString:
                              @"`~!@#$%^&*()_+{}|:\"<>?-=[]\\;',./"];
     return [[NSCharacterSet characterSetWithRange:NSMakeRange(0, 128)] invertedSet];

@@ -15,6 +15,7 @@
 		A598ED54148F798900C86EC9 /* xVim.bundle in CopyFiles */ = {isa = PBXBuildFile; fileRef = A56CE20C148F640100A06106 /* xVim.bundle */; };
 		A5A905CC149C41C000810962 /* XGlobal.m in Sources */ = {isa = PBXBuildFile; fileRef = A5A905CB149C41C000810962 /* XGlobal.m */; };
 		A5A905CF149C429300810962 /* XTextViewBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = A5A905CE149C429300810962 /* XTextViewBridge.m */; };
+		A5BD0F34149C598F0089BF5E /* vim.m in Sources */ = {isa = PBXBuildFile; fileRef = A5BD0F33149C598F0089BF5E /* vim.m */; };
 		A5FA0F9C149AF56B0020C76A /* XVimMode.m in Sources */ = {isa = PBXBuildFile; fileRef = A5FA0F9B149AF56B0020C76A /* XVimMode.m */; };
 /* End PBXBuildFile section */
 
@@ -49,6 +50,8 @@
 		A5A905CB149C41C000810962 /* XGlobal.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XGlobal.m; sourceTree = "<group>"; };
 		A5A905CD149C429300810962 /* XTextViewBridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XTextViewBridge.h; sourceTree = "<group>"; };
 		A5A905CE149C429300810962 /* XTextViewBridge.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XTextViewBridge.m; sourceTree = "<group>"; };
+		A5BD0F32149C598F0089BF5E /* vim.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vim.h; sourceTree = "<group>"; };
+		A5BD0F33149C598F0089BF5E /* vim.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = vim.m; sourceTree = "<group>"; };
 		A5FA0F9A149AF56B0020C76A /* XVimMode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XVimMode.h; sourceTree = "<group>"; };
 		A5FA0F9B149AF56B0020C76A /* XVimMode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XVimMode.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -130,6 +133,7 @@
 				A543C394148FBAAC0070E986 /* XCodeTVBridge.h */,
 				A543C398148FBBB10070E986 /* XVimController.h */,
 				A5FA0F9A149AF56B0020C76A /* XVimMode.h */,
+				A5BD0F32149C598F0089BF5E /* vim.h */,
 			);
 			name = Header;
 			sourceTree = "<group>";
@@ -142,6 +146,7 @@
 				A543C395148FBAAC0070E986 /* XCodeTVBridge.m */,
 				A543C399148FBBB10070E986 /* XVimController.m */,
 				A5FA0F9B149AF56B0020C76A /* XVimMode.m */,
+				A5BD0F33149C598F0089BF5E /* vim.m */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -214,6 +219,7 @@
 				A5FA0F9C149AF56B0020C76A /* XVimMode.m in Sources */,
 				A5A905CC149C41C000810962 /* XGlobal.m in Sources */,
 				A5A905CF149C429300810962 /* XTextViewBridge.m in Sources */,
+				A5BD0F34149C598F0089BF5E /* vim.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

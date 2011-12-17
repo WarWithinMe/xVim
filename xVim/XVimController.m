@@ -195,6 +195,7 @@ static NSMutableDictionary* keyMapDicts[4];
 {
     if (self = [super init]) {
         bridge = b;
+        vi_mode = NormalMode;
         inputBuffer = [[NSMutableString alloc] init];
         
         handlers[NormalMode] = [[XVimNormalModeHandler alloc] init];
@@ -267,7 +268,7 @@ static NSMutableDictionary* keyMapDicts[4];
     return NO;
 }
 
-// In processKeyEvent, we simply examine the key input and the buffer may be a keymap.
+// TODO: The keymapping doesn't work as I thought atm.
 -(void) processKeyEvent:(NSEvent*) event
 {
     [self stopKeymapTimer];
@@ -399,10 +400,26 @@ static NSMutableDictionary* keyMapDicts[4];
 
 -(void) switchToMode:(VimMode)mode
 {
+    if (mode == vi_mode) { return; }
+    
     [handlers[vi_mode] reset];
-    vi_mode = mode;
+    
+    // Check to see if we should notify the textview that it should
+    // redraw the caret immediately
+    if (0 == (mode & vi_mode) || // Either mode is InsertMode
+        (vi_mode < ReplaceMode && mode >= ReplaceMode) ||
+        (vi_mode >= ReplaceMode && mode < ReplaceMode))
+    {
+        vi_mode = mode;
+        [[bridge targetView] updateInsertionPointStateAndRestartTimer:YES];
+    } else {
+        vi_mode = mode;
+    }
+    
     [handlers[vi_mode] enter];
 }
+
+-(VimMode) mode { return vi_mode; }
 
 -(void) startKeymapTimer{}
 -(void) stopKeymapTimer{}
