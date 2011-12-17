@@ -27,4 +27,7 @@
 // Ask the textview to close any popup, return YES if a popup is closed.
 -(BOOL) closePopup;
 
+// Returns the current visible lines range. Starting with 0
+-(NSRange) visibleParagraphRange;
+
 @end

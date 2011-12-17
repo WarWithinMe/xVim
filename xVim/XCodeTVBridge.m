@@ -163,5 +163,10 @@ void xc_DIPIR(void* self, SEL sel, NSRect rect, NSColor* color, BOOL turnedOn)
     orig_keyDown([super targetView], @selector(keyDown:), fakeEvent);
 }
 
+-(NSRange) visibleParagraphRange
+{
+    return [[super targetView] visibleParagraphRange];
+}
+
 @end
 

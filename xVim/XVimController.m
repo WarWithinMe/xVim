@@ -406,14 +406,12 @@ static NSMutableDictionary* keyMapDicts[4];
     
     // Check to see if we should notify the textview that it should
     // redraw the caret immediately
-    if (0 == (mode & vi_mode) || // Either mode is InsertMode
-        (vi_mode < ReplaceMode && mode >= ReplaceMode) ||
-        (vi_mode >= ReplaceMode && mode < ReplaceMode))
-    {
-        vi_mode = mode;
+    BOOL needToRedrawCaret = (0 == (mode & vi_mode) || // Either mode is InsertMode
+                              (vi_mode < ReplaceMode && mode >= ReplaceMode) ||
+                              (vi_mode >= ReplaceMode && mode < ReplaceMode));
+    vi_mode = mode;
+    if (needToRedrawCaret) {
         [[bridge targetView] updateInsertionPointStateAndRestartTimer:YES];
-    } else {
-        vi_mode = mode;
     }
     
     [handlers[vi_mode] enter];

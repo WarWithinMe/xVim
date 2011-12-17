@@ -34,5 +34,6 @@
 -(void) processKeyEvent:(NSEvent*)event { [controller processKeyEvent:event]; }
 -(void) handleFakeKeyEvent:(NSEvent*) fakeEvent {}
 -(BOOL) closePopup { return NO; }
+-(NSRange) visibleParagraphRange { return NSMakeRange(0, 0); }
 
 @end

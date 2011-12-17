@@ -7,6 +7,7 @@
 #import "XVimMode.h"
 #import "XVimController.h"
 #import "XTextViewBridge.h"
+#import "vim.h"
 
 @implementation XVimModeHandler
 -(void) enter{}
@@ -123,45 +124,51 @@ NSCharacterSet* characterSetForChar(unichar ch)
     motionChar = 0;
 }
 
-//h	 Moves caret to the left
-//j	 Moves caret down
-//k	 Moves caret up
-//l	 Moves caret to the left
-//i	 Enters insert mode
-//a	 Enters insert mode after the current character
-//I	 Enters insert mode at the start of the indentation of current line
-//A	 Enters insert mode at the end of line
-//o	 Opens a new line below, auto indents, and enters insert mode
-//O	 Opens a new line above, auto indents, and enters insert mode
-//r	 Enters single replace mode (insert mode with overtype enabled).
-//R	 Enters replace mode (insert mode with overtype enabled).
-//0	 Move to start of current line
-//$	 Move to end of current line
-//^	 Move to the start of indentation on current line.
-//w	 Moves to the start of the next word
-//b	 Moves (back) to the start of the current (or previous) word.
-//e	 Moves to the end of the current (or next) word.
-//WBE	 Similar to wbe commands, but words are separated by white space, so ABC+X(Y) is considered a single word.
-//[	 (Editra only) Moves back one word part
-// ]	 (Editra only) Move one word part forward
+// #h    Moves caret to the left
+// #j    Moves caret down
+// #k    Moves caret up
+// #l    Moves caret to the left
+//  i    Enters insert mode
+//  a    Enters insert mode after the current character
+//  I    Enters insert mode at the start of the indentation of current line
+//  A    Enters insert mode at the end of line
+//  o    Opens a new line below, auto indents, and enters insert mode
+//  O    Opens a new line above, auto indents, and enters insert mode
+//  r    Enters single replace mode (insert mode with overtype enabled).
+//  R    Enters replace mode (insert mode with overtype enabled).
+//  0    Move to start of current line
+//  $    Move to end of current line
+//  _    Move to the start of indentation on current line.
+//  ^    Move to the start of indentation on current line.
+//  H    Goto first visible line
+//  M    Goto the middle of the screen
+//  L    Goto last visible line
+// #G    Goto last line, or line number (eg 12G goes to line 12)
+// #u    Undo.
+// #U    Redo.
+// #J    Join this line with the one(s) under it.
+// #x    Delete character under caret, and put the deleted chars into clipboard.
+// #X    Delete character before caret (backspace), and put the deleted chars into clipboard.
+// #~    Toggle case of character(s) under caret and move caret across them.
+// #w    Moves to the start of the next word
+// #b    Moves (back) to the start of the current (or previous) word.
+// #e    Moves to the end of the current (or next) word.
+// #WBE  Similar to wbe commands, but words are separated by white space, so ABC+X(Y) is considered a single word.
+
+// Below are commands that are going to be implemented.
+// #>    Indent
+// #<    Un-Indent
+// #|    Jump to column (specified by the repeat parameter).
+
+// Below are commands that I don't know how to implement.
+// #.    Repeat last change/insert command (doesn't repeat motions or other things).
+
 //{	 Goto start of current (or previous) paragraph
 //}	 Goto end of current (or next) paragraph
-//~	 Toggle case of character(s) under caret and move caret across them.
-//u	 Undo (repeatable).
-//U	 Redo (repeatable).
 //rb	 Replace character under caret with b
-//x	 Delete character under caret
-//X	 Delete character before caret (backspace)
-//ma	 Bookmark the current position and give it label a
-//`a	 Goto position bookmarked with label a
-//'a	 Goto line bookmarked with label a
-//H	 Goto first visible line
-//M	 Goto the middle of the screen
-//L	 Goto last visible line
 //zt	 Scroll view so current line becomes the first line
 //zz	 Scroll view so current line is in the middle
 //zb	 Scroll view so current line is at the bottom (last line)
-//G	 Goto last line, or line number (eg 12G goes to line 12)
 //gg	 Goto first line in file
 //fx	 Find char x on current line and go to it
 //tx	 Similar to fx, but stops one character short before x
@@ -171,16 +178,11 @@ NSCharacterSet* characterSetForChar(unichar ch)
 //,	 Repeat last find motion, but in reverse
 //*	 Find next occurance of identifier under caret or currently selected text
 //#	 Similar to * but backwards
-//|	 Jump to column (specified by the repeat parameter).
-//J	 Join this line with the one(s) under it.
 //p	 Paste text, if copied text is whole lines, pastes below current line.
 //P	 Paste text, if copied text is whole lines, pastes above current line.
 //y	 Yank (copy). See below for more.
 //d	 Delete. (also yanks)
 //c	 Change: deletes (and yanks) then enters insert mode.
-//>	 Indent
-//<	 Un-Indent
-//.	 Repeat last change/insert command (doesn't repeat motions or other things).
 //   Y	 Yank from current position to the end of line
 //   D	 Delete from current position to the end of line
 //   C	 Change from current position to the end of line
@@ -215,15 +217,22 @@ NSCharacterSet* characterSetForChar(unichar ch)
             }
         } else {
             
+            BOOL commandCountSpecified = commandCount > 0;
             if (commandCount == 0) commandCount = 1;
             if (commandChar == 0) {
                 // We don't receive any motion command yet (ydc).
                 
                 switch (ch) {
                     case 'h':
-                        for (int i = 0; i < commandCount; ++i)
-                            [hijackedView moveLeft:nil];
+                        [hijackedView setSelectedRange:
+                         NSMakeRange(mv_h_handler(hijackedView, commandCount), 0)];
                         break;
+                    case 'l': 
+                        [hijackedView setSelectedRange:
+                         NSMakeRange(mv_l_handler(hijackedView, commandCount), 0)];
+                        break;
+                    // TODO: 'j' and 'k' calls the NSTextView's methods,
+                    // So them won't ensure that the caret won't be before the CR
                     case 'j': 
                         for (int i = 0; i < commandCount; ++i)
                             [hijackedView moveDown:nil];
@@ -232,38 +241,37 @@ NSCharacterSet* characterSetForChar(unichar ch)
                         for (int i = 0; i < commandCount; ++i)
                             [hijackedView moveUp:nil];
                         break;
-                    case 'l': 
-                        for (int i = 0; i < commandCount; ++i)
-                            [hijackedView moveRight:nil];
-                        break;
 
                     // TODO: commandCount for aAiIoOrR is not implemented.
                     case 'a':
-                        [hijackedView moveRight:nil]; // Fall through to 'i'
+                        [hijackedView moveRight:nil];
+                        // Fall through to 'i'
                     case 'i':
                         [controller switchToMode:InsertMode];
+                        break;
+                    case '0':
+                        [hijackedView setSelectedRange:
+                         NSMakeRange(mv_0_handler(hijackedView), 0)];
+                        break;
+                    case '$':
+                        [hijackedView setSelectedRange:
+                         NSMakeRange(mv_dollar_handler(hijackedView), 0)];
                         break;
                     case 'A':
                         [hijackedView moveToEndOfLine:nil];
                         [controller switchToMode:InsertMode];
                         break;
+                    case '_':
                     case '^':
                     case 'I':
                     {
-                        [hijackedView moveToBeginningOfLine:nil];
-                        NSRange insertionPoint = [hijackedView selectedRange];
-                        NSScanner* scanner = [NSScanner scannerWithString:[[hijackedView textStorage] string]];
-                        [scanner setScanLocation:insertionPoint.location];
-                        [scanner setCharactersToBeSkipped:nil];
-                        [scanner scanCharactersFromSet:[NSCharacterSet whitespaceCharacterSet] intoString:nil];
-                        insertionPoint.location = [scanner scanLocation];
-                        [hijackedView setSelectedRange:insertionPoint];
-                        if (ch == 'I') {
-                            [controller switchToMode:InsertMode];
-                        }
+                        [hijackedView setSelectedRange:
+                         NSMakeRange(mv_caret_handler(hijackedView), 0)];
+                        if (ch == 'I') { [controller switchToMode:InsertMode]; }
                     }
                         break;
                     case 'o':
+                        [hijackedView moveToEndOfLine:nil];
                         [hijackedView insertNewline:nil];
                         [controller switchToMode:InsertMode];
                         break;
@@ -271,8 +279,7 @@ NSCharacterSet* characterSetForChar(unichar ch)
                     {
                         NSRange currRange = [hijackedView selectedRange];
                         [hijackedView moveUp:nil];
-                        NSRange newRange  = [hijackedView selectedRange];
-                        if (currRange.location == newRange.location) {
+                        if (currRange.location == [hijackedView selectedRange].location) {
                             [hijackedView moveToBeginningOfLine:nil];
                         } else {
                             [hijackedView moveToEndOfLine:nil];
@@ -287,13 +294,180 @@ NSCharacterSet* characterSetForChar(unichar ch)
                     case 'R':
                         [controller switchToMode:ReplaceMode];
                         break;
+                    case 'H':
+                    {
+                        NSRange lines = [bridge visibleParagraphRange];
+                        DLog(@"Line Range: %@", NSStringFromRange(lines));
+                        if (lines.length != 0) { textview_goto_line(hijackedView,lines.location, NO); }
+                    }
+                        break;
+                    case 'M':
+                    {
+                        NSRange lines = [bridge visibleParagraphRange];
+                                                DLog(@"Line Range: %@", NSStringFromRange(lines));
+                        if (lines.length != 0) 
+                            textview_goto_line(hijackedView, lines.location + lines.length / 2, NO);
+                    }
+                        break;
+                    case 'L':
+                    {
+                        NSRange lines = [bridge visibleParagraphRange];
+                        DLog(@"Line Range: %@", NSStringFromRange(lines));
+                        if (lines.length != 0) 
+                            textview_goto_line(hijackedView, lines.location + lines.length, NO);
+                    }
+                        break;
+                    case 'G':
+                        textview_goto_line(hijackedView, (commandCountSpecified ? commandCount - 1 : -1), YES);
+                        break;
+                    case 'u':
+                        for (int i = 0; i < commandCount; ++i)
+                            [[hijackedView undoManager] undo];
+                        break;
+                    case 'U':
+                        for (int i = 0; i < commandCount; ++i)
+                            [[hijackedView undoManager] redo];
+                        break;
+                    case 'J': 
+                        // In Vim, if line ends with dot, two spaces are inserted isnead of one
+                        // when joining lines. But I don't want to do it that way. :) 
+                        // J, 1J, 2J are all join this line and next line. 3J is joining three lines.
+                        // FIXME: After undoing, the caret cannot be place at where 'J' is called.
+                    {
+                        NSString* string    = [[hijackedView textStorage] string];
+                        NSUInteger index    = [hijackedView selectedRange].location;
+                        NSUInteger maxIndex = [string length] - 1;
+                        NSCharacterSet* set = [NSCharacterSet newlineCharacterSet];
+                        NSUndoManager* undoManager = [hijackedView undoManager];
                         
-                    case '0':
-                        [hijackedView moveToBeginningOfLine:nil];
+                        commandCount = commandCount > 2 ? commandCount - 1 : 1;
+                        
+                        [undoManager beginUndoGrouping];
+                        
+                        for (int i = 0; i < commandCount; ++i)
+                        {
+                            while (index < maxIndex) {
+                                if ([set characterIsMember:[string characterAtIndex:index]])
+                                    break;
+                                ++index;
+                            }
+                            // Now we are at the end of current line.
+                            if (index == maxIndex) {
+                                // If the end of the textview is CR, we simply remove it.
+                                if ([set characterIsMember:[string characterAtIndex:index]]) {
+                                    [hijackedView insertText:@"" 
+                                            replacementRange:NSMakeRange(maxIndex, 1)];
+                                    [hijackedView setSelectedRange:NSMakeRange(maxIndex - 1, 0)];
+                                }
+                                break;
+                            } else {
+                                // Go back to found out how many space we can remove.
+                                NSInteger before = index;
+                                unichar ch = 0;
+                                while (before > 0) {
+                                    ch = [string characterAtIndex:before - 1];
+                                    if (ch != '\t' && ch != ' ') { break; }
+                                    --before;
+                                }
+                                // The whole line is whitespace, these whitespaces eshould not removed.
+                                if ([set characterIsMember:ch] || before == 0) { before = index; }
+                                // Go forward to find space.
+                                NSInteger after = index;
+                                NSInteger place = before;
+                                while (after < maxIndex) {
+                                    ch = [string characterAtIndex:after + 1];
+                                    if (ch != '\t' && ch != ' ') { break; }
+                                    ++after;
+                                }
+                                // The whole line is whitespace, these whitespaces eshould not removed.
+                                if ([set characterIsMember:ch] || after == maxIndex) { 
+                                    place = after; 
+                                    after = index;
+                                }
+                                [hijackedView insertText:@" " 
+                                        replacementRange:NSMakeRange(before, after - before + 1)];
+                                [hijackedView setSelectedRange:NSMakeRange(place, 0)];
+                            }
+                        }
+                        
+                        [undoManager endUndoGrouping];
+                    }
                         break;
-                    case '$':
-                        [hijackedView moveToEndOfLine:nil];
+                        
+                    case 'X':
+                    {
+                        NSInteger index = [hijackedView selectedRange].location;
+                        NSInteger rIndex = index - commandCount;
+                        if (rIndex < 0) { rIndex = 0; }
+                        if (index > rIndex) {
+                            [hijackedView setSelectedRange:NSMakeRange(rIndex, index - rIndex)];
+                            [hijackedView cut:nil];
+                        }
+                    }
                         break;
+                    case 'x':
+                    case '~':
+                        // x and ~ will only work on the character in current line.
+                    {
+                        NSString*  string   = [[hijackedView textStorage] string];
+                        NSUInteger maxIndex = [string length] - 1;
+                        NSUInteger index    = [hijackedView selectedRange].location;
+                        NSCharacterSet* set = [NSCharacterSet newlineCharacterSet];
+                        if (index <= maxIndex &&
+                            [set characterIsMember:[string characterAtIndex:index]] == NO)
+                        {
+                            NSUInteger length = 1;
+                            if (commandCount > 1)
+                            {
+                                NSUInteger lineEndIndex = mv_dollar_handler(hijackedView) + 1;
+                                length = lineEndIndex - index;
+                                if (length > commandCount) { length = commandCount; }
+                            }
+                            
+                            NSRange range = {index, length};
+                            
+                            if (ch == 'x')
+                            {
+                                [hijackedView setSelectedRange:range];
+                                [hijackedView cut:nil];
+                                if ((index >= maxIndex - length ||
+                                     [set characterIsMember:[string characterAtIndex:index]]) &&
+                                    index > 0 &&
+                                    [set characterIsMember:[string characterAtIndex:index-1]] == NO)
+                                {
+                                    range.location = index - 1;
+                                    range.length = 0;
+                                    [hijackedView setSelectedRange:range];
+                                }
+                            } else {
+                                NSMutableString* subString = [NSMutableString stringWithString:[string substringWithRange:range]];
+                                NSRange r = {0,1};
+                                for (; r.location < length; ++r.location) {
+                                    unichar c = [subString characterAtIndex:r.location];
+                                    if (c >= 'a' && c <= 'z')
+                                        c = c + 'A' - 'a';
+                                    else if (c >= 'A' && c <= 'Z')
+                                        c = c + 'a' - 'A';
+                                    [subString replaceCharactersInRange:r 
+                                                             withString:[NSString stringWithCharacters:&c 
+                                                                                                length:1]];
+                                }
+                                [hijackedView insertText:subString replacementRange:range];
+                                
+                                range.length = 0;
+                                range.location += length;
+                                if (index < maxIndex && 
+                                    [set characterIsMember:[string characterAtIndex:range.location]])
+                                {
+                                    --range.location;
+                                }
+                                [hijackedView setSelectedRange:range];
+                            }
+                            
+                        }
+                    }
+                        break;
+                    
                         
                     // wWbBeE
                     case 'w':
@@ -405,9 +579,9 @@ NSCharacterSet* characterSetForChar(unichar ch)
 @end
 
 @implementation XVimVisualModeHandler
--(void) processKey:(NSString *)key For:(XVimController *)controller{}
+-(void) processKey:(NSString*) key For:(XVimController*) controller{}
 @end
 
 @implementation XVimExModeHandler
--(void) processKey:(NSString *)key For:(XVimController *)controller{}
+-(void) processKey:(NSString*) key For:(XVimController*) controller{}
 @end
