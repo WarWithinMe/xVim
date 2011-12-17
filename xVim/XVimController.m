@@ -3,9 +3,10 @@
 //  Copyright (c) 2011年 http://warwithinme.com . All rights reserved.
 //
 
+#import "XGlobal.h"
 #import "XVimController.h"
-#import "XVimPlugin.h"
 #import "XVimMode.h"
+#import "XTextViewBridge.h"
 
 static NSDictionary*        specialKeyName   = 0;
 static NSDictionary*        specialKeyCode   = 0;
@@ -345,7 +346,8 @@ static NSMutableDictionary* keyMapDicts[4];
             [self processKey:normalizedKey];
             
             NSUInteger modifiers = [event modifierFlags];
-            if (modifiers & (NSControlKeyMask | NSAlternateKeyMask | NSCommandKeyMask | NSFunctionKeyMask))
+            if ((modifiers & (NSControlKeyMask | NSAlternateKeyMask | NSCommandKeyMask)) ||
+                (vi_mode != InsertMode && (modifiers & NSFunctionKeyMask)))
             {
                 // If the key contains any modifiers, let
                 // the original text view handle it.
@@ -399,6 +401,7 @@ static NSMutableDictionary* keyMapDicts[4];
 {
     [handlers[vi_mode] reset];
     vi_mode = mode;
+    [handlers[vi_mode] enter];
 }
 
 -(void) startKeymapTimer{}

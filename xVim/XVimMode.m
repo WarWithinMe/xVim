@@ -3,11 +3,13 @@
 //  Copyright (c) 2011年 http://warwithinme.com . All rights reserved.
 //
 
+#import "XGlobal.h"
 #import "XVimMode.h"
 #import "XVimController.h"
-#import "XVimPlugin.h"
+#import "XTextViewBridge.h"
 
 @implementation XVimModeHandler
+-(void) enter{}
 -(void) reset{}
 -(void) processKey:(NSString *)key For:(XVimController *)controller{}
 @end
@@ -35,6 +37,8 @@
     if ([key compare:@"<Esc>"] == NSOrderedSame) {
         if ([[controller bridge] closePopup] == NO) {
             // There's no popup, so we now switch to Normal Mode.
+            // TODO: When switch to Normal Mode, if the caret is not at 
+            // the beginning of the line, we should move the caret left.
             [controller switchToMode:NormalMode];
         }
     } else {
@@ -42,11 +46,17 @@
         {
             // This key should be a visible key input.
             // Change the text.
+            
+            // TODO: This approach works, however,
+            // the replacing doesn't group together, so that undo once
+            // can only get back one character.
+            // When we are at the end of the line, we need to insert that
+            // charater, instead of replacing the new-line character.
             NSTextView* hijackedView = [[controller bridge] targetView];
             NSRange selectedRange = [hijackedView selectedRange];
             selectedRange.length = 1;
-            [hijackedView replaceCharactersInRange:selectedRange withString:key];
-            
+            [hijackedView setSelectedRange:selectedRange];
+            [hijackedView insertText:key];
         }
     }
 }
@@ -63,12 +73,11 @@
     } else {
         if ([key length] == 1)
         {
-            // This key should be a visible key input.
-            // Change the text.
             NSTextView* hijackedView = [[controller bridge] targetView];
             NSRange selectedRange = [hijackedView selectedRange];
             selectedRange.length = 1;
-            [hijackedView replaceCharactersInRange:selectedRange withString:key];
+            [hijackedView setSelectedRange:selectedRange];
+            [hijackedView insertText:key];
             [controller switchToMode:NormalMode];
         }
     }
@@ -85,20 +94,30 @@
 }
 @end
 
+NSCharacterSet* characterSetForChar(unichar ch);
+NSCharacterSet* characterSetForChar(unichar ch)
+{
+    if (isdigit(ch)) return [NSCharacterSet decimalDigitCharacterSet];
+    if (isalpha(ch)) return [NSCharacterSet letterCharacterSet];
+    if (isascii(ch)) return [NSCharacterSet characterSetWithCharactersInString:
+                             @"`~!@#$%^&*()_+{}|:\"<>?-=[]\\;',./"];
+    return [[NSCharacterSet characterSetWithRange:NSMakeRange(0, 128)] invertedSet];
+}
+
 @implementation XVimNormalModeHandler
 -(id) init
 {
     [super init];
-    commandCount = 1;
-    motionCount = 1;
+    commandCount = 0;
+    motionCount = 0;
     commandChar = 0;
     motionChar = 0;
     return self;
 }
 -(void) reset
 {
-    commandCount = 1;
-    motionCount = 1;
+    commandCount = 0;
+    motionCount = 0;
     commandChar = 0;
     motionChar = 0;
 }
@@ -113,6 +132,7 @@
 //A	 Enters insert mode at the end of line
 //o	 Opens a new line below, auto indents, and enters insert mode
 //O	 Opens a new line above, auto indents, and enters insert mode
+//r	 Enters single replace mode (insert mode with overtype enabled).
 //R	 Enters replace mode (insert mode with overtype enabled).
 //0	 Move to start of current line
 //$	 Move to end of current line
@@ -178,7 +198,7 @@
     if ([key length] == 1)
     {
         unichar ch = [key characterAtIndex:0];
-        if (ch > '0' && ch < '9')
+        if (ch <= '9' && ((commandCount > 0 && ch >= '0') || (commandCount == 0 && ch > '0')) )
         {
             DLog(@"This key is a digit");
             if (commandChar == 0) {
@@ -193,6 +213,8 @@
                 DLog(@"Bad command, ignoring.");
             }
         } else {
+            
+            if (commandCount == 0) commandCount = 1;
             if (commandChar == 0) {
                 // We don't receive any motion command yet (ydc).
                 
@@ -214,6 +236,7 @@
                             [hijackedView moveRight:nil];
                         break;
 
+                    // TODO: commandCount for aAiIoOrR is not implemented.
                     case 'a':
                         [hijackedView moveRight:nil]; // Fall through to 'i'
                     case 'i':
@@ -223,7 +246,9 @@
                         [hijackedView moveToEndOfLine:nil];
                         [controller switchToMode:InsertMode];
                         break;
+                    case '^':
                     case 'I':
+                    {
                         [hijackedView moveToBeginningOfLine:nil];
                         NSRange insertionPoint = [hijackedView selectedRange];
                         NSScanner* scanner = [NSScanner scannerWithString:[[hijackedView textStorage] string]];
@@ -232,11 +257,138 @@
                         [scanner scanCharactersFromSet:[NSCharacterSet whitespaceCharacterSet] intoString:nil];
                         insertionPoint.location = [scanner scanLocation];
                         [hijackedView setSelectedRange:insertionPoint];
+                        if (ch == 'I') {
+                            [controller switchToMode:InsertMode];
+                        }
+                    }
+                        break;
+                    case 'o':
+                        [hijackedView insertNewline:nil];
                         [controller switchToMode:InsertMode];
+                        break;
+                    case 'O':
+                    {
+                        NSRange currRange = [hijackedView selectedRange];
+                        [hijackedView moveUp:nil];
+                        NSRange newRange  = [hijackedView selectedRange];
+                        if (currRange.location == newRange.location) {
+                            [hijackedView moveToBeginningOfLine:nil];
+                        } else {
+                            [hijackedView moveToEndOfLine:nil];
+                        }
+                        [hijackedView insertNewline:nil];
+                        [controller switchToMode:InsertMode];
+                    }
+                        break;
+                    case 'r':
+                        [controller switchToMode:SingleReplaceMode];
+                        break;
+                    case 'R':
+                        [controller switchToMode:ReplaceMode];
+                        break;
+                        
+                    case '0':
+                        [hijackedView moveToBeginningOfLine:nil];
+                        break;
+                    case '$':
+                        [hijackedView moveToEndOfLine:nil];
+                        break;
+                        
+                    // wWbBeE
+                    case 'w':
+                    {
+                        NSRange    range       = [hijackedView selectedRange];
+                        NSString*  string      = [[hijackedView textStorage] string];
+                        NSUInteger maxIndex    = [string length] - 1;
+                        NSCharacterSet* wspSet = [NSCharacterSet whitespaceCharacterSet];
+                        NSCharacterSet* nlSet  = [NSCharacterSet newlineCharacterSet];
+                        
+                        for (int i = 0; i < commandCount; ++i)
+                        {
+                            if (range.location >= maxIndex) { break; }
+                            
+                            unichar ch = [string characterAtIndex:range.location];
+                            
+                            BOOL blankLine = NO;
+                            NSCharacterSet* cs = characterSetForChar(ch);
+                            
+                            do
+                            {
+                                ++range.location;
+                                ch = [string characterAtIndex:range.location];
+                            } while (range.location < maxIndex && [cs characterIsMember:ch]);
+                            
+                            while (range.location < maxIndex)
+                            {
+                                ch = [string characterAtIndex:range.location];
+                                if (blankLine == NO && [nlSet characterIsMember:ch]) {
+                                    blankLine = YES;
+                                } else if ([wspSet characterIsMember:ch]) {
+                                    blankLine = NO;
+                                } else {
+                                    break;
+                                }
+                                ++range.location;
+                            }
+                            
+                            [hijackedView setSelectedRange:range];
+                            [hijackedView scrollRangeToVisible:range];
+                        }
+                        
+                    }
+                        break;
+                    case 'b':
+                    {
+                        NSRange    range       = [hijackedView selectedRange];
+                        NSString*  string      = [[hijackedView textStorage] string];
+                        NSCharacterSet* wspSet = [NSCharacterSet whitespaceCharacterSet];
+                        NSCharacterSet* nlSet  = [NSCharacterSet newlineCharacterSet];
+                        
+                        for (int i = 0; i < commandCount; ++i)
+                        {
+                            if (range.location <= 0) { break; }
+                            
+                            unichar ch = [string characterAtIndex:range.location];
+                            
+                            BOOL blankLine = NO;
+                            NSCharacterSet* cs = characterSetForChar(ch);
+                            
+                            do
+                            {
+                                --range.location;
+                                ch = [string characterAtIndex:range.location];
+                            } while (range.location > 0 && [cs characterIsMember:ch]);
+                            
+                            while (range.location > 0)
+                            {
+                                ch = [string characterAtIndex:range.location];
+                                if (blankLine == NO && [nlSet characterIsMember:ch]) {
+                                    blankLine = YES;
+                                } else if ([wspSet characterIsMember:ch]) {
+                                    blankLine = NO;
+                                } else {
+                                    break;
+                                }
+                                --range.location;
+                            }
+                            
+                            cs = characterSetForChar(ch);
+                            
+                            while (range.location > 0) {
+                                ch = [string characterAtIndex:range.location - 1];
+                                if ([cs characterIsMember:ch] == NO) { break; }
+                                --range.location;
+                            }
+                            
+                            [hijackedView setSelectedRange:range];
+                            [hijackedView scrollRangeToVisible:range];
+                        }
+                        
+                    }
                         break;
                 }
                 
-                commandCount = 1; // We don't have to reset the other properties.
+                commandCount = 0; // We don't have to reset the other properties.
                 
                 
             } else {

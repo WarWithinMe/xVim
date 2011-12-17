@@ -3,11 +3,9 @@
 //  Copyright (c) 2011年 http://warwithinme.com . All rights reserved.
 //
 
+#import "XGlobal.h"
 #import "XCodeTVBridge.h"
 
-// Below are some methods we may want to override.
-
-// === Xcode ===
 // Looks like whenever we open a text file, 
 // or switch to another text file,
 // or bring up a new assistant editor. 
@@ -15,13 +13,6 @@
 typedef void* (*O_InitWithCoder) (void*, SEL, void*);
 typedef void  (*O_Finalize) (void*, SEL);
 typedef void  (*O_KeyDown) (void*, SEL, NSEvent*);
-
-// I don't know when DVTSourceTextView's init / initWithFrame:textContainer: is invoked.
-// But if we never see a hook message, we may remove these hooks ~
-typedef void* (*O_Init)(void*, SEL);
-typedef void* (*O_InitWithFrameTextContainer)(void* self, SEL sel, void*, void*);
-
-
 static O_Finalize      orig_finalize = 0;
 static O_InitWithCoder orig_initWithCoder = 0;
 static O_KeyDown       orig_keyDown  = 0;
@@ -29,7 +20,12 @@ static void  xc_finalize(void*, SEL);
 static void* xc_initWithCoder(void*, SEL, void*);
 static void  xc_keyDown(void*, SEL, NSEvent*);
 
+
 #if defined(DEBUG) && defined(XCode_Safe_Hijack)
+// I don't know when DVTSourceTextView's init / initWithFrame:textContainer: is invoked.
+// But if we never see a hook message, we may remove these hooks ~
+typedef void* (*O_Init)(void*, SEL);
+typedef void* (*O_InitWithFrameTextContainer)(void* self, SEL sel, void*, void*);
 static O_Init orig_init = 0;
 static O_InitWithFrameTextContainer orig_initWithFTC = 0;
 static void* xc_init(void*, SEL);
@@ -53,7 +49,7 @@ void* xc_initWithCoder(void* self, SEL sel, void* p1)
 {
     DLog(@"HJ_initWithCoder");
     XTextViewBridge* bridge = [[XCodeTVBridge alloc] initWithTextView:self];
-    [XVimPlugin storeBridge:bridge ForView:self];
+    associateBridgeAndView(bridge, self);
     [bridge release];
     return orig_initWithCoder(self, sel, p1);
 }
@@ -61,13 +57,13 @@ void* xc_initWithCoder(void* self, SEL sel, void* p1)
 void xc_finalize(void* self, SEL sel)
 {
     DLog(@"HJ_Finalize");
-    [XVimPlugin removeBridgeForView:self];
+    removeBridgeForView(self);
     orig_finalize(self, sel);
 }
 
 void xc_keyDown(void* self, SEL sel, NSEvent* event)
 {
-    [[XVimPlugin bridgeFor:self] processKeyEvent:event] ;
+    [getBridgeForView(self) processKeyEvent:event];
 }
 
 

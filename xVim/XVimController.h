@@ -3,8 +3,6 @@
 //  Copyright (c) 2011年 http://warwithinme.com . All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
-
 @class XTextViewBridge;
 
 typedef enum e_VimMode
@@ -29,10 +27,10 @@ typedef enum e_VimMode
 -(void) processKeyEvent:(NSEvent*) event;
 -(void) switchToMode:(VimMode) mode;
 
--(XTextViewBridge*) bridge;
-
-// Return the current key event that we are working with,
-// or nil, if we are working with a mapped key.
+// Return the current key event that we are working with.
+// Or nil, if we are working with a mapped key, in this case,
+// on have to call fakeEventFor: to generate a fake keyevent for a key string.
 -(NSEvent*) currentKeyEvent;
+-(XTextViewBridge*) bridge;
 
 @end
