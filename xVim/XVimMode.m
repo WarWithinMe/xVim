@@ -245,12 +245,40 @@
                 }
                     
                 case 'd':
-                    // Delete whole lines.
-                    
                 case 'c':
                     // Delete whole lines except last new line character. And enter insert mode.
+                {
+                    NSString*  string   = [[hijackedView textStorage] string];
+                    NSUInteger lineEnd  = [hijackedView selectedRange].location;
+                    NSUInteger max      = [string length] - 1;
                     
-                default:
+                    if (lineEnd <= max)
+                    {
+                        while (lineEnd <= max)
+                        {
+                            if (testNewLine([string characterAtIndex:lineEnd])) {
+                                --commandCount;
+                                if (commandCount == 0) { break; }
+                            }
+                            ++lineEnd;
+                        }
+                        
+                        // We need to include a new line character if there's any.
+                        if (ch == 'd' && testNewLine([string characterAtIndex:lineEnd])) {
+                            ++lineEnd;
+                        }
+                        
+                        NSUInteger lineBegin = mv_0_handler(hijackedView);
+                        NSRange    range     = {lineBegin, lineEnd - lineBegin};
+                        [hijackedView setSelectedRange:range];
+                        [hijackedView copy:nil];
+                        
+                        // TODO: We have to mark that the clipboard content contains whole lines.
+                        
+                        [hijackedView insertText:@"" replacementRange:range];
+                        if (ch == 'c') { [controller switchToMode:InsertMode]; }
+                    }
+                }
                     break;
             }
         }
@@ -560,10 +588,10 @@ yy_escape:
             NSRange    range     = {lineBegin, lineEnd - lineBegin};
             [hijackedView setSelectedRange:range];
             [hijackedView copy:nil];
-            [hijackedView setSelectedRange:NSMakeRange(current, 0)];
             
             if (ch == 'Y')
             {
+                [hijackedView setSelectedRange:NSMakeRange(current, 0)];
                 // TODO: Mark that we have copied a whole line, so that 'pP' can paste at a new line.
             } else {
                 [hijackedView insertText:@"" replacementRange:range];

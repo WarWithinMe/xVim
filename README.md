@@ -173,6 +173,28 @@
 	<td align="left">Similar to wbe commands, but words are separated by white space, so ABC+X(Y) is considered a single word.</td>
 </tr>
 
+<tr>
+	<td align="center"><code>gg</code></td>
+	<td align="left">Goto first line in file</td>
+</tr>
+<tr>
+	<td align="center"><code>zz</code></td>
+	<td align="left">Scroll view so current line is in the middle</td>
+</tr>
+
+<tr>
+	<td align="center"><code>#y#y</code></td>
+	<td align="left">Yank whole lines, acts like <code>#Y</code></td>
+</tr>
+<tr>
+	<td align="center"><code>#d#d</code></td>
+	<td align="left">Yank and delete who lines</td>
+</tr>
+<tr>
+	<td align="center"><code>#c#c</code></td>
+	<td align="left">Yank and delete who lines, then enter insert mode</td>
+</tr>
+
 </tbody>
 </table>
 
