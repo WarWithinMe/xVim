@@ -174,9 +174,6 @@
     motionChar   = 0;
 }
 
-// gg    Goto first line in file
-// zz    Scroll view so current line is in the middle
-
 // Below are commands that are going to be implemented.
 // #>    Indent
 // #<    Un-Indent
@@ -196,16 +193,9 @@
 // :#    Jump to line number #.
 // :q, :q!, :w, :wq, :x
 
-// S	 Change current line (substitute line)
 // y	 Yank (copy). See below for more.
 // d	 Delete. (also yanks)
 // c     Change: deletes (and yanks) then enters insert mode.
-
-//   Y	 Yank from current position to the end of line
-//   D	 Delete from current position to the end of line
-//   C	 Change from current position to the end of line
-
-
 -(BOOL) processKey:(unichar)ch modifiers:(NSUInteger)flags forController:(XVimController*)controller
 {
     if ((flags & XImportantMask) != 0) {
@@ -535,6 +525,51 @@
             NSRange range = {mv_e_handler(hijackedView, commandCount, ch == 'E'), 0};
             [hijackedView setSelectedRange:range];
             [hijackedView scrollRangeToVisible:range];
+        }
+            break;
+            
+        case 'Y':
+        case 'D':
+        case 'C':
+        {
+            // Yank the whole line, but does not include the last new line character.
+            NSString*  string   = [[hijackedView textStorage] string];
+            NSUInteger current  = [hijackedView selectedRange].location;
+            NSUInteger lineEnd  = current;
+            NSUInteger max      = [string length] - 1;
+            while (lineEnd <= max)
+            {
+                if (testNewLine([string characterAtIndex:lineEnd])) {
+                    --commandCount;
+                    if (commandCount == 0) { break; }
+                }
+                ++lineEnd;
+            }
+            
+            NSUInteger lineBegin = ch == 'Y' ? mv_0_handler(hijackedView) : current;
+            NSRange    range     = {lineBegin, lineEnd - lineBegin};
+            [hijackedView setSelectedRange:range];
+            [hijackedView copy:nil];
+            [hijackedView setSelectedRange:NSMakeRange(current, 0)];
+            
+            if (ch == 'Y')
+            {
+                // TODO: Mark that we have copied a whole line, so that 'pP' can paste at a new line.
+            } else {
+                [hijackedView insertText:@"" replacementRange:range];
+                if (ch == 'C') {
+                    [controller switchToMode:InsertMode];
+                } else {
+                    max     = [string length] - 1;
+                    current = [hijackedView selectedRange].location;
+                    
+                    if ((current > max && testNewLine([string characterAtIndex:max]) == NO) ||
+                        testNewLine([string characterAtIndex:current]) == YES)
+                    {
+                        [hijackedView setSelectedRange:NSMakeRange(current - 1, 0)];
+                    }
+                }
+            }
         }
             break;
             
