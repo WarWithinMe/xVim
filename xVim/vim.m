@@ -85,9 +85,6 @@ NSUInteger mv_dollar_handler(NSTextView* view)
     return index;
 }
 
-@interface NSTextView(xVim)
--(NSRange) accessibilityCharacterRangeForLineNumber:(NSUInteger) lineNumber;
-@end
 void textview_goto_line(NSTextView* view, NSInteger lineNumber, BOOL ensureVisible)
 {
     NSRange range = {0,0};

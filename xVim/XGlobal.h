@@ -9,6 +9,8 @@
 #   define DLog(...)
 #endif
 
+// Switches:
+
 // How xVim works:
 // 1.In the entry point of this bundle (defined as XVimPlugin in XGlobal.m),
 //   we hijack the application's NSTextView class or possibly its subclass,
@@ -34,3 +36,10 @@ XTextViewBridge* getBridgeForView(NSTextView*);
 // Free the bridge for a textview in the hijacked finalize method.
 void removeBridgeForView(NSTextView*);
 // --------------------
+
+
+// Hidden API for NSTextView
+@interface NSTextView(xVim)
+-(NSRange) accessibilityCharacterRangeForLineNumber:(NSUInteger) lineNumber;
+-(void) _scrollRangeToVisible:(NSRange) range forceCenter:(BOOL) flag;
+@end

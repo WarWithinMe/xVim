@@ -28,9 +28,9 @@
     if (key == XEsc && (flags & XImportantMask) == 0)
     {
         XTextViewBridge* bridge = [controller bridge];
-        if ([bridge closePopup] == NO) {
+        if ([bridge closePopup] == NO)
+        {
             // There's no popup, so we now switch to Normal Mode.
-            
             NSTextView* view     = [bridge targetView];
             NSString*   string   = [[view textStorage] string];
             NSUInteger  index    = [view selectedRange].location;
@@ -100,16 +100,25 @@
     // 4. Deleting a replaced character is restoring it (We can't restore the char after
     //    moving the caret)
     
+    // Extra: if the caret doesn't moved, all the change should be grouped together, so that
+    //        undo once can return to the state before replace mode.
+    
     // FIXME: Almost none of the beviour above is supported right now.
     
     NSTextView* hijackedView = [[controller bridge] targetView];
-    NSRange range = [hijackedView selectedRange];
-    range.length = 1;
-    
-    NSString* ch = [NSString stringWithCharacters:&key length:1];
-    [hijackedView insertText:ch replacementRange:range];
-
-    return YES;
+    NSString*   string       = [[hijackedView textStorage] string];
+    NSUInteger  maxIndex     = [string length] - 1;
+    NSRange     range        = [hijackedView selectedRange];
+    if (range.location >= maxIndex || testNewLine([string characterAtIndex:range.location]))
+    {
+        // Let the textview process the key input, that is inserting the char.
+        return NO;
+    } else {
+        range.length = 1;
+        NSString* ch = [NSString stringWithCharacters:&key length:1];
+        [hijackedView insertText:ch replacementRange:range];
+        return YES;
+    }
 }
 @end
 
@@ -131,21 +140,14 @@
         return YES;
     }
     
-    // Replace mode behaviour:
-    // 1. Typing will replace the character after the caret.
-    // 2. If the character after the caret is newline, we insert char instead of replacing.
-    // 3. We can move the caret by using arrow keys and home key and ...
-    // 4. Deleting a replaced character is restoring it (We can't restore the char after
-    //    moving the caret)
-    
-    // FIXME: Almost none of the beviour above is supported right now.
-    
     NSTextView* hijackedView = [[controller bridge] targetView];
     NSRange range = [hijackedView selectedRange];
     range.length = 1;
     
     NSString* ch = [NSString stringWithCharacters:&key length:1];
     [hijackedView insertText:ch replacementRange:range];
+    range.length = 0;
+    [hijackedView setSelectedRange:range];
     [controller switchToMode:NormalMode];
     return YES;
 }
@@ -172,44 +174,38 @@
     motionChar   = 0;
 }
 
+// gg    Goto first line in file
+// zz    Scroll view so current line is in the middle
+
 // Below are commands that are going to be implemented.
 // #>    Indent
 // #<    Un-Indent
 // #|    Jump to column (specified by the repeat parameter).
+// {     Goto start of current (or previous) paragraph
+// }     Goto end of current (or next) paragraph
+// zt	 Scroll view so current line becomes the first line
+// zb	 Scroll view so current line is at the bottom (last line)
+// fx    Find char x on current line and go to it
+// tx    Similar to fx, but stops one character short before x
+// Fx    Similar to fx, but searches backwards
+// Tx    Similar to tx, but searches backwards
+// #;    Repeat last find motion
+// #,    Repeat last find motion, but in reverse
+// #*    Find next occurance of identifier under caret or currently selected text
+// ##    Similar to * but backwards
 // :#    Jump to line number #.
 // :q, :q!, :w, :wq, :x
-//{	 Goto start of current (or previous) paragraph
-//}	 Goto end of current (or next) paragraph
-//zt	 Scroll view so current line becomes the first line
-//zz	 Scroll view so current line is in the middle
-//zb	 Scroll view so current line is at the bottom (last line)
-//gg	 Goto first line in file
-//fx	 Find char x on current line and go to it
-//tx	 Similar to fx, but stops one character short before x
-//Fx	 Similar to fx, but searches backwards
-//Tx	 Similar to tx, but searches backwards
-//;	 Repeat last find motion
-//,	 Repeat last find motion, but in reverse
-//*	 Find next occurance of identifier under caret or currently selected text
-//#	 Similar to * but backwards
-//y	 Yank (copy). See below for more.
-//d	 Delete. (also yanks)
-//c	 Change: deletes (and yanks) then enters insert mode.
+
+// S	 Change current line (substitute line)
+// y	 Yank (copy). See below for more.
+// d	 Delete. (also yanks)
+// c     Change: deletes (and yanks) then enters insert mode.
+
 //   Y	 Yank from current position to the end of line
 //   D	 Delete from current position to the end of line
 //   C	 Change from current position to the end of line
-//   s	 Substitute: deletes character under caret and enter insert mode.
-//   S	 Change current line (substitute line)
-// KeyMapping
 
-// Below are commands that I don't know how to implement.
-// #.    Repeat last change/insert command (doesn't repeat motions or other things).
 
-// Below are functionality that I don't want/know how to implement.
-// 1. Search and Replace
-// 2. Marker
-// 3. Register
-// 4. Folding and anything that is not metiond above.
 -(BOOL) processKey:(unichar)ch modifiers:(NSUInteger)flags forController:(XVimController*)controller
 {
     if ((flags & XImportantMask) != 0) {
@@ -247,7 +243,21 @@
     if (commandCount == 0) commandCount = 1;
     
     if (commandChar != 0) {
-        // Currently the ydc like commands are not supported.
+        switch (commandChar) {
+            case 'g':
+                if (ch == 'g') { textview_goto_line(hijackedView, 0, YES); }
+                break;
+            case 'z':
+                if (ch == 'z') {
+                    [hijackedView _scrollRangeToVisible:[hijackedView selectedRange]
+                                            forceCenter:YES];
+                }
+                break;
+                
+            default:
+                break;
+        }
+        [self reset];
         return YES;
     }
     
@@ -418,8 +428,33 @@
         }
             break;
         case 'x':
+        {
+            // x deletes the character after the caret.
+            // If the following is a newline and the preceding is not,
+            // we have to move the caret backward once.
+            NSString*  string   = [[hijackedView textStorage] string];
+            NSUInteger maxIndex = [string length] - 1;
+            NSUInteger index    = [hijackedView selectedRange].location;
+            if (index <= maxIndex)
+            {
+                NSRange range = {index, commandCount};
+                
+                [hijackedView setSelectedRange:range];
+                [hijackedView cut:nil];
+                if ((index >= maxIndex - commandCount ||
+                     testNewLine([string characterAtIndex:index])) &&
+                    index > 0 &&
+                    testNewLine([string characterAtIndex:index-1]) == NO)
+                {
+                    range.location = index - 1;
+                    range.length = 0;
+                    [hijackedView setSelectedRange:range];
+                }
+            }
+        }
+            break;
         case '~':
-            // x and ~ will only work on the character in current line.
+            // ~ will only work on the character in current line.
         {
             NSString*  string   = [[hijackedView textStorage] string];
             NSUInteger maxIndex = [string length] - 1;
@@ -435,43 +470,26 @@
                 }
                 
                 NSRange range = {index, length};
-                
-                if (ch == 'x')
-                {
-                    [hijackedView setSelectedRange:range];
-                    [hijackedView cut:nil];
-                    if ((index >= maxIndex - length ||
-                         testNewLine([string characterAtIndex:index])) &&
-                        index > 0 &&
-                        testNewLine([string characterAtIndex:index-1]) == NO)
-                    {
-                        range.location = index - 1;
-                        range.length = 0;
-                        [hijackedView setSelectedRange:range];
-                    }
-                } else {
-                    NSMutableString* subString = [NSMutableString stringWithString:[string substringWithRange:range]];
-                    NSRange r = {0,1};
-                    for (; r.location < length; ++r.location) {
-                        unichar c = [subString characterAtIndex:r.location];
-                        if (c >= 'a' && c <= 'z')
-                            c = c + 'A' - 'a';
-                        else if (c >= 'A' && c <= 'Z')
-                            c = c + 'a' - 'A';
-                        [subString replaceCharactersInRange:r 
-                                                 withString:[NSString stringWithCharacters:&c 
-                                                                                    length:1]];
-                    }
-                    [hijackedView insertText:subString replacementRange:range];
-                    
-                    range.length = 0;
-                    range.location += length;
-                    if (index < maxIndex && testNewLine([string characterAtIndex:range.location])) {
-                        --range.location;
-                    }
-                    [hijackedView setSelectedRange:range];
+                NSMutableString* subString = [NSMutableString stringWithString:[string substringWithRange:range]];
+                NSRange r = {0,1};
+                for (; r.location < length; ++r.location) {
+                    unichar c = [subString characterAtIndex:r.location];
+                    if (c >= 'a' && c <= 'z')
+                        c = c + 'A' - 'a';
+                    else if (c >= 'A' && c <= 'Z')
+                        c = c + 'a' - 'A';
+                    [subString replaceCharactersInRange:r 
+                                             withString:[NSString stringWithCharacters:&c 
+                                                                                length:1]];
                 }
+                [hijackedView insertText:subString replacementRange:range];
                 
+                range.length = 0;
+                range.location += length;
+                if (index < maxIndex && testNewLine([string characterAtIndex:range.location])) {
+                    --range.location;
+                }
+                [hijackedView setSelectedRange:range];
             }
         }
             break;
@@ -518,6 +536,12 @@
             [hijackedView setSelectedRange:range];
             [hijackedView scrollRangeToVisible:range];
         }
+            break;
+            
+        // Below are commands that need a parameter
+        case 'g':
+        case 'z':
+            commandChar = ch;
             break;
     }
     

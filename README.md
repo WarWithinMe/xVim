@@ -174,6 +174,9 @@
 </tbody>
 </table>
 
+## NOTE
+1. This plugin possibly won't work well with Dos line ending(CR/LF).
+
 ## Something I don't know how to implement
 <table>
 <tbody>
