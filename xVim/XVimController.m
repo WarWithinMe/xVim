@@ -88,7 +88,7 @@
         // Process the currentKeyEvent.
         unichar ch = [[currentKeyEvent charactersIgnoringModifiers] characterAtIndex:0];
         BOOL handled = [handlers[vi_mode] processKey:ch
-                                           modifiers:([currentKeyEvent modifierFlags]) 
+                                           modifiers:([currentKeyEvent modifierFlags] & XModifierFlagsMask) 
                                        forController:self];
         if (handled == NO)
             [bridge handleFakeKeyEvent:currentKeyEvent];

@@ -185,7 +185,8 @@
 </table>
 
 ## TODO
+* Handle __replace mode__ properly.
 * Implement __motion commands__
 * Implement __simplified key mapping__
-* Handler __insert mode__, __replace mode__ properly.
 * Implement __visual mode__, __ex mode__
+* Add a text control to show command line.

@@ -6,16 +6,6 @@
 #import "XGlobal.h"
 #import "vim.h"
 
-
-BOOL testDigit(unichar ch);
-BOOL testAlpha(unichar ch);
-BOOL testDelimeter(unichar ch);
-BOOL testWhiteSpace(unichar ch);
-BOOL testNonAscii(unichar ch);
-BOOL testNewLine(unichar ch);
-BOOL testFuzzyWord(unichar ch);
-
-
 BOOL testDigit(unichar ch) { return ch >= '0' && ch <= '9'; }
 BOOL testWhiteSpace(unichar ch) { return ch == ' ' || ch == '\t'; }
 BOOL testNewLine(unichar ch) { return (ch >= 0xA && ch <= 0xD) || ch == 0x85; }
