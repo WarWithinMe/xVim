@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A504A452149DF9F40084C754 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = A504A451149DF9F40084C754 /* README.md */; };
 		A52E943B1499A95F00FA6045 /* keymap-example in Resources */ = {isa = PBXBuildFile; fileRef = A52E943A1499A95F00FA6045 /* keymap-example */; };
 		A543C396148FBAAC0070E986 /* XCodeTVBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = A543C395148FBAAC0070E986 /* XCodeTVBridge.m */; };
 		A543C39A148FBBB10070E986 /* XVimController.m in Sources */ = {isa = PBXBuildFile; fileRef = A543C399148FBBB10070E986 /* XVimController.m */; };
@@ -33,6 +34,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		A504A451149DF9F40084C754 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 		A52E943A1499A95F00FA6045 /* keymap-example */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "keymap-example"; path = "Resources/keymap-example"; sourceTree = "<group>"; };
 		A543C394148FBAAC0070E986 /* XCodeTVBridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XCodeTVBridge.h; sourceTree = "<group>"; };
 		A543C395148FBAAC0070E986 /* XCodeTVBridge.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XCodeTVBridge.m; sourceTree = "<group>"; };
@@ -121,6 +123,7 @@
 				A56CE218148F640100A06106 /* InfoPlist.strings */,
 				A56CE217148F640100A06106 /* xVim-Info.plist */,
 				A56CE21B148F640100A06106 /* xVim-Prefix.pch */,
+				A504A451149DF9F40084C754 /* README.md */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -162,6 +165,7 @@
 				A56CE209148F640100A06106 /* Frameworks */,
 				A56CE20A148F640100A06106 /* Resources */,
 				A598ED53148F797600C86EC9 /* CopyFiles */,
+				A504A44F149DF6290084C754 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -204,10 +208,27 @@
 			files = (
 				A56CE21A148F640100A06106 /* InfoPlist.strings in Resources */,
 				A52E943B1499A95F00FA6045 /* keymap-example in Resources */,
+				A504A452149DF9F40084C754 /* README.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		A504A44F149DF6290084C754 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 12;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "KEYWORDS=\"TODO|FIXME|\\?\\?\\?:|\\!\\!\\!:\"\nfind \"${SRCROOT}\" \\( -name \"*.h\" -or -name \"*.m\" \\) -print0 | \\\nxargs -0 egrep --with-filename --line-number --only-matching \"($KEYWORDS).*\\$\" | \\\nperl -p -e \"s/($KEYWORDS)/ warning: \\$1/\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		A56CE208148F640100A06106 /* Sources */ = {

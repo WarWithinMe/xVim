@@ -138,10 +138,10 @@
     motionChar   = 0;
 }
 
-// #h    Moves caret to the left
+// #h    Moves caret left
 // #j    Moves caret down
 // #k    Moves caret up
-// #l    Moves caret to the left
+// #l    Moves caret right
 //  i    Enters insert mode
 //  a    Enters insert mode after the current character
 //  I    Enters insert mode at the start of the indentation of current line
