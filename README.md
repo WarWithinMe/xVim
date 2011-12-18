@@ -2,9 +2,11 @@
 
 * xVim is another [SIMBL](http://www.culater.net/software/SIMBL/SIMBL.php) plugin to provide vim key-binding for Xcode and possibly other application that uses NSTextView.
 
-* There's a [viXCode](https://github.com/robertkrimen/viXcode) plugin, but I don't think it's good enough, so I decided to make another one. The README.md is borrowed from viXcode.
+* There's a [viXcode](https://github.com/robertkrimen/viXcode) plugin, but I don't think it's good enough, so I decided to make another one. The README.md is borrowed from viXcode.
 
-* Most of the functionality is not completed, so make sure you are checking xVim's github and stay updated. Also, feel free to contribute as you name will sure appear at the beginning of the source file.
+* Most of the functionality is not completed, so make sure you are checking xVim's github and stay updated. Also, feel free to contribute as your name will sure appear at the beginning of the source file.
+
+* __You may use xVim under the terms of the MIT license.__
 
 ## How to use it
 
@@ -13,7 +15,7 @@
 2. Download xVim (currently you should use the **noKeyMapSupport** branche)
 
 3. If your XCode is not of v4.2, you may have to edit the xVim-Info.plist,
-   change the *MaxBundleVersion* and *MinBundleVersion* of *SIMBLTargetApplications* to cater your Xcode's version.
+   change the *MaxBundleVersion* and *MinBundleVersion* of *SIMBLTargetApplications* to cater to your Xcode's version.
 
 4. Build xVim (you may want to build it with Release mode), after building xVim, the bundle may have already been copied to ~/Library/Application Support/SIMBL/Plugins/
 
