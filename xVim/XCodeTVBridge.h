@@ -5,6 +5,8 @@
 
 #import "XTextViewBridge.h"
 
+// Hijack class for xCode.
+
 @interface XCodeTVBridge : XTextViewBridge
 +(void) hijack;
 -(void) handleFakeKeyEvent:(NSEvent*) fakeEvent;

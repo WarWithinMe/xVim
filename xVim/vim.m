@@ -246,6 +246,8 @@ NSUInteger mv_b_handler(NSTextView* view, int repeatCount, BOOL bigWord)
     // Otherwise go to the beginning of the word before it.
     NSUInteger index  = [view selectedRange].location;
     NSString*  string = [[view textStorage] string];
+    NSUInteger maxI   = [string length] - 1;
+    if (index >= maxI) { index = maxI; }
     
     for (int i = 0; i < repeatCount && index > 0; ++i)
     {

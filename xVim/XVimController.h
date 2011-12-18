@@ -12,26 +12,47 @@ typedef enum e_VimMode
     VisualMode = 2,
     ExMode     = 3,
     ReplaceMode = 4,
-    SingleReplaceMode = 5
+    SingleReplaceMode = 5,
+    VimModeCount
 } VimMode;
 
-// The controller is used to process the key input
+typedef enum e_SpecialKeys
+{
+    XSpace = ' ',
+    XEsc   = 27
+} SpecialKeys;
+
+// Whenever we need store the key input, we store it in a unsigned int.
+// The higher half is used to store the modifiers,
+// and the lower half is used to store the actual key input.
+typedef enum e_ModifierFlags
+{
+    XMaskCapLock = NSAlphaShiftKeyMask,
+    XMaskShift   = NSShiftKeyMask,
+    XMaskControl = NSControlKeyMask,
+    XMaskAlt     = NSAlternateKeyMask,
+    XMaskCommand = NSCommandKeyMask,
+    XMaskNumeric = NSNumericPadKeyMask,
+    XMaskFn      = NSFunctionKeyMask,
+    
+    XUnicharMask = 0x0000ffffU,
+    XModifierFlagsMask = 0xffff0000U,
+    XImportantMask = XMaskControl | XMaskCommand | XMaskAlt | XMaskFn
+    
+} ModifierFlags;
+
+// XVimController is used to process key inputs.
+// The idea is that XVimContoller is to handle keymapping,
+// and then hands the input event to the appropriate XVimMode to handle.
 @interface XVimController : NSObject
 
-+(void) setup;
-+(NSEvent*) fakeEventFor:(NSString*) key;
+@property (readonly) XTextViewBridge* bridge;
+@property (readonly) VimMode          mode;
 
+-(void) switchToMode:(VimMode)mode;
+
+// These methods should only be called by XTextViewBridge.
 -(XVimController*) initWithBridge:(XTextViewBridge*) bridge;
 -(void) dealloc;
-
 -(void) processKeyEvent:(NSEvent*) event;
--(void) switchToMode:(VimMode) mode;
--(VimMode) mode;
-
-// Return the current key event that we are working with.
-// Or nil, if we are working with a mapped key, in this case,
-// on have to call fakeEventFor: to generate a fake keyevent for a key string.
--(NSEvent*) currentKeyEvent;
--(XTextViewBridge*) bridge;
-
 @end
