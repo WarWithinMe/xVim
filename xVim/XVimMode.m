@@ -95,17 +95,6 @@
 }
 @end
 
-NSCharacterSet* characterSetForChar(unichar ch);
-NSCharacterSet* characterSetForChar(unichar ch)
-{
-    if (isdigit(ch)) return [NSCharacterSet decimalDigitCharacterSet];
-    if (isalpha(ch)) return [NSCharacterSet letterCharacterSet];
-    if (ch == ' ' || ch == '\t') return [NSCharacterSet whitespaceCharacterSet];
-    if (isascii(ch)) return [NSCharacterSet characterSetWithCharactersInString:
-                             @"`~!@#$%^&*()_+{}|:\"<>?-=[]\\;',./"];
-    return [[NSCharacterSet characterSetWithRange:NSMakeRange(0, 128)] invertedSet];
-}
-
 @implementation XVimNormalModeHandler
 -(id) init
 {
@@ -150,6 +139,8 @@ NSCharacterSet* characterSetForChar(unichar ch)
 // #x    Delete character under caret, and put the deleted chars into clipboard.
 // #X    Delete character before caret (backspace), and put the deleted chars into clipboard.
 // #~    Toggle case of character(s) under caret and move caret across them.
+// #p    Paste text after the caret.
+// #P    Paste text.
 // #w    Moves to the start of the next word
 // #b    Moves (back) to the start of the current (or previous) word.
 // #e    Moves to the end of the current (or next) word.
@@ -159,9 +150,17 @@ NSCharacterSet* characterSetForChar(unichar ch)
 // #>    Indent
 // #<    Un-Indent
 // #|    Jump to column (specified by the repeat parameter).
+// :#    Jump to line number #.
+// :q, :q!, :w, :wq, :x
 
 // Below are commands that I don't know how to implement.
 // #.    Repeat last change/insert command (doesn't repeat motions or other things).
+
+// Below are functionality that I don't want/know how to implement.
+// 1. Search and Replace
+// 2. Marker
+// 3. Register
+// 4. Folding and anything that is not metiond above.
 
 //{	 Goto start of current (or previous) paragraph
 //}	 Goto end of current (or next) paragraph
@@ -170,6 +169,7 @@ NSCharacterSet* characterSetForChar(unichar ch)
 //zz	 Scroll view so current line is in the middle
 //zb	 Scroll view so current line is at the bottom (last line)
 //gg	 Goto first line in file
+
 //fx	 Find char x on current line and go to it
 //tx	 Similar to fx, but stops one character short before x
 //Fx	 Similar to fx, but searches backwards
@@ -178,8 +178,7 @@ NSCharacterSet* characterSetForChar(unichar ch)
 //,	 Repeat last find motion, but in reverse
 //*	 Find next occurance of identifier under caret or currently selected text
 //#	 Similar to * but backwards
-//p	 Paste text, if copied text is whole lines, pastes below current line.
-//P	 Paste text, if copied text is whole lines, pastes above current line.
+
 //y	 Yank (copy). See below for more.
 //d	 Delete. (also yanks)
 //c	 Change: deletes (and yanks) then enters insert mode.
@@ -297,14 +296,12 @@ NSCharacterSet* characterSetForChar(unichar ch)
                     case 'H':
                     {
                         NSRange lines = [bridge visibleParagraphRange];
-                        DLog(@"Line Range: %@", NSStringFromRange(lines));
                         if (lines.length != 0) { textview_goto_line(hijackedView,lines.location, NO); }
                     }
                         break;
                     case 'M':
                     {
                         NSRange lines = [bridge visibleParagraphRange];
-                                                DLog(@"Line Range: %@", NSStringFromRange(lines));
                         if (lines.length != 0) 
                             textview_goto_line(hijackedView, lines.location + lines.length / 2, NO);
                     }
@@ -312,7 +309,6 @@ NSCharacterSet* characterSetForChar(unichar ch)
                     case 'L':
                     {
                         NSRange lines = [bridge visibleParagraphRange];
-                        DLog(@"Line Range: %@", NSStringFromRange(lines));
                         if (lines.length != 0) 
                             textview_goto_line(hijackedView, lines.location + lines.length, NO);
                     }
@@ -467,98 +463,46 @@ NSCharacterSet* characterSetForChar(unichar ch)
                         }
                     }
                         break;
-                    
                         
+                    // TODO: If there's a whole line in clipboard, we should paste the content
+                    // in a newline. We may have to work with 'y' and observe the clipboard.
+                    case 'p':
+                    {
+                        NSUInteger index    = [hijackedView selectedRange].location;
+                        if (index < [[[hijackedView textStorage] string] length]) {
+                            [hijackedView setSelectedRange:NSMakeRange(index+1, 0)];
+                        }
+                    }
+                        // Fall through to 'P'
+                    case 'P':
+                        for (int i = 0; i < commandCount; ++i) {
+                            [hijackedView paste:nil];
+                        }
+                        break;
+                    
                     // wWbBeE
                     case 'w':
+                    case 'W':
                     {
-                        NSRange    range       = [hijackedView selectedRange];
-                        NSString*  string      = [[hijackedView textStorage] string];
-                        NSUInteger maxIndex    = [string length] - 1;
-                        NSCharacterSet* wspSet = [NSCharacterSet whitespaceCharacterSet];
-                        NSCharacterSet* nlSet  = [NSCharacterSet newlineCharacterSet];
-                        
-                        for (int i = 0; i < commandCount; ++i)
-                        {
-                            if (range.location >= maxIndex) { break; }
-                            
-                            unichar ch = [string characterAtIndex:range.location];
-                            
-                            BOOL blankLine = NO;
-                            NSCharacterSet* cs = characterSetForChar(ch);
-                            
-                            do
-                            {
-                                ++range.location;
-                                ch = [string characterAtIndex:range.location];
-                            } while (range.location < maxIndex && [cs characterIsMember:ch]);
-                            
-                            while (range.location < maxIndex)
-                            {
-                                ch = [string characterAtIndex:range.location];
-                                if (blankLine == NO && [nlSet characterIsMember:ch]) {
-                                    blankLine = YES;
-                                } else if ([wspSet characterIsMember:ch]) {
-                                    blankLine = NO;
-                                } else {
-                                    break;
-                                }
-                                ++range.location;
-                            }
-                            
-                            [hijackedView setSelectedRange:range];
-                            [hijackedView scrollRangeToVisible:range];
-                        }
-                        
+                        NSRange range = {mv_w_handler(hijackedView, commandCount, ch == 'W'), 0};
+                        [hijackedView setSelectedRange:range];
+                        [hijackedView scrollRangeToVisible:range];
                     }
                         break;
                     case 'b':
+                    case 'B':
                     {
-                        NSRange    range       = [hijackedView selectedRange];
-                        NSString*  string      = [[hijackedView textStorage] string];
-                        NSCharacterSet* wspSet = [NSCharacterSet whitespaceCharacterSet];
-                        NSCharacterSet* nlSet  = [NSCharacterSet newlineCharacterSet];
-                        
-                        for (int i = 0; i < commandCount; ++i)
-                        {
-                            if (range.location <= 0) { break; }
-                            
-                            unichar ch = [string characterAtIndex:range.location];
-                            
-                            BOOL blankLine = NO;
-                            NSCharacterSet* cs = characterSetForChar(ch);
-                            
-                            do
-                            {
-                                --range.location;
-                                ch = [string characterAtIndex:range.location];
-                            } while (range.location > 0 && [cs characterIsMember:ch]);
-                            
-                            while (range.location > 0)
-                            {
-                                ch = [string characterAtIndex:range.location];
-                                if (blankLine == NO && [nlSet characterIsMember:ch]) {
-                                    blankLine = YES;
-                                } else if ([wspSet characterIsMember:ch]) {
-                                    blankLine = NO;
-                                } else {
-                                    break;
-                                }
-                                --range.location;
-                            }
-                            
-                            cs = characterSetForChar(ch);
-                            
-                            while (range.location > 0) {
-                                ch = [string characterAtIndex:range.location - 1];
-                                if ([cs characterIsMember:ch] == NO) { break; }
-                                --range.location;
-                            }
-                            
-                            [hijackedView setSelectedRange:range];
-                            [hijackedView scrollRangeToVisible:range];
-                        }
-                        
+                        NSRange range = {mv_b_handler(hijackedView, commandCount, ch == 'B'), 0};
+                        [hijackedView setSelectedRange:range];
+                        [hijackedView scrollRangeToVisible:range];
+                    }
+                        break;
+                    case 'e':
+                    case 'E':
+                    {
+                        NSRange range = {mv_e_handler(hijackedView, commandCount, ch == 'E'), 0};
+                        [hijackedView setSelectedRange:range];
+                        [hijackedView scrollRangeToVisible:range];
                     }
                         break;
                 }
