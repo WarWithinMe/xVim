@@ -198,28 +198,23 @@
 // c     Change: deletes (and yanks) then enters insert mode.
 -(BOOL) processKey:(unichar)ch modifiers:(NSUInteger)flags forController:(XVimController*)controller
 {
-    if ((flags & XImportantMask) != 0) {
-        // Currently we have nothing to do with a key, if it has some flags.
-        return NO;
-    }
+    // Currently we have nothing to do with a key, if it has some flags.
+    if ((flags & XImportantMask) != 0) { return NO; }
+    // Esc will reset everything
+    if (ch == XEsc) { [self reset]; return YES; }
     
-    if (ch == XEsc)
-    {
-        [self reset];
-        return YES;
-    }
+    XTextViewBridge* bridge       = [controller bridge];
+    NSTextView*      hijackedView = [bridge targetView];
     
-    XTextViewBridge* bridge  = [controller bridge];
-    NSTextView* hijackedView = [bridge targetView];
-    
+    // If the commandCount is not defined, we treat '0' as a command instead of a number.
     if (ch <= '9' && ((commandCount > 0 && ch >= '0') || (commandCount == 0 && ch > '0')) )
     {
         DLog(@"This key is a digit");
         if (commandChar == 0) {
-            commandCount = commandCount * 10 + digittoint(ch);
+            commandCount = commandCount * 10 + ch - '0';
             DLog(@"Current command count is: %d", commandCount);
         } else if(motionChar == 0) {
-            motionCount = motionCount * 10 + digittoint(ch);
+            motionCount = motionCount * 10 + ch - '0';
             DLog(@"Current motion count is: %d", motionCount);
         } else {
             // Bad command, ignore it.
@@ -229,27 +224,42 @@
         return YES;
     }
     
-    BOOL commandCountSpecified = commandCount > 0;
+    BOOL commandCountSpecified = commandCount > 0; // This is need only for 'G'
     if (commandCount == 0) commandCount = 1;
     
-    if (commandChar != 0) {
-        switch (commandChar) {
-            case 'g':
-                if (ch == 'g') { textview_goto_line(hijackedView, 0, YES); }
-                break;
-            case 'z':
-                if (ch == 'z') {
-                    [hijackedView _scrollRangeToVisible:[hijackedView selectedRange]
-                                            forceCenter:YES];
+    if (commandChar != 0)
+    {
+        if (commandChar == ch)
+        {
+            if (motionCount != 0) { commandCount *= motionCount; }
+            switch (ch) {
+                case 'g': textview_goto_line(hijackedView, 0, YES); break;
+                case 'z': [hijackedView _scrollRangeToVisible:[hijackedView selectedRange]
+                                                  forceCenter:YES]; break;
+                case 'y':
+                {
+                    ch = 'Y';
+                    commandChar = 0;
+                    motionCount = 0;
+                    goto yy_escape;
                 }
-                break;
-                
-            default:
-                break;
+                    
+                case 'd':
+                    // Delete whole lines.
+                    
+                case 'c':
+                    // Delete whole lines except last new line character. And enter insert mode.
+                    
+                default:
+                    break;
+            }
         }
+        
         [self reset];
         return YES;
     }
+    
+yy_escape:
     
     switch (ch) {
             // NOTE: 'j' and 'k' calls the NSTextView's methods,
@@ -576,11 +586,17 @@
         // Below are commands that need a parameter
         case 'g':
         case 'z':
+        case 'y':
+        case 'd':
+        case 'c':
             commandChar = ch;
+            goto dontResetCommandCount;
             break;
     }
     
     commandCount = 0; // We don't have to reset the other properties.
+    
+dontResetCommandCount:
     return YES;
 }
 @end

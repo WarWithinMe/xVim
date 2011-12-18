@@ -114,6 +114,25 @@ void textview_goto_line(NSTextView* view, NSInteger lineNumber, BOOL ensureVisib
     if (ensureVisible) { [view scrollRangeToVisible:range]; }
 }
 
+NSRange characterRangeOfLines(NSTextView* view, int repeatCount, BOOL startAtCurrentIndex)
+{
+    NSString*  string   = [[view textStorage] string];
+    NSUInteger current  = [view selectedRange].location;
+    NSUInteger lineEnd  = current;
+    NSUInteger max      = [string length] - 1;
+    while (lineEnd <= max)
+    {
+        if (testNewLine([string characterAtIndex:lineEnd])) {
+            --repeatCount;
+            if (repeatCount == 0) { break; }
+        }
+        ++lineEnd;
+    }
+    
+    NSUInteger lineBegin = startAtCurrentIndex ? mv_0_handler(view) : current;
+    return NSMakeRange(lineBegin, lineEnd - lineBegin);
+}
+
 NSUInteger mv_h_handler(NSTextView* view, int repeatCount)
 {
     NSUInteger index = [view selectedRange].location;

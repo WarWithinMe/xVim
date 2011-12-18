@@ -17,6 +17,10 @@ NSUInteger mv_dollar_handler(NSTextView* view);
 // lineNumber is 0-base. -1 means goto the last line
 void textview_goto_line(NSTextView* view, NSInteger lineNumber, BOOL ensureVisible);
 
+// Return the characterRange of [currentLine, currentLine + repeatCount).
+// The range does not contain the trailing new line character.
+NSRange characterRangeOfLines(NSTextView* string, int repeatCount, BOOL startAtCurrentIndex);
+
 // Return the new location of the caret, after handler h,j,w,W,e,E,b,B
 NSUInteger mv_h_handler(NSTextView* view, int repeatCount);
 NSUInteger mv_l_handler(NSTextView* view, int repeatCount);
