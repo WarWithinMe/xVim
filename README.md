@@ -27,7 +27,7 @@
 1. __Folding__ (and basically any other thing that's not relevant to key-binding)
 
 ## What works so far
-* ##### Commands in normal mode（ <span># Means you can enter a number, e.g. <code>12l</code> to move right 12 times</span>）
+##### Commands in normal mode（ <span># Means you can enter a number, e.g. <code>12l</code> to move right 12 times</span>）
 <table>
 <col align="center" />
 <col align="left" />
@@ -175,12 +175,11 @@
 </table>
 
 ## Something I don't know how to implement
-1. <tbody>
 <table>
+<tbody>
 <tr>
 	<td align="center"><code>#.</code></td>
-	<td align="left">Repeat last change/insert command (doesn't repeat motions or other things).
-</td>
+	<td align="left">Repeat last change/insert command (doesn't repeat motions or other things).</td>
 </tr>
 </tbody>
 </table>

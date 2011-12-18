@@ -34,7 +34,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		A504A451149DF9F40084C754 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
+		A504A451149DF9F40084C754 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = README.md; path = ../README.md; sourceTree = "<group>"; };
 		A52E943A1499A95F00FA6045 /* keymap-example */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "keymap-example"; path = "Resources/keymap-example"; sourceTree = "<group>"; };
 		A543C394148FBAAC0070E986 /* XCodeTVBridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XCodeTVBridge.h; sourceTree = "<group>"; };
 		A543C395148FBAAC0070E986 /* XCodeTVBridge.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XCodeTVBridge.m; sourceTree = "<group>"; };
