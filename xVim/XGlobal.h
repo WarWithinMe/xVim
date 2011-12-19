@@ -38,8 +38,11 @@ void removeBridgeForView(NSTextView*);
 // --------------------
 
 
-// Hidden API for NSTextView
+// Hidden API
 @interface NSTextView(xVim)
--(NSRange) accessibilityCharacterRangeForLineNumber:(NSUInteger) lineNumber;
--(void) _scrollRangeToVisible:(NSRange) range forceCenter:(BOOL) flag;
+-(void)       _scrollRangeToVisible:(NSRange) range forceCenter:(BOOL) flag;
+@end
+@interface NSText(xVim)
+-(NSUInteger) accessibilityInsertionPointLineNumber;
+-(NSRange)    accessibilityCharacterRangeForLineNumber:(NSUInteger) lineNumber;
 @end

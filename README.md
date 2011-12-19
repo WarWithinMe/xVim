@@ -200,6 +200,8 @@
 
 ## NOTE
 1. This plugin possibly won't work well with Dos line ending(CR/LF).
+2. If you have some code block folded in Xcode, xVim will not work fine.
+   The bug is unreproducable so far, so I have no idea how to fix it.
 
 ## Something I don't know how to implement
 <table>

@@ -175,6 +175,7 @@
 }
 
 // Below are commands that are going to be implemented.
+// %     Goto to the matching bracket
 // #>    Indent
 // #<    Un-Indent
 // #|    Jump to column (specified by the repeat parameter).
@@ -193,13 +194,10 @@
 // :#    Jump to line number #.
 // :q, :q!, :w, :wq, :x
 
-// y	 Yank (copy). See below for more.
-// d	 Delete. (also yanks)
-// c     Change: deletes (and yanks) then enters insert mode.
 -(BOOL) processKey:(unichar)ch modifiers:(NSUInteger)flags forController:(XVimController*)controller
 {
-    // Currently we have nothing to do with a key, if it has some flags.
-    if ((flags & XImportantMask) != 0) { return NO; }
+    // Currently we have nothing to do with a key, if it has some flags, or a tab.
+    if (ch == '\t' || (flags & XImportantMask) != 0) { return NO; }
     // Esc will reset everything
     if (ch == XEsc) { [self reset]; return YES; }
     
@@ -229,9 +227,9 @@
     
     if (commandChar != 0)
     {
+        if (motionCount != 0) { commandCount *= motionCount; }
         if (commandChar == ch)
         {
-            if (motionCount != 0) { commandCount *= motionCount; }
             switch (ch) {
                 case 'g': textview_goto_line(hijackedView, 0, YES); break;
                 case 'z': [hijackedView _scrollRangeToVisible:[hijackedView selectedRange]
@@ -239,9 +237,7 @@
                 case 'y':
                 {
                     ch = 'Y';
-                    commandChar = 0;
-                    motionCount = 0;
-                    goto yy_escape;
+                    goto interpret_as_command;
                 }
                     
                 case 'd':
@@ -281,17 +277,94 @@
                 }
                     break;
             }
+        } else {
+            // Here we deal with the motion command ydc.
+            // 
+            // Unsupported:
+            // {[()]} // not much useful
+            // (left)/(down)/(up)/(right) // the same as hjkl, 
+            //                               but we filter them out at the beginning
+            //
+            // Supported motions: 
+            // wbeWBE, hjkl, ^$0_
+            // i wW{[(<'"
+            // a wW{[(<'"
+            // v // toggle character range and line range.(jk is line range, others are character range)
+            
+            NSInteger motionBegin = -1;
+            NSInteger motionEnd   = -1;
+            
+            if (motionChar == 0 && (ch == 'i' || ch == 'a' || ch == 'v'))
+            {
+                motionChar = ch;
+                return YES;
+            }
+            
+            if (motionChar != 'i' && motionChar != 'a')
+            {
+                // handle basic motion here
+                switch (ch) {
+                    case 'w': motionEnd   = mv_w_handler(hijackedView, commandCount, NO);  break;
+                    case 'W': motionEnd   = mv_w_handler(hijackedView, commandCount, YES); break;
+                    case 'e': motionEnd   = mv_e_handler(hijackedView, commandCount, NO);  break;
+                    case 'E': motionEnd   = mv_e_handler(hijackedView, commandCount, YES); break;
+                    case 'b': motionBegin = mv_b_handler(hijackedView, commandCount, NO);  break;
+                    case 'B': motionBegin = mv_b_handler(hijackedView, commandCount, YES); break;
+                    case 'h': motionBegin = mv_h_handler(hijackedView, commandCount);      break;
+                    case 'l': motionEnd   = mv_h_handler(hijackedView, commandCount);      break;
+                    case '^': motionBegin = mv_caret_handler(hijackedView);                break;
+                    case '_':
+                    case '0': motionBegin = mv_0_handler(hijackedView);                    break;
+                    case '&': motionEnd   = mv_dollar_handler(hijackedView);               break;
+                    case 'j':
+                    {
+                        NSRange range = [hijackedView selectedRange];
+                        for (int i = 0; i < commandCount; ++i) { [hijackedView moveDown:nil]; }
+                        NSRange newRange = [hijackedView selectedRange];
+                        // For now, we record only character range.
+                        if (range.location != newRange.location) {
+                            motionBegin = range.location;
+                            motionEnd   = newRange.location;
+                        }
+                        [hijackedView setSelectedRange:range];
+                    }
+                        break;
+                    case 'k':
+                    {
+                        NSRange range = [hijackedView selectedRange];
+                        for (int i = 0; i < commandCount; ++i) { [hijackedView moveUp:nil]; }
+                        NSRange newRange = [hijackedView selectedRange];
+                        // For now, we record only character range.
+                        if (range.location != newRange.location) {
+                            motionBegin = newRange.location;
+                            motionEnd   = range.location;
+                        }
+                        [hijackedView setSelectedRange:range];
+                    }
+                        break;
+                }
+                
+            } else
+            {
+                NSString* awMotion = @"wbeWBE{[(<'\"";
+                NSString* input = [NSString stringWithCharacters:&ch length:1];
+                if ([awMotion rangeOfString:input].location != NSNotFound)
+                {
+                    // handle the i and a motion here.
+                }
+            }
         }
         
         [self reset];
         return YES;
     }
     
-yy_escape:
+interpret_as_command:
+    motionChar = motionCount = 0;
     
     switch (ch) {
             // NOTE: 'j' and 'k' calls the NSTextView's methods,
-            // So them won't ensure that the caret won't be before the CR
+            // Them won't ensure that the caret won't be before the CR
         case 'j': for (int i = 0; i < commandCount; ++i) { [hijackedView moveDown:nil]; } break;
         case 'k': for (int i = 0; i < commandCount; ++i) { [hijackedView moveUp:nil];   } break;
         case NSDeleteCharacter: // Backspace in normal mode are like 'h'
@@ -570,7 +643,7 @@ yy_escape:
         case 'D':
         case 'C':
         {
-            // Yank the whole line, but does not include the last new line character.
+            // All these 3 command does not include trailing CR
             NSString*  string   = [[hijackedView textStorage] string];
             NSUInteger current  = [hijackedView selectedRange].location;
             NSUInteger lineEnd  = current;
@@ -594,17 +667,19 @@ yy_escape:
                 [hijackedView setSelectedRange:NSMakeRange(current, 0)];
                 // TODO: Mark that we have copied a whole line, so that 'pP' can paste at a new line.
             } else {
-                [hijackedView insertText:@"" replacementRange:range];
+                [hijackedView insertText:@""];
                 if (ch == 'C') {
                     [controller switchToMode:InsertMode];
                 } else {
-                    max     = [string length] - 1;
-                    current = [hijackedView selectedRange].location;
                     
-                    if ((current > max && testNewLine([string characterAtIndex:max]) == NO) ||
-                        testNewLine([string characterAtIndex:current]) == YES)
+                    current = [hijackedView selectedRange].location;
+                    if (current > 0)
                     {
-                        [hijackedView setSelectedRange:NSMakeRange(current - 1, 0)];
+                        if ((current > max && testNewLine([string characterAtIndex:max]) == NO) ||
+                            testNewLine([string characterAtIndex:current]) != testNewLine([string characterAtIndex:current - 1]))
+                        {
+                            [hijackedView setSelectedRange:NSMakeRange(current - 1, 0)];
+                        }
                     }
                 }
             }
@@ -618,13 +693,12 @@ yy_escape:
         case 'd':
         case 'c':
             commandChar = ch;
-            goto dontResetCommandCount;
+            return YES; // Don't reset commandCount.
+        default:
             break;
     }
     
     commandCount = 0; // We don't have to reset the other properties.
-    
-dontResetCommandCount:
     return YES;
 }
 @end
