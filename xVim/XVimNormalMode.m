@@ -217,6 +217,12 @@
                             // If we are at whitespace, delete the whitespace, otherwise
                             // delete the word. If it is aw, delete the trailing whitespace
                             // Either way, the caret will stay at the same line.
+                        {
+                            NSRange range = motion_word_bound(hijackedView, ch == 'W', motionChar == 'a');
+                            motionBegin = range.location;
+                            motionEnd   = range.location + range.length;
+                        }
+                            break;
                         case '{':
                         case '}':
                         case '(':
@@ -227,6 +233,7 @@
                         case '>':
                         case '\'':
                         case '"':
+                            // TODO: Implement a efficient bracket matching algorithm, and we are all set.
                             break;
                             
                         default:
@@ -250,11 +257,11 @@
                     motionEnd   = mv_dollar_inc_handler(hijackedView);
                 }
                 
-                NSRange   range  = {motionBegin, motionEnd - motionBegin};
-                [controller yank:string withRange:range wholeLine:YES];
-                if (ch != 'y') {
+                NSRange range = {motionBegin, motionEnd - motionBegin};
+                [controller yank:string withRange:range wholeLine:wholeLine];
+                if (commandChar != 'y') {
                     [hijackedView insertText:@"" replacementRange:range];
-                    if (ch == 'c') { [controller switchToMode:InsertMode]; }
+                    if (commandChar == 'c') { [controller switchToMode:InsertMode]; }
                 }
             }
         }

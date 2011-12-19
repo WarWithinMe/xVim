@@ -375,3 +375,38 @@ NSUInteger mv_e_handler(NSTextView* view, int repeatCount, BOOL bigWord)
     
     return index;
 }
+
+NSRange motion_word_bound(NSTextView* view, BOOL fuzzy, BOOL trailing)
+{
+    NSString*  string   = [view string];
+    NSUInteger index    = [view selectedRange].location;
+    NSUInteger maxIndex = [string length] - 1;
+    
+    if (index > maxIndex) { return NSMakeRange(0, 0); }
+    
+    unichar   ch   = [string characterAtIndex:index];
+    testAscii test = testWhiteSpace(ch) ? testWhiteSpace : (fuzzy ? testFuzzyWord : testForChar(ch));
+    
+    NSUInteger begin = index;
+    
+    while (begin > 0)
+    {
+        if (test([string characterAtIndex:begin - 1]) == NO) { break; }
+        --begin;
+    }
+    
+    NSUInteger end = index;
+    while (end < maxIndex) {
+        if (test([string characterAtIndex:end + 1]) == NO) { break; }
+        ++end;
+    }
+    
+    if (trailing) {
+        while (end < maxIndex) {
+            if (testWhiteSpace([string characterAtIndex:end + 1]) == NO) { break; }
+            ++end;
+        }
+    }
+    
+    return NSMakeRange(begin, end - begin + 1);
+}

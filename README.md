@@ -197,6 +197,9 @@
 
 </tbody>
 </table>
+##### Supported motions: [ydc] + ([iav] + ) [wW]
+##### Going to support:  [ydc] + ([iav] + ) [{[(<'">)]}]
+example usage: "diw" to delete a word. 
 
 ## NOTE
 1. This plugin possibly won't work well with Dos line ending(CR/LF).

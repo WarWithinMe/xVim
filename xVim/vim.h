@@ -28,6 +28,8 @@ NSUInteger mv_b_handler(NSTextView* view, int repeatCount, BOOL bigWord);
 // There's no function by now for 'j' and 'k', 
 // since NSTextView has a moveUp: and moveDown: method
 
+NSRange motion_word_bound(NSTextView* view, BOOL fuzzy, BOOL includeTrailing);
+
 BOOL testDigit(unichar ch);
 BOOL testAlpha(unichar ch);
 BOOL testDelimeter(unichar ch);
