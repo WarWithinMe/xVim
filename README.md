@@ -200,8 +200,15 @@
 
 ## NOTE
 1. This plugin possibly won't work well with Dos line ending(CR/LF).
+
 2. If you have some code block folded in Xcode, xVim will not work fine.
    The bug is unreproducable so far, so I have no idea how to fix it.
+   
+3. Those things may be different from vim:
+   1). yYdDcCxX will copy the content to internal kill buffer. And pP will only paste something, if that buffer is not empty.
+       If you want to use the clipboard, use Ctrl+C (Copy), Ctrl+X (Cut), Ctrl+V (Paste)
+       
+   2). You can force another type by using "v", "V" or CTRL-V just after the motion operator __in vim__. But xVim only supports "v" and it behave differently from vim.
 
 ## Something I don't know how to implement
 <table>

@@ -49,7 +49,12 @@ typedef enum e_ModifierFlags
 @property (readonly) XTextViewBridge* bridge;
 @property (readonly) VimMode          mode;
 
--(void) switchToMode:(VimMode)mode;
+-(void) switchToMode:(VimMode) mode;
+
+// Yank the text. This should not copy to clipboard
+// Yank the text in range of the target textview.
+-(void) yank:(NSString*) string withRange:(NSRange) range wholeLine:(BOOL) flag;
+-(NSString*) yankContent:(BOOL*) isWholeLine;
 
 // These methods should only be called by XTextViewBridge.
 -(XVimController*) initWithBridge:(XTextViewBridge*) bridge;

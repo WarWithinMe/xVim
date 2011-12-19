@@ -11,8 +11,10 @@
 		A52E943B1499A95F00FA6045 /* keymap-example in Resources */ = {isa = PBXBuildFile; fileRef = A52E943A1499A95F00FA6045 /* keymap-example */; };
 		A543C396148FBAAC0070E986 /* XCodeTVBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = A543C395148FBAAC0070E986 /* XCodeTVBridge.m */; };
 		A543C39A148FBBB10070E986 /* XVimController.m in Sources */ = {isa = PBXBuildFile; fileRef = A543C399148FBBB10070E986 /* XVimController.m */; };
+		A56B36DA149F2A0A00AE44CC /* NSStringHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = A56B36D9149F2A0A00AE44CC /* NSStringHelper.m */; };
 		A56CE210148F640100A06106 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A56CE20F148F640100A06106 /* Cocoa.framework */; };
 		A56CE21A148F640100A06106 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = A56CE218148F640100A06106 /* InfoPlist.strings */; };
+		A58D5A7E149F491F00921622 /* XVimNormalMode.m in Sources */ = {isa = PBXBuildFile; fileRef = A58D5A7D149F491F00921622 /* XVimNormalMode.m */; };
 		A598ED54148F798900C86EC9 /* xVim.bundle in CopyFiles */ = {isa = PBXBuildFile; fileRef = A56CE20C148F640100A06106 /* xVim.bundle */; };
 		A5A905CC149C41C000810962 /* XGlobal.m in Sources */ = {isa = PBXBuildFile; fileRef = A5A905CB149C41C000810962 /* XGlobal.m */; };
 		A5A905CF149C429300810962 /* XTextViewBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = A5A905CE149C429300810962 /* XTextViewBridge.m */; };
@@ -40,6 +42,8 @@
 		A543C395148FBAAC0070E986 /* XCodeTVBridge.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XCodeTVBridge.m; sourceTree = "<group>"; };
 		A543C398148FBBB10070E986 /* XVimController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XVimController.h; sourceTree = "<group>"; };
 		A543C399148FBBB10070E986 /* XVimController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XVimController.m; sourceTree = "<group>"; };
+		A56B36D8149F29FF00AE44CC /* NSStringHelper.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; path = NSStringHelper.h; sourceTree = "<group>"; };
+		A56B36D9149F2A0A00AE44CC /* NSStringHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSStringHelper.m; sourceTree = "<group>"; };
 		A56CE20C148F640100A06106 /* xVim.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = xVim.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		A56CE20F148F640100A06106 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		A56CE212148F640100A06106 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -48,6 +52,7 @@
 		A56CE217148F640100A06106 /* xVim-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "xVim-Info.plist"; sourceTree = "<group>"; };
 		A56CE219148F640100A06106 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		A56CE21B148F640100A06106 /* xVim-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "xVim-Prefix.pch"; sourceTree = "<group>"; };
+		A58D5A7D149F491F00921622 /* XVimNormalMode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XVimNormalMode.m; sourceTree = "<group>"; };
 		A5A905CA149C41C000810962 /* XGlobal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XGlobal.h; sourceTree = "<group>"; };
 		A5A905CB149C41C000810962 /* XGlobal.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XGlobal.m; sourceTree = "<group>"; };
 		A5A905CD149C429300810962 /* XTextViewBridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XTextViewBridge.h; sourceTree = "<group>"; };
@@ -137,6 +142,7 @@
 				A543C398148FBBB10070E986 /* XVimController.h */,
 				A5FA0F9A149AF56B0020C76A /* XVimMode.h */,
 				A5BD0F32149C598F0089BF5E /* vim.h */,
+				A56B36D8149F29FF00AE44CC /* NSStringHelper.h */,
 			);
 			name = Header;
 			sourceTree = "<group>";
@@ -149,7 +155,9 @@
 				A543C395148FBAAC0070E986 /* XCodeTVBridge.m */,
 				A543C399148FBBB10070E986 /* XVimController.m */,
 				A5DD1A95149DD112000AAE3D /* XVimMode.m */,
+				A58D5A7D149F491F00921622 /* XVimNormalMode.m */,
 				A5BD0F33149C598F0089BF5E /* vim.m */,
+				A56B36D9149F2A0A00AE44CC /* NSStringHelper.m */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -241,6 +249,8 @@
 				A5A905CF149C429300810962 /* XTextViewBridge.m in Sources */,
 				A5BD0F34149C598F0089BF5E /* vim.m in Sources */,
 				A5DD1A96149DD112000AAE3D /* XVimMode.m in Sources */,
+				A56B36DA149F2A0A00AE44CC /* NSStringHelper.m in Sources */,
+				A58D5A7E149F491F00921622 /* XVimNormalMode.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

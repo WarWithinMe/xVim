@@ -123,6 +123,12 @@ void xc_DIPIR(void* self, SEL sel, NSRect rect, NSColor* color, BOOL turnedOn)
     orig_DIPIR(self, sel, rect, color, turnedOn);
 }
 
+@interface NSTextView(XTVBridge)
+// visibleParagraphRange is a method of Xcode's editor,
+// I just want to suppress the warning.
+-(NSRange) visibleParagraphRange;
+@end
+
 
 @implementation XCodeTVBridge
 

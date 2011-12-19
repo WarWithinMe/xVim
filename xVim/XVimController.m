@@ -7,24 +7,28 @@
 #import "XVimController.h"
 #import "XVimMode.h"
 #import "XTextViewBridge.h"
+#import "vim.h"
 
 
 @interface XVimController()
 {
     @private
-        XTextViewBridge* bridge;
+        XTextViewBridge*  bridge;
     
-        VimMode vi_mode;
-        XVimModeHandler* handlers[VimModeCount];
+        VimMode           vi_mode;
+        XVimModeHandler*  handlers[VimModeCount];
     
         // This buffer contains all the keys that we have to process.
         // inputBuffer and currentKeyEvent is mutal-exclusive.
         // That is if inputBuffer is empty, currentKeyEvent must not be nil. Vice versa.
-        NSMutableArray* inputBuffer;
+        NSMutableArray*  inputBuffer;
         // If currentKeyEvent is nil, then currentKey holds the key value
         // that we are processing.
-        NSEvent*        currentKeyEvent;
-        NSUInteger      currentKey;
+        NSEvent*         currentKeyEvent;
+        NSUInteger       currentKey;
+    
+        NSMutableString* killBuffer;
+        BOOL             killBufferIsWholeLine;
 }
 
 -(void) processBuffer;
@@ -42,6 +46,7 @@
         bridge = b;
         vi_mode = NormalMode;
         inputBuffer = [[NSMutableArray alloc] init];
+        killBuffer  = [[NSMutableString alloc] init];
         
         handlers[NormalMode] = [[XVimNormalModeHandler alloc] init];
         handlers[VisualMode] = [[XVimVisualModeHandler alloc] init];
@@ -56,7 +61,22 @@
 -(void) dealloc
 {
     [inputBuffer release];
+    [killBuffer  release];
     for (int i = 0; i < VimModeCount; ++i) { [handlers[i] release]; }
+}
+
+-(NSString*) yankContent:(BOOL*)isWholeLine 
+{ 
+    if (isWholeLine) { *isWholeLine = killBufferIsWholeLine; }
+    return killBuffer;
+}
+-(void) yank:(NSString*)string withRange:(NSRange)range wholeLine:(BOOL)flag
+{
+    [killBuffer setString:[string substringWithRange:range]];
+    if (flag && testNewLine([killBuffer characterAtIndex:[killBuffer length] - 1]) == NO) {
+        [killBuffer appendString:@"\n"];
+    }
+    killBufferIsWholeLine = flag;
 }
 
 @synthesize bridge;

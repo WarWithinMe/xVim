@@ -5,6 +5,7 @@
 
 #import "XGlobal.h"
 #import "vim.h"
+#import "NSStringHelper.h"
 
 BOOL testDigit(unichar ch) { return ch >= '0' && ch <= '9'; }
 BOOL testWhiteSpace(unichar ch) { return ch == ' ' || ch == '\t'; }
@@ -24,11 +25,52 @@ BOOL testFuzzyWord(unichar ch) {
     return (!testWhiteSpace(ch)) && (!testNewLine(ch));
 }
 
+NSUInteger mv_dollar_handler(NSTextView* view)
+{
+    NSString*  string = [view string];
+    NSUInteger strLen = [string length];
+    NSUInteger index  = [view selectedRange].location;
+    
+    NSStringHelper helper;
+    initNSStringHelper(&helper, string, strLen);
+    
+    while (index < strLen)
+    {
+        if (testNewLine(characterAtIndex(&helper, index)))
+        {
+            if (index > 0) { --index; }
+            break;
+        }
+        ++index;
+    }
+    return index;
+}
+
+NSUInteger mv_dollar_inc_handler(NSTextView* view)
+{
+    NSString*  string = [view string];
+    NSUInteger strLen = [string length];
+    NSUInteger index  = [view selectedRange].location;
+    
+    NSStringHelper helper;
+    initNSStringHelper(&helper, string, strLen);
+    
+    while (index < strLen)
+    {
+        if (testNewLine(characterAtIndex(&helper, index)))
+        {
+            ++index;
+            break;
+        }
+        ++index;
+    }
+    return index;
+}
 
 NSUInteger mv_caret_handler(NSTextView* view)
 {
-    NSString* string = [[view textStorage] string];
-    NSUInteger index = [view selectedRange].location;
+    NSString*  string       = [view string];
+    NSUInteger index        = [view selectedRange].location;
     NSUInteger resultIndex  = index;
     NSUInteger seekingIndex = index;
     
@@ -58,29 +100,13 @@ NSUInteger mv_caret_handler(NSTextView* view)
 
 NSUInteger mv_0_handler(NSTextView* view)
 {
-    NSString* string = [[view textStorage] string];
-    NSUInteger index = [view selectedRange].location;
+    NSString*  string = [view string];
+    NSUInteger index  = [view selectedRange].location;
     
-    while (index > 0) {
-        if (testNewLine([string characterAtIndex:index-1])) {
-            break;
-        }
+    while (index > 0)
+    {
+        if (testNewLine([string characterAtIndex:index-1])) { break; }
         --index;
-    }
-    return index;
-}
-
-NSUInteger mv_dollar_handler(NSTextView* view)
-{
-    NSString* string    = [[view textStorage] string];
-    NSUInteger index    = [view selectedRange].location;
-    NSUInteger maxIndex = [string length] - 1;
-    
-    while (index < maxIndex) {
-        if (testNewLine([string characterAtIndex:index+1])) {
-            break;
-        }
-        ++index;
     }
     return index;
 }
@@ -100,7 +126,7 @@ void textview_goto_line(NSTextView* view, NSInteger lineNumber, BOOL ensureVisib
     
     if (lineNumber == -1) {
         // Goto last line
-        NSString* string = [[view textStorage] string];
+        NSString*  string   = [view string];
         NSUInteger maxIndex = [string length];
         if (testNewLine([string characterAtIndex:maxIndex - 1]) == NO)
             --maxIndex;
@@ -116,8 +142,8 @@ void textview_goto_line(NSTextView* view, NSInteger lineNumber, BOOL ensureVisib
 
 NSUInteger mv_h_handler(NSTextView* view, int repeatCount)
 {
-    NSUInteger index = [view selectedRange].location;
-    NSString* string = [[view textStorage] string];
+    NSUInteger index  = [view selectedRange].location;
+    NSString*  string = [view string];
     
     for (int i = 0; i < repeatCount; ++i)
     {
@@ -143,7 +169,7 @@ NSUInteger mv_h_handler(NSTextView* view, int repeatCount)
 
 NSUInteger mv_l_handler(NSTextView* view, int repeatCount)
 {
-    NSString* string    = [[view textStorage] string];
+    NSString*  string   = [view string];
     NSUInteger index    = [view selectedRange].location;
     NSUInteger maxIndex = [string length] - 1;
     
@@ -174,9 +200,9 @@ testAscii testForChar(unichar ch)
 
 NSUInteger mv_w_handler(NSTextView* view, int repeatCount, BOOL bigWord)
 {
-    NSUInteger      index    = [view selectedRange].location;
-    NSString*       string   = [[view textStorage] string];
-    NSUInteger      maxIndex = [string length] - 1;
+    NSUInteger index    = [view selectedRange].location;
+    NSString*  string   = [view string];
+    NSUInteger maxIndex = [string length] - 1;
     
     for (int i = 0; i < repeatCount && index < maxIndex; ++i)
     {
@@ -232,7 +258,7 @@ NSUInteger mv_b_handler(NSTextView* view, int repeatCount, BOOL bigWord)
     // 'b' If we are not at the beginning of a word, go to the beginning of it.
     // Otherwise go to the beginning of the word before it.
     NSUInteger index  = [view selectedRange].location;
-    NSString*  string = [[view textStorage] string];
+    NSString*  string = [view string];
     NSUInteger maxI   = [string length] - 1;
     if (index >= maxI) { index = maxI; }
     
@@ -306,7 +332,7 @@ NSUInteger mv_e_handler(NSTextView* view, int repeatCount, BOOL bigWord)
     // So whitespace and newline are totally ingored.
     
     NSUInteger index    = [view selectedRange].location;
-    NSString*  string   = [[view textStorage] string];
+    NSString*  string   = [view string];
     NSUInteger maxIndex = [string length] - 1;
     
     for (int i = 0; i < repeatCount && index < maxIndex; ++i)

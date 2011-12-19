@@ -11,6 +11,8 @@ NSUInteger mv_0_handler(NSTextView* view);
 
 // Return the end of the line. '$'
 NSUInteger mv_dollar_handler(NSTextView* view);
+// This one returns index of the CR
+NSUInteger mv_dollar_inc_handler(NSTextView* view);
 
 // This makes the caret to position after the indentation of line (lineNumber).
 // This function does not check if the lineNumber is valid.
