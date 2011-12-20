@@ -167,7 +167,7 @@ NSUInteger mv_h_handler(NSTextView* view, int repeatCount)
     return index;
 }
 
-NSUInteger mv_l_handler(NSTextView* view, int repeatCount)
+NSUInteger mv_l_handler(NSTextView* view, int repeatCount, BOOL stepForward)
 {
     NSString*  string   = [view string];
     NSUInteger index    = [view selectedRange].location;
@@ -179,7 +179,7 @@ NSUInteger mv_l_handler(NSTextView* view, int repeatCount)
         }
         
         ++index;
-        if ([string characterAtIndex:index] == '\n') {
+        if ([string characterAtIndex:index] == '\n' && stepForward) {
             ++index;
         }
     }

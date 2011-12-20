@@ -82,10 +82,9 @@
 @synthesize bridge;
 
 -(VimMode) mode { return vi_mode; }
+-(void) markAsMode:(VimMode)mode { vi_mode = mode; }
 -(void) switchToMode:(VimMode)mode
 {
-    if (mode == vi_mode) { return; }
-    
     [handlers[vi_mode] reset];
     
     // Check to see if we should notify the textview that it should

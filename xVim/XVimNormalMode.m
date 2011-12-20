@@ -12,11 +12,11 @@
 
 @interface XVimNormalModeHandler()
 {
-@private
-    int     commandCount;
-    int     motionCount;
-    unichar commandChar;
-    unichar motionChar;
+    @private
+        int     commandCount;
+        int     motionCount;
+        unichar commandChar;
+        unichar motionChar;
 }
 @end
 
@@ -171,7 +171,7 @@
                     case 'B': motionBegin = mv_b_handler(hijackedView, commandCount, YES); break;
                         
                     case 'h': motionBegin = mv_h_handler(hijackedView, commandCount);      break;
-                    case 'l': motionEnd   = mv_h_handler(hijackedView, commandCount);      break;
+                    case 'l': motionEnd   = mv_l_handler(hijackedView, commandCount, NO);  break;
                         
                     case '^': motionBegin = mv_caret_handler(hijackedView);                break;
                     case '_':
@@ -280,7 +280,7 @@ interpret_as_command:
         case 'k': for (int i = 0; i < commandCount; ++i) { [hijackedView moveUp:nil];   } break;
         case NSDeleteCharacter: // Backspace in normal mode are like 'h'
         case 'h': [hijackedView setSelectedRange:NSMakeRange(mv_h_handler(hijackedView,commandCount),0)]; break;
-        case 'l': [hijackedView setSelectedRange:NSMakeRange(mv_l_handler(hijackedView,commandCount),0)]; break;
+        case 'l': [hijackedView setSelectedRange:NSMakeRange(mv_l_handler(hijackedView,commandCount,YES),0)]; break;
             
         case 'r': [controller switchToMode:SingleReplaceMode]; break;
         case 'R': [controller switchToMode:ReplaceMode];       break;
@@ -291,7 +291,9 @@ interpret_as_command:
             
             // TODO: commandCount for aAiIoOrR is not implemented.
         case 'a':
+            [controller markAsMode:InsertMode];
             [hijackedView moveRight:nil];
+            [controller markAsMode:NormalMode];
             // Fall through to 'i'
         case 'i':
             [controller switchToMode:InsertMode];
@@ -305,7 +307,9 @@ interpret_as_command:
              NSMakeRange(mv_dollar_handler(hijackedView), 0)];
             break;
         case 'A':
+            [controller markAsMode:InsertMode];
             [hijackedView moveToEndOfLine:nil];
+            [controller markAsMode:NormalMode];
             [controller switchToMode:InsertMode];
             break;
         case '_':
@@ -317,13 +321,16 @@ interpret_as_command:
         }
             break;
         case 'o':
+            [controller markAsMode:InsertMode];
             [hijackedView moveToEndOfLine:nil];
             [hijackedView insertNewline:nil];
+            [controller markAsMode:NormalMode];
             [controller switchToMode:InsertMode];
             break;
         case 'O':
         {
             NSRange currRange = [hijackedView selectedRange];
+            [controller markAsMode:InsertMode];
             [hijackedView moveUp:nil];
             if (currRange.location == [hijackedView selectedRange].location) {
                 [hijackedView moveToBeginningOfLine:nil];
@@ -331,6 +338,7 @@ interpret_as_command:
                 [hijackedView moveToEndOfLine:nil];
             }
             [hijackedView insertNewline:nil];
+            [controller markAsMode:NormalMode];
             [controller switchToMode:InsertMode];
         }
             break;
@@ -371,8 +379,10 @@ interpret_as_command:
             NSStringHelper* h = &helper;
             
             commandCount = commandCount > 2 ? commandCount - 1 : 1;
+           
             
             [undoManager beginUndoGrouping];
+            [controller markAsMode:InsertMode];
             
             for (int i = 0; i < commandCount; ++i)
             {
@@ -422,6 +432,7 @@ interpret_as_command:
             }
             
             [undoManager endUndoGrouping];
+            [controller markAsMode:NormalMode];
         }
             break;
             
@@ -454,7 +465,7 @@ interpret_as_command:
                 [controller yank:string withRange:range wholeLine:NO];
                 [hijackedView insertText:@"" replacementRange:range];
                 
-                if ((index >= maxIndex - commandCount ||
+                /*if ((index >= maxIndex - commandCount ||
                      testNewLine([string characterAtIndex:index])) &&
                     index > 0 &&
                     testNewLine([string characterAtIndex:index-1]) == NO)
@@ -462,7 +473,7 @@ interpret_as_command:
                     range.location = index - 1;
                     range.length = 0;
                     [hijackedView setSelectedRange:range];
-                }
+                }*/
             }
         }
             break;
@@ -499,9 +510,6 @@ interpret_as_command:
                 
                 range.length = 0;
                 range.location += length;
-                if (index < maxIndex && testNewLine([string characterAtIndex:range.location])) {
-                    --range.location;
-                }
                 [hijackedView setSelectedRange:range];
             }
         }
@@ -514,6 +522,7 @@ interpret_as_command:
             NSString* yankContent = [controller yankContent:&wholeLine];
             if (yankContent != nil)
             {
+                [controller markAsMode:InsertMode];
                 if (wholeLine)
                 {
                     if (ch == 'p') {
@@ -533,12 +542,14 @@ interpret_as_command:
                 }
                 
                 NSRange currentIndex = [hijackedView selectedRange];
+                
                 for (int i = 0; i < commandCount; ++i) {
                     [hijackedView insertText:yankContent];
                     if (wholeLine) {
                         [hijackedView setSelectedRange:currentIndex];
                     }
                 }
+                [controller markAsMode:NormalMode];
             }
         }
             break;
@@ -599,13 +610,15 @@ interpret_as_command:
             
             if (ch != 'Y')
             {
+                [controller markAsMode:InsertMode];
                 [hijackedView insertText:@"" replacementRange:range];
+                [controller markAsMode:NormalMode];
                 if (ch == 'C') {
                     [controller switchToMode:InsertMode];
                 } else {
                     
                     current = [hijackedView selectedRange].location;
-                    if (current > 0)
+                    /*if (current > 0)
                     {
                         if ((current > maxIndex && testNewLine(characterAtIndex(h, maxIndex)) == NO) ||
                             testNewLine(characterAtIndex(h, current)) != 
@@ -613,7 +626,7 @@ interpret_as_command:
                         {
                             [hijackedView setSelectedRange:NSMakeRange(current - 1, 0)];
                         }
-                    }
+                    }*/
                 }
             }
         }

@@ -21,7 +21,7 @@ void textview_goto_line(NSTextView* view, NSInteger lineNumber, BOOL ensureVisib
 
 // Return the new location of the caret, after handler h,j,w,W,e,E,b,B
 NSUInteger mv_h_handler(NSTextView* view, int repeatCount);
-NSUInteger mv_l_handler(NSTextView* view, int repeatCount);
+NSUInteger mv_l_handler(NSTextView* view, int repeatCount, BOOL stepForward);
 NSUInteger mv_w_handler(NSTextView* view, int repeatCount, BOOL bigWord);
 NSUInteger mv_e_handler(NSTextView* view, int repeatCount, BOOL bigWord);
 NSUInteger mv_b_handler(NSTextView* view, int repeatCount, BOOL bigWord);
