@@ -5,23 +5,22 @@
 
 @class XVimController;
 
+// XTextViewBridge is implemented in XGlobal.m
 @interface XTextViewBridge : NSObject
 
 -(XTextViewBridge*) initWithTextView:(NSTextView*) view;
 -(void) dealloc;
 
-// Return the hijacked targetView
--(NSTextView*) targetView;
-// Return the vim controller that is with this textview.
+-(NSTextView*)     targetView;
 -(XVimController*) vimController;
-// Subclass can just calls this method to process the key event.
 -(void) processKeyEvent:(NSEvent*) event;
 
 // ====================
 // Subclass should override the methods below.
 
-// This method is called by the XVimController, subclass should override
-// this method to let the hijacked textview to handle the fakeEvent.
+// This method is called by the XVimController.
+// If a subclass does not call general_hj_keydown() to hijack the keydown,
+// it must override this method.
 -(void) handleFakeKeyEvent:(NSEvent*) fakeEvent;
 
 // Ask the textview to close any popup(e.g. a code-complete popup).

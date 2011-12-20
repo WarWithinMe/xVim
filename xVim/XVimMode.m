@@ -10,9 +10,17 @@
 #import "vim.h"
 
 @implementation XVimModeHandler
+-(id) initWithController:(XVimController*) c
+{
+    if (self = [super init]) {
+        controller = c;
+    }
+    return self;
+}
 -(void) enter{}
 -(void) reset{}
--(BOOL) processKey:(unichar)k modifiers:(NSUInteger)f forController:(XVimController*) c { return NO; }
+-(BOOL) processKey:(unichar)k modifiers:(NSUInteger)f { return NO; }
+-(NSArray*) selectionChangedFrom:(NSArray*)oldRanges to:(NSArray*)newRanges { return newRanges; }
 @end
 
 @implementation XVimVisualModeHandler
@@ -23,7 +31,7 @@
 
 
 @implementation XVimInsertModeHandler
--(BOOL) processKey:(unichar)key modifiers:(NSUInteger)flags forController:(XVimController*)controller
+-(BOOL) processKey:(unichar)key modifiers:(NSUInteger)flags
 {
     if (key == XEsc && (flags & XImportantMask) == 0)
     {
@@ -78,7 +86,7 @@
 
 
 @implementation XVimReplaceModeHandler
--(BOOL) processKey:(unichar)key modifiers:(NSUInteger)flags forController:(XVimController*)controller
+-(BOOL) processKey:(unichar)key modifiers:(NSUInteger)flags
 {
     if ((flags & XImportantMask) != 0) {
         // This may not be a visible character, let the NSTextView process it.
@@ -125,7 +133,7 @@
 
 
 @implementation XVimSReplaceModeHandler
--(BOOL) processKey:(unichar)key modifiers:(NSUInteger)flags forController:(XVimController*)controller
+-(BOOL) processKey:(unichar)key modifiers:(NSUInteger)flags
 {
     if ((flags & XImportantMask) != 0) {
         // This may not be a visible character, let the NSTextView process it.

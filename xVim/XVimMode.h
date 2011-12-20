@@ -7,31 +7,38 @@
 
 
 @interface XVimModeHandler : NSObject
+{
+    @protected
+        XVimController* controller;
+}
+-(id) initWithController:(XVimController*) controller;
 // Called before entering the mode.
 -(void) enter;
 // Called before leaving the mode.
 -(void) reset;
 // Return YES if the key is processed, otherwise, return NO.
 // The variable key is not the keycode of the keyboard.
--(BOOL) processKey:(unichar)key modifiers:(NSUInteger)flags forController:(XVimController*)controller;
+-(BOOL) processKey:(unichar)key modifiers:(NSUInteger)flags;
+-(NSArray*) selectionChangedFrom:(NSArray*)oldRanges to:(NSArray*)newRanges;
 @end
 
 
 @interface XVimNormalModeHandler : XVimModeHandler
 -(void) reset;
--(BOOL) processKey:(unichar)key modifiers:(NSUInteger)flags forController:(XVimController*)controller;
+-(BOOL) processKey:(unichar)key modifiers:(NSUInteger)flags;
+-(NSArray*) selectionChangedFrom:(NSArray*)oldRanges to:(NSArray*)newRanges;
 @end
 
 @interface XVimInsertModeHandler : XVimModeHandler
--(BOOL) processKey:(unichar)key modifiers:(NSUInteger)flags forController:(XVimController*)controller;
+-(BOOL) processKey:(unichar)key modifiers:(NSUInteger)flags;
 @end
 
 @interface XVimReplaceModeHandler : XVimModeHandler
--(BOOL) processKey:(unichar)key modifiers:(NSUInteger)flags forController:(XVimController*)controller;
+-(BOOL) processKey:(unichar)key modifiers:(NSUInteger)flags;
 @end
 
 @interface XVimSReplaceModeHandler : XVimModeHandler
--(BOOL) processKey:(unichar)key modifiers:(NSUInteger)flags forController:(XVimController*)controller;
+-(BOOL) processKey:(unichar)key modifiers:(NSUInteger)flags;
 @end
 
 

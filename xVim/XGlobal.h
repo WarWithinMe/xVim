@@ -38,6 +38,16 @@ void removeBridgeForView(NSTextView*);
 // --------------------
 
 
+// ====================
+// General hijack methods, if these methods are not called, one should
+// hijack the target method with his own implementation.
+void general_hj_finalize(Class);
+void general_hj_keydown(Class);
+void general_hj_DIPIR(Class); // NSTextView -drawInsertionPointInRect:color:turnedOn:
+void general_hj_willChangeSelection(Class); // NSTextViewDelegate –textView:willChangeSelectionFromCharacterRanges:toCharacterRanges:
+// --------------------
+
+// ====================
 // Hidden API
 @interface NSTextView(xVim)
 -(void)       _scrollRangeToVisible:(NSRange) range forceCenter:(BOOL) flag;
@@ -46,3 +56,4 @@ void removeBridgeForView(NSTextView*);
 -(NSUInteger) accessibilityInsertionPointLineNumber;
 -(NSRange)    accessibilityCharacterRangeForLineNumber:(NSUInteger) lineNumber;
 @end
+// --------------------

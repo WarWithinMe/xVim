@@ -49,10 +49,6 @@ typedef enum e_ModifierFlags
 @property (readonly) XTextViewBridge* bridge;
 @property (readonly) VimMode          mode;
 
-// Temporarily set the mode as other mode, one should 
-// call switchToMode to actually change the mode,
-// markAsMode is used for placing the caret.
--(void) markAsMode:(VimMode) mode;
 -(void) switchToMode:(VimMode) mode;
 
 // Yank the text. This should not copy to clipboard
@@ -64,4 +60,5 @@ typedef enum e_ModifierFlags
 -(XVimController*) initWithBridge:(XTextViewBridge*) bridge;
 -(void) dealloc;
 -(void) processKeyEvent:(NSEvent*) event;
+-(NSArray*) selectionChangedFrom:(NSArray*)oldRanges to:(NSArray*)newRanges;
 @end

@@ -17,6 +17,7 @@
         int     motionCount;
         unichar commandChar;
         unichar motionChar;
+        BOOL    checkTrailingCR;
 }
 @end
 
@@ -27,6 +28,30 @@
     motionCount  = 0;
     commandChar  = 0;
     motionChar   = 0;
+    checkTrailingCR = YES;
+}
+
+-(NSArray*) selectionChangedFrom:(NSArray*)oldRanges to:(NSArray*)newRanges
+{
+    if (checkTrailingCR == NO) { return newRanges; }
+    if ([newRanges count] > 1) { return newRanges; }
+    
+    NSRange selected = [[newRanges objectAtIndex:0] rangeValue];
+    if (selected.length > 0 || selected.location == 0) { return newRanges; }
+    
+    NSTextView* hijackedView = [[controller bridge] targetView];
+    NSString*   string       = [hijackedView string];
+    
+    if (!testNewLine([string characterAtIndex:selected.location - 1]))
+    {
+        NSUInteger strLen = [string length];
+        if (selected.location >= strLen || testNewLine([string characterAtIndex:selected.location])) {
+            --selected.location;
+            return [NSArray arrayWithObject:[NSValue valueWithRange:selected]];
+        }
+    }
+    
+    return newRanges;
 }
 
 // Below are commands that are going to be implemented.
@@ -49,7 +74,7 @@
 // :#    Jump to line number #.
 // :q, :q!, :w, :wq, :x
 
--(BOOL) processKey:(unichar)ch modifiers:(NSUInteger)flags forController:(XVimController*)controller
+-(BOOL) processKey:(unichar)ch modifiers:(NSUInteger)flags
 {
     // Currently we have nothing to do with a key, if it has some flags, or a tab.
     if (ch == '\t' || (flags & XImportantMask) != 0) { return NO; }
@@ -276,11 +301,23 @@ interpret_as_command:
     switch (ch) {
             // NOTE: 'j' and 'k' calls the NSTextView's methods,
             // Them won't ensure that the caret won't be before the CR
-        case 'j': for (int i = 0; i < commandCount; ++i) { [hijackedView moveDown:nil]; } break;
+        case 'j': for (int i = 0; i < commandCount; ++i) { [hijackedView moveDown:nil]; }  break;
         case 'k': for (int i = 0; i < commandCount; ++i) { [hijackedView moveUp:nil];   } break;
         case NSDeleteCharacter: // Backspace in normal mode are like 'h'
-        case 'h': [hijackedView setSelectedRange:NSMakeRange(mv_h_handler(hijackedView,commandCount),0)]; break;
-        case 'l': [hijackedView setSelectedRange:NSMakeRange(mv_l_handler(hijackedView,commandCount,YES),0)]; break;
+        case 'h': 
+        {
+            NSRange range = {mv_h_handler(hijackedView,commandCount),0};
+            [hijackedView setSelectedRange:range];
+            [hijackedView scrollRangeToVisible:range];
+        }
+            break;
+        case 'l':
+        {
+            NSRange range = {mv_l_handler(hijackedView,commandCount,YES),0};
+            [hijackedView setSelectedRange:range]; 
+            [hijackedView scrollRangeToVisible:range];
+        }
+            break;
             
         case 'r': [controller switchToMode:SingleReplaceMode]; break;
         case 'R': [controller switchToMode:ReplaceMode];       break;
@@ -291,9 +328,8 @@ interpret_as_command:
             
             // TODO: commandCount for aAiIoOrR is not implemented.
         case 'a':
-            [controller markAsMode:InsertMode];
+            checkTrailingCR = NO;
             [hijackedView moveRight:nil];
-            [controller markAsMode:NormalMode];
             // Fall through to 'i'
         case 'i':
             [controller switchToMode:InsertMode];
@@ -307,9 +343,8 @@ interpret_as_command:
              NSMakeRange(mv_dollar_handler(hijackedView), 0)];
             break;
         case 'A':
-            [controller markAsMode:InsertMode];
+            checkTrailingCR = NO;
             [hijackedView moveToEndOfLine:nil];
-            [controller markAsMode:NormalMode];
             [controller switchToMode:InsertMode];
             break;
         case '_':
@@ -321,16 +356,15 @@ interpret_as_command:
         }
             break;
         case 'o':
-            [controller markAsMode:InsertMode];
+            checkTrailingCR = NO;
             [hijackedView moveToEndOfLine:nil];
             [hijackedView insertNewline:nil];
-            [controller markAsMode:NormalMode];
             [controller switchToMode:InsertMode];
             break;
         case 'O':
         {
             NSRange currRange = [hijackedView selectedRange];
-            [controller markAsMode:InsertMode];
+            checkTrailingCR = NO;
             [hijackedView moveUp:nil];
             if (currRange.location == [hijackedView selectedRange].location) {
                 [hijackedView moveToBeginningOfLine:nil];
@@ -338,7 +372,6 @@ interpret_as_command:
                 [hijackedView moveToEndOfLine:nil];
             }
             [hijackedView insertNewline:nil];
-            [controller markAsMode:NormalMode];
             [controller switchToMode:InsertMode];
         }
             break;
@@ -382,7 +415,6 @@ interpret_as_command:
            
             
             [undoManager beginUndoGrouping];
-            [controller markAsMode:InsertMode];
             
             for (int i = 0; i < commandCount; ++i)
             {
@@ -432,7 +464,6 @@ interpret_as_command:
             }
             
             [undoManager endUndoGrouping];
-            [controller markAsMode:NormalMode];
         }
             break;
             
@@ -522,7 +553,7 @@ interpret_as_command:
             NSString* yankContent = [controller yankContent:&wholeLine];
             if (yankContent != nil)
             {
-                [controller markAsMode:InsertMode];
+                checkTrailingCR = NO;
                 if (wholeLine)
                 {
                     if (ch == 'p') {
@@ -549,7 +580,6 @@ interpret_as_command:
                         [hijackedView setSelectedRange:currentIndex];
                     }
                 }
-                [controller markAsMode:NormalMode];
             }
         }
             break;
@@ -608,26 +638,14 @@ interpret_as_command:
             NSRange    range     = {lineBegin, lineEnd - lineBegin};
             [controller yank:string withRange:range wholeLine:(ch == 'Y')];
             
-            if (ch != 'Y')
+            if (ch == 'C')
             {
-                [controller markAsMode:InsertMode];
+                checkTrailingCR = NO;
                 [hijackedView insertText:@"" replacementRange:range];
-                [controller markAsMode:NormalMode];
-                if (ch == 'C') {
-                    [controller switchToMode:InsertMode];
-                } else {
-                    
-                    current = [hijackedView selectedRange].location;
-                    /*if (current > 0)
-                    {
-                        if ((current > maxIndex && testNewLine(characterAtIndex(h, maxIndex)) == NO) ||
-                            testNewLine(characterAtIndex(h, current)) != 
-                            testNewLine(characterAtIndex(h, current-1)) )
-                        {
-                            [hijackedView setSelectedRange:NSMakeRange(current - 1, 0)];
-                        }
-                    }*/
-                }
+                [controller switchToMode:InsertMode];
+            } else if(ch == 'D')
+            {
+                [hijackedView insertText:@"" replacementRange:range];
             }
         }
             break;
@@ -644,8 +662,9 @@ interpret_as_command:
             break;
     }
     
-    commandChar  = 0;
-    commandCount = 0;
+    commandChar     = 0;
+    commandCount    = 0;
+    checkTrailingCR = YES;
     return YES;
 }
 @end

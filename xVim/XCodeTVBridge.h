@@ -9,7 +9,6 @@
 
 @interface XCodeTVBridge : XTextViewBridge
 +(void) hijack;
--(void) handleFakeKeyEvent:(NSEvent*) fakeEvent;
 -(NSRange) visibleParagraphRange;
 @end
 

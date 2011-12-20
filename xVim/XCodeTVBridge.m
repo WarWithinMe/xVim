@@ -6,33 +6,14 @@
 #import "XGlobal.h"
 #import "XCodeTVBridge.h"
 #import "XVimController.h"
-#import "vim.h"
 
 // Looks like whenever we open a text file, 
 // or switch to another text file,
 // or bring up a new assistant editor. 
 // DVTSourceTextView's initWithCoder: is invoked.
 typedef void* (*O_InitWithCoder) (void*, SEL, void*);
-typedef void  (*O_Finalize) (void*, SEL);
-typedef void  (*O_KeyDown) (void*, SEL, NSEvent*);
-typedef void  (*O__DrawInsertionPointInRect) (NSTextView*, SEL, NSRect, NSColor*); // This one is for private api.
-typedef void  (*O_DrawInsertionPointInRect) (NSTextView*, SEL, NSRect, NSColor*, BOOL);
-static O_Finalize      orig_finalize = 0;
 static O_InitWithCoder orig_initWithCoder = 0;
-static O_KeyDown       orig_keyDown  = 0;
-static O__DrawInsertionPointInRect orig_DIPIR_private = 0;
-static O_DrawInsertionPointInRect  orig_DIPIR = 0;
-static void  xc_finalize(void*, SEL);
 static void* xc_initWithCoder(void*, SEL, void*);
-static void  xc_keyDown(void*, SEL, NSEvent*);
-static void  xc_DIPIR_private(NSTextView*, SEL, NSRect, NSColor*);
-static void  xc_DIPIR(NSTextView*, SEL, NSRect, NSColor*, BOOL);
-static void  configureInsertionPointRect(NSTextView* view, NSRect*);
-
-
-typedef void* (*O_WillChangeSelection) (void*, SEL, NSTextView*, NSArray* oldRanges, NSArray* newRanges);
-static O_WillChangeSelection orig_willChangeSelection = 0;
-static void* xc_willChangeSelection(void*, SEL, NSTextView*, NSArray* oldRanges, NSArray* newRanges);
 
 
 #if defined(DEBUG) && defined(XCode_Safe_Hijack)
@@ -49,7 +30,6 @@ void* xc_init(void* self, SEL sel)
     DLog(@"HJ_init");
     return orig_init(self, sel);
 }
-
 void* xc_initWithFTC(void* self, SEL sel, void* p1, void* p2)
 {
     DLog(@"HJ_initWithFrame");
@@ -68,98 +48,6 @@ void* xc_initWithCoder(void* self, SEL sel, void* p1)
     return orig_initWithCoder(self, sel, p1);
 }
 
-void xc_finalize(void* self, SEL sel)
-{
-    DLog(@"HJ_Finalize");
-    removeBridgeForView(self);
-    orig_finalize(self, sel);
-}
-
-void xc_keyDown(void* self, SEL sel, NSEvent* event)
-{
-    [getBridgeForView(self) processKeyEvent:event];
-}
-
-void configureInsertionPointRect(NSTextView* view, NSRect* rect)
-{
-    XTextViewBridge* bridge = getBridgeForView(view);
-    XVimController* controller = [bridge vimController];
-    
-    VimMode mode = [controller mode];
-    if (mode == InsertMode) {
-        rect->size.width = 1;
-    } else {
-        
-        NSRange   range  = [view selectedRange];
-        NSString* string = [[view textStorage] string];
-        
-        if (range.location + 1 >= [string length]) {
-            rect->size.width = 8;
-        } else {
-            unichar ch = [string characterAtIndex:range.location];
-            
-            if ((ch >= 0xA && ch <= 0xD) || ch == 0x85) {
-                // This is new line
-                rect->size.width = 8;
-            } else {
-                NSUInteger glyphIndex = [[view layoutManager] glyphIndexForCharacterAtIndex:range.location];
-                NSRect glyphRect = [[view layoutManager] boundingRectForGlyphRange:NSMakeRange(glyphIndex, 1)
-                                                                   inTextContainer:[view textContainer]];
-                rect->size.width = glyphRect.size.width;
-            }
-            
-            if (mode == ReplaceMode || mode == SingleReplaceMode) {
-                rect->origin.y += rect->size.height;
-                rect->origin.y -= 3;
-                rect->size.height = 3;
-            }
-        }
-    }
-}
-
-void xc_DIPIR_private(NSTextView* self, SEL sel, NSRect rect, NSColor* color)
-{
-    configureInsertionPointRect(self, &rect);
-    orig_DIPIR_private(self, sel, rect, color);
-}
-
-void xc_DIPIR(NSTextView* self, SEL sel, NSRect rect, NSColor* color, BOOL turnedOn)
-{
-    configureInsertionPointRect(self, &rect);
-    orig_DIPIR(self, sel, rect, color, turnedOn);
-}
-
-void* xc_willChangeSelection(void* self, SEL sel, NSTextView* view, NSArray* oldRanges, NSArray* newRanges)
-{
-    // Ensure we are not at the end of the line at normal mode.
-    // But this case, the normal mode handler should refactor.
-    if ([newRanges count] == 1)
-    {
-        NSRange selected  = [[newRanges objectAtIndex:0] rangeValue];
-        if (selected.length == 0)
-        {
-            if ([[getBridgeForView(view) vimController] mode] == NormalMode)
-            {
-                NSString*  string = [view string];
-                NSUInteger strLen = [string length];
-                if (selected.location > 0 && selected.location < strLen)
-                {
-                    if (testNewLine([string characterAtIndex:selected.location]) &&
-                        !testNewLine([string characterAtIndex:selected.location - 1]))
-                    {
-                        --selected.location;
-                        return [NSArray arrayWithObject:[NSValue valueWithRange:selected]];
-                    }
-                }
-            }
-        }
-    }
-    
-    // TODO: We can also check if the selection has change, so that we can enter select mode.
-    
-    if (orig_willChangeSelection) { return orig_willChangeSelection(self, sel, view, oldRanges, newRanges); }
-    return newRanges;
-}
 
 @interface NSTextView(XTVBridge)
 // visibleParagraphRange is a method of Xcode's editor,
@@ -172,47 +60,22 @@ void* xc_willChangeSelection(void* self, SEL sel, NSTextView* view, NSArray* old
 
 +(void) hijack
 {
+    Class dvtTextViewClass = NSClassFromString(@"DVTSourceTextView");
+    orig_initWithCoder = methodSwizzle(dvtTextViewClass, @selector(initWithCoder:), xc_initWithCoder);
+    general_hj_finalize(dvtTextViewClass);
+    general_hj_keydown(dvtTextViewClass);
+    general_hj_DIPIR(dvtTextViewClass);
+    
+    Class ideDelegateClass = NSClassFromString(@"IDESourceCodeEditor");
+    general_hj_willChangeSelection(ideDelegateClass);
+    
 #if defined(DEBUG) && defined(XCode_Safe_Hijack)
-    orig_init = methodSwizzle(NSClassFromString(@"DVTSourceTextView"), 
-                              @selector(init), 
-                              xc_init);
-    
-    orig_initWithFTC = methodSwizzle(NSClassFromString(@"DVTSourceTextView"), 
-                                     @selector(initWithFrame:textContainer:), 
-                                     xc_initWithFTC);
+    orig_init = methodSwizzle(dvtTextViewClass, @selector(init), xc_init);
+    orig_initWithFTC = methodSwizzle(dvtTextViewClass, @selector(initWithFrame:textContainer:), xc_initWithFTC);
 #endif
-    
-    orig_initWithCoder = methodSwizzle(NSClassFromString(@"DVTSourceTextView"), 
-                                       @selector(initWithCoder:), 
-                                       xc_initWithCoder);
-    
-    orig_finalize = methodSwizzle(NSClassFromString(@"DVTSourceTextView"), 
-                                  @selector(finalize), 
-                                  xc_finalize);
-    
-    orig_keyDown = methodSwizzle(NSClassFromString(@"DVTSourceTextView"), 
-                                 @selector(keyDown:), 
-                                 xc_keyDown);
-    
-    orig_DIPIR_private = methodSwizzle(NSClassFromString(@"DVTSourceTextView"), 
-                                       @selector(_drawInsertionPointInRect:color:), 
-                                       xc_DIPIR_private);
-    orig_DIPIR = methodSwizzle(NSClassFromString(@"DVTSourceTextView"), 
-                               @selector(drawInsertionPointInRect:color:turnedOn:), 
-                               xc_DIPIR);
-    
-    orig_willChangeSelection = methodSwizzle(NSClassFromString(@"IDESourceCodeEditor"),
-                                             @selector(textView:willChangeSelectionFromCharacterRanges:toCharacterRanges:), 
-                                             xc_willChangeSelection);
 }
 
--(void) handleFakeKeyEvent:(NSEvent*) fakeEvent
-{
-    orig_keyDown([super targetView], @selector(keyDown:), fakeEvent);
-}
-
--(NSRange) visibleParagraphRange
-{
+-(NSRange) visibleParagraphRange {
     return [[super targetView] visibleParagraphRange];
 }
 

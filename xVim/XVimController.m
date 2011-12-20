@@ -48,12 +48,12 @@
         inputBuffer = [[NSMutableArray alloc] init];
         killBuffer  = [[NSMutableString alloc] init];
         
-        handlers[NormalMode] = [[XVimNormalModeHandler alloc] init];
-        handlers[VisualMode] = [[XVimVisualModeHandler alloc] init];
-        handlers[InsertMode] = [[XVimInsertModeHandler alloc] init];
-        handlers[ExMode]     = [[XVimExModeHandler alloc] init];
-        handlers[ReplaceMode] = [[XVimReplaceModeHandler alloc] init];
-        handlers[SingleReplaceMode] = [[ XVimSReplaceModeHandler alloc] init];
+        handlers[NormalMode] = [[XVimNormalModeHandler alloc] initWithController:self];
+        handlers[VisualMode] = [[XVimVisualModeHandler alloc] initWithController:self];
+        handlers[InsertMode] = [[XVimInsertModeHandler alloc] initWithController:self];
+        handlers[ExMode]     = [[XVimExModeHandler alloc] initWithController:self];
+        handlers[ReplaceMode] = [[XVimReplaceModeHandler alloc] initWithController:self];
+        handlers[SingleReplaceMode] = [[ XVimSReplaceModeHandler alloc] initWithController:self];
     }
     return self;
 }
@@ -82,9 +82,10 @@
 @synthesize bridge;
 
 -(VimMode) mode { return vi_mode; }
--(void) markAsMode:(VimMode)mode { vi_mode = mode; }
 -(void) switchToMode:(VimMode)mode
 {
+    if (vi_mode == mode) { return; }
+    
     [handlers[vi_mode] reset];
     
     // Check to see if we should notify the textview that it should
@@ -107,8 +108,7 @@
         // Process the currentKeyEvent.
         unichar ch = [[currentKeyEvent charactersIgnoringModifiers] characterAtIndex:0];
         BOOL handled = [handlers[vi_mode] processKey:ch
-                                           modifiers:([currentKeyEvent modifierFlags] & XModifierFlagsMask) 
-                                       forController:self];
+                                           modifiers:([currentKeyEvent modifierFlags] & XModifierFlagsMask)];
         if (handled == NO)
             [bridge handleFakeKeyEvent:currentKeyEvent];
     } else {
@@ -117,8 +117,7 @@
         {
             currentKey = [key unsignedIntegerValue];
             BOOL handled = [handlers[vi_mode] processKey:(currentKey & XUnicharMask) 
-                                               modifiers:(currentKey & XModifierFlagsMask) 
-                                           forController:self];
+                                               modifiers:(currentKey & XModifierFlagsMask)];
             // The key is not handled, ask the NSTextView to handle it.
             if (handled == NO)
                 [bridge handleFakeKeyEvent:[self generateFakeEvent]];
@@ -153,4 +152,8 @@
     currentKeyEvent = nil;
 }
 
+-(NSArray*) selectionChangedFrom:(NSArray*)oldRanges to:(NSArray*)newRanges
+{
+    return [handlers[vi_mode] selectionChangedFrom:oldRanges to:newRanges];
+}
 @end
