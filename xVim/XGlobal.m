@@ -49,6 +49,7 @@ void removeBridgeForView(NSTextView* tv)
 // The entry point of our plugin
 +(void) load
 {
+    [XVimController readKeyMapping];
     bridgeDict = [[NSMutableDictionary alloc] init];
     
     NSString* id = [[NSBundle mainBundle] bundleIdentifier];
@@ -196,7 +197,7 @@ void general_hj_willChangeSelection(Class c)
 }
 
 -(void)    dealloc  { DLog(@"XTextViewBridge Dealloced"); [controller release]; }
--(void)    finalize { DLog(@"XTextViewBridge Finalized"); }
+-(void)    finalize { DLog(@"XTextViewBridge Finalized"); [super finalize]; }
 -(void)    processKeyEvent:(NSEvent*)event { [controller processKeyEvent:event]; }
 -(BOOL)    closePopup { return NO; }
 -(NSRange) visibleParagraphRange { return NSMakeRange(0, 0); }

@@ -17,7 +17,7 @@
         int     motionCount;
         unichar commandChar;
         unichar motionChar;
-        BOOL    checkTrailingCR;
+        BOOL    dontCheckTrailingCR;
 }
 @end
 
@@ -28,12 +28,12 @@
     motionCount  = 0;
     commandChar  = 0;
     motionChar   = 0;
-    checkTrailingCR = YES;
+    dontCheckTrailingCR = NO;
 }
 
 -(NSArray*) selectionChangedFrom:(NSArray*)oldRanges to:(NSArray*)newRanges
 {
-    if (checkTrailingCR == NO) { return newRanges; }
+    if (dontCheckTrailingCR == YES) { return newRanges; }
     if ([newRanges count] > 1) { return newRanges; }
     
     NSRange selected = [[newRanges objectAtIndex:0] rangeValue];
@@ -328,7 +328,7 @@ interpret_as_command:
             
             // TODO: commandCount for aAiIoOrR is not implemented.
         case 'a':
-            checkTrailingCR = NO;
+            dontCheckTrailingCR = YES;
             [hijackedView moveRight:nil];
             // Fall through to 'i'
         case 'i':
@@ -343,7 +343,7 @@ interpret_as_command:
              NSMakeRange(mv_dollar_handler(hijackedView), 0)];
             break;
         case 'A':
-            checkTrailingCR = NO;
+            dontCheckTrailingCR = YES;
             [hijackedView moveToEndOfLine:nil];
             [controller switchToMode:InsertMode];
             break;
@@ -356,7 +356,7 @@ interpret_as_command:
         }
             break;
         case 'o':
-            checkTrailingCR = NO;
+            dontCheckTrailingCR = YES;
             [hijackedView moveToEndOfLine:nil];
             [hijackedView insertNewline:nil];
             [controller switchToMode:InsertMode];
@@ -364,7 +364,7 @@ interpret_as_command:
         case 'O':
         {
             NSRange currRange = [hijackedView selectedRange];
-            checkTrailingCR = NO;
+            dontCheckTrailingCR = YES;
             [hijackedView moveUp:nil];
             if (currRange.location == [hijackedView selectedRange].location) {
                 [hijackedView moveToBeginningOfLine:nil];
@@ -553,7 +553,7 @@ interpret_as_command:
             NSString* yankContent = [controller yankContent:&wholeLine];
             if (yankContent != nil)
             {
-                checkTrailingCR = NO;
+                dontCheckTrailingCR = YES;
                 if (wholeLine)
                 {
                     if (ch == 'p') {
@@ -640,7 +640,7 @@ interpret_as_command:
             
             if (ch == 'C')
             {
-                checkTrailingCR = NO;
+                dontCheckTrailingCR = YES;
                 [hijackedView insertText:@"" replacementRange:range];
                 [controller switchToMode:InsertMode];
             } else if(ch == 'D')
@@ -664,7 +664,7 @@ interpret_as_command:
     
     commandChar     = 0;
     commandCount    = 0;
-    checkTrailingCR = YES;
+    dontCheckTrailingCR = NO;
     return YES;
 }
 @end
