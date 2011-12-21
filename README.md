@@ -31,6 +31,7 @@
 1. Insert Mode
 2. Replace Mode
 3. Normal Mode ([Check out the normal mode command here](https://github.com/WarWithinMe/xVim/wiki/Normal-Mode-Command))
+4. Simplified Key-map ([Read the wiki](https://github.com/WarWithinMe/xVim/wiki/Simplified-Key-map))
 
 ## NOTE
 1. This plugin possibly won't work well with Dos line ending(CR/LF).
