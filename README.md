@@ -12,7 +12,7 @@
 
 1. Install __SIMBL__. (Google is always your best friend if you have no idea what SIMBL is.)
 
-2. Download xVim (currently you should use the __noKeyMapSupport__ branch)
+2. Download xVim (currently you should use the __master__ branch)
 
 3. __Confirm your Xcode version before build__. (only v828 aka Xcode 4.2 has been tested) <p>If you have a different version of Xcode, edit xVim-Info.plist. *MaxBundleVersion* and *MinBundleVersion* of *SIMBLTargetApplications* to cater to your Xcode's version.
 
@@ -31,6 +31,7 @@
 1. Insert Mode
 2. Replace Mode
 3. Normal Mode ([Check out the normal mode command here](https://github.com/WarWithinMe/xVim/wiki/Normal-Mode-Command))
+4. Simplified Key-map ([Read the wiki](https://github.com/WarWithinMe/xVim/wiki/Simplified-Key-map))
 
 ## NOTE
 1. This plugin possibly won't work well with Dos line ending(CR/LF).

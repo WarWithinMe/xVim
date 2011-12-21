@@ -37,6 +37,7 @@ typedef enum e_ModifierFlags
     
     XUnicharMask = 0x0000ffffU,
     XModifierFlagsMask = 0xffff0000U,
+    XModifierFlagsMaskX = XModifierFlagsMask & (~(XMaskCapLock | NSHelpKeyMask)),
     XImportantMask = XMaskControl | XMaskCommand | XMaskAlt | XMaskFn
     
 } ModifierFlags;
@@ -61,4 +62,7 @@ typedef enum e_ModifierFlags
 -(void) dealloc;
 -(void) processKeyEvent:(NSEvent*) event;
 -(NSArray*) selectionChangedFrom:(NSArray*)oldRanges to:(NSArray*)newRanges;
+
++(void) readKeyMapping;
+-(void) finalize;
 @end
