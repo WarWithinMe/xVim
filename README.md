@@ -58,6 +58,5 @@
 ## TODO
 * Handle __replace mode__ properly.
 * Implement __motion commands__
-* Implement __simplified key mapping__
 * Implement __visual mode__, __ex mode__
 * Add a text control to show command line.
