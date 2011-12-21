@@ -359,10 +359,6 @@ interpret_as_command:
         case 'i':
             [controller switchToMode:InsertMode];
             break;
-        case '0':
-            [hijackedView setSelectedRange:
-             NSMakeRange(mv_0_handler(hijackedView), 0)];
-            break;
         case '$':
             [hijackedView setSelectedRange:
              NSMakeRange(mv_dollar_handler(hijackedView), 0)];
@@ -372,6 +368,12 @@ interpret_as_command:
             [hijackedView moveToEndOfLine:nil];
             [controller switchToMode:InsertMode];
             break;
+        case '0':
+#ifndef MAKE_0_AS_CARET
+            [hijackedView setSelectedRange:
+             NSMakeRange(mv_0_handler(hijackedView), 0)];
+            break;
+#endif
         case '_':
         case '^':
         case 'I':
@@ -401,6 +403,7 @@ interpret_as_command:
         }
             break;
             
+            // TODO: Use layout manager to determine the position, instead of using 3rd API.
         case 'H':
         {
             NSRange lines = [bridge visibleParagraphRange];
