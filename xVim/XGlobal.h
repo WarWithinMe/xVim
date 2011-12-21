@@ -10,7 +10,7 @@
 #endif
 
 // Switches:
-#define VIM_KEYMAP_TIMEOUT 250
+#define VIM_KEYMAP_TIMEOUT 150
 
 // How xVim works:
 // 1.In the entry point of this bundle (defined as XVimPlugin in XGlobal.m),

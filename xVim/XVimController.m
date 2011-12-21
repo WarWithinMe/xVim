@@ -333,7 +333,6 @@ NSArray* keyStringTokeyArray(NSString* string)
     if ([key length] == 0) { return; }
     
     NSUInteger keyCode = ([event modifierFlags] & XModifierFlagsMaskX) | [key characterAtIndex:0];
-    DLog(@"KeyCode: %lu", keyCode);
     NSMutableDictionary* dict = keyMapDicts[vi_mode];
     if (dict != nil)
     {

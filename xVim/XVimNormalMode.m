@@ -159,7 +159,32 @@
                 }
                     break;
             }
+        } else if (commandChar == 'z')
+        {
+            if (ch == 't' || ch == 'b') {
+                // Place current line at top.
+                NSLayoutManager* manager = [hijackedView layoutManager];
+                NSRange range = [hijackedView selectedRange];
+                range.length = 1;
+                range = [manager glyphRangeForCharacterRange:range actualCharacterRange:nil];
+                NSRect currentRect = [manager boundingRectForGlyphRange:range 
+                                                        inTextContainer:[hijackedView textContainer]];
+                DLog(@"Current Rect: %@", NSStringFromRect(currentRect));
+                
+                NSRect visibleRect = [hijackedView visibleRect];
+                
+                if (ch == 't') {
+                    visibleRect.origin.y = currentRect.origin.y;
+                } else {
+                    visibleRect.origin.y = currentRect.origin.y + currentRect.size.height - 
+                                           visibleRect.size.height;
+                    if (visibleRect.origin.y < 0) { visibleRect.origin.y = 0; }
+                }
+                [hijackedView scrollRectToVisible:visibleRect];
+            }
+            
         } else {
+            
             // Here we deal with the motion command ydc.
             // 
             // Unsupported:
