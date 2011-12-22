@@ -6,6 +6,7 @@
 
 // ====================
 // Switches:
+#define SUPPORTED_APP_COUNT 2
 #define VIM_KEYMAP_TIMEOUT 220
 // #define MAKE_0_AS_CARET      // If defined, 0 acts as ^
 // --------------------
