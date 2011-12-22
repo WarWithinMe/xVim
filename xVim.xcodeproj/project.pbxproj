@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		A504A452149DF9F40084C754 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = A504A451149DF9F40084C754 /* README.md */; };
 		A52E943B1499A95F00FA6045 /* keymap-example in Resources */ = {isa = PBXBuildFile; fileRef = A52E943A1499A95F00FA6045 /* keymap-example */; };
-		A543C396148FBAAC0070E986 /* XSpecificTVBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = A543C395148FBAAC0070E986 /* XSpecificTVBridge.m */; };
 		A543C39A148FBBB10070E986 /* XVimController.m in Sources */ = {isa = PBXBuildFile; fileRef = A543C399148FBBB10070E986 /* XVimController.m */; };
 		A55056BE14A19B4300067686 /* keymap in Resources */ = {isa = PBXBuildFile; fileRef = A55056BD14A19B4300067686 /* keymap */; };
 		A56B36DA149F2A0A00AE44CC /* NSStringHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = A56B36D9149F2A0A00AE44CC /* NSStringHelper.m */; };
@@ -38,8 +37,6 @@
 /* Begin PBXFileReference section */
 		A504A451149DF9F40084C754 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = README.md; path = ../README.md; sourceTree = "<group>"; };
 		A52E943A1499A95F00FA6045 /* keymap-example */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "keymap-example"; path = "Resources/keymap-example"; sourceTree = "<group>"; };
-		A543C394148FBAAC0070E986 /* XSpecificTVBridge.h */ = {isa = PBXFileReference; fileEncoding = 4; path = XSpecificTVBridge.h; sourceTree = "<group>"; };
-		A543C395148FBAAC0070E986 /* XSpecificTVBridge.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XSpecificTVBridge.m; sourceTree = "<group>"; };
 		A543C398148FBBB10070E986 /* XVimController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XVimController.h; sourceTree = "<group>"; };
 		A543C399148FBBB10070E986 /* XVimController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XVimController.m; sourceTree = "<group>"; };
 		A55056BD14A19B4300067686 /* keymap */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = keymap; path = Resources/keymap; sourceTree = "<group>"; };
@@ -139,7 +136,6 @@
 			children = (
 				A5A905CA149C41C000810962 /* XGlobal.h */,
 				A5A905CD149C429300810962 /* XTextViewBridge.h */,
-				A543C394148FBAAC0070E986 /* XSpecificTVBridge.h */,
 				A543C398148FBBB10070E986 /* XVimController.h */,
 				A5FA0F9A149AF56B0020C76A /* XVimMode.h */,
 				A5BD0F32149C598F0089BF5E /* vim.h */,
@@ -152,7 +148,6 @@
 			isa = PBXGroup;
 			children = (
 				A5A905CB149C41C000810962 /* XGlobal.m */,
-				A543C395148FBAAC0070E986 /* XSpecificTVBridge.m */,
 				A543C399148FBBB10070E986 /* XVimController.m */,
 				A5DD1A95149DD112000AAE3D /* XVimMode.m */,
 				A58D5A7D149F491F00921622 /* XVimNormalMode.m */,
@@ -258,7 +253,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A543C396148FBAAC0070E986 /* XSpecificTVBridge.m in Sources */,
 				A543C39A148FBBB10070E986 /* XVimController.m in Sources */,
 				A5A905CC149C41C000810962 /* XGlobal.m in Sources */,
 				A5BD0F34149C598F0089BF5E /* vim.m in Sources */,

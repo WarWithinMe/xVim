@@ -25,36 +25,6 @@
 // 2.Subclass of XTextViewBridge can ask XTextViewBridge to get the XVimController,
 //   which is used to handle every key input.
 
-@class XTextViewBridge;
-
-
-// Replace target selector of a target class with our function
-// the overriden method is returned.
-void* methodSwizzle(Class c, SEL sel, void* overrideFunction);
-
-
-// ====================
-// These methods are used to associate a XTextViewBridge and NSTextView
-// without using the cocoa system.
-// Associate a bridge with a textview in the hijacked init method.
-void associateBridgeAndView(XTextViewBridge*, NSTextView*);
-// Retreive the associated bridge object in the hijacked keydown method.
-XTextViewBridge* getBridgeForView(NSTextView*);
-// Free the bridge for a textview in the hijacked finalize method.
-void removeBridgeForView(NSTextView*);
-// --------------------
-
-
-// ====================
-// General hijack methods, if these methods are not called, one should
-// hijack the target method with his own implementation.
-void general_hj_init(Class hijackClass, Class bridgeClass);
-void general_hj_finalize(Class);
-void general_hj_dealloc(Class);
-void general_hj_keydown(Class);
-void general_hj_DIPIR(Class); // NSTextView -drawInsertionPointInRect:color:turnedOn:
-void general_hj_willChangeSelection(Class); // NSTextViewDelegate –textView:willChangeSelectionFromCharacterRanges:toCharacterRanges:
-// --------------------
 
 // ====================
 // Hidden API

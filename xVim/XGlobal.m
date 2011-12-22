@@ -4,10 +4,13 @@
 //
 
 #import "XGlobal.h"
-#import "XSpecificTVBridge.h"
+#import "XTextViewBridge.h"
 #import "XVimController.h"
 #import <objc/runtime.h>
 
+// Replace target selector of a target class with our function
+// the overriden method is returned.
+void* methodSwizzle(Class c, SEL sel, void* overrideFunction);
 void* methodSwizzle(Class c, SEL sel, void* overrideMethod)
 {
     Method origM   = class_getInstanceMethod(c, sel);
@@ -19,6 +22,18 @@ void* methodSwizzle(Class c, SEL sel, void* overrideMethod)
     }
     return origIMP;
 }
+
+
+// ====================
+// These methods are used to associate a XTextViewBridge and NSTextView
+// without using the cocoa system.
+// Associate a bridge with a textview in the hijacked init method.
+void associateBridgeAndView(XTextViewBridge*, NSTextView*);
+// Retreive the associated bridge object in the hijacked keydown method.
+XTextViewBridge* getBridgeForView(NSTextView*);
+// Free the bridge for a textview in the hijacked finalize method.
+void removeBridgeForView(NSTextView*);
+// --------------------
 
 NSMutableDictionary* bridgeDict = 0;
 void associateBridgeAndView(XTextViewBridge* b, NSTextView* tv)
@@ -33,6 +48,74 @@ void removeBridgeForView(NSTextView* tv)
 {
     [bridgeDict removeObjectForKey:[NSValue valueWithPointer:tv]];
 }
+
+
+// Original methods:
+typedef void  (*O_Finalize)                  (void*, SEL);
+typedef void  (*O_Dealloc)                   (void*, SEL);
+typedef void  (*O_KeyDown)                   (void*, SEL, NSEvent*);
+typedef void  (*O__DrawInsertionPointInRect) (NSTextView*, SEL, NSRect, NSColor*); // This one is for private api.
+typedef void  (*O_DrawInsertionPointInRect)  (NSTextView*, SEL, NSRect, NSColor*, BOOL);
+typedef void* (*O_WillChangeSelection)       (void*, SEL, NSTextView*, NSArray* oldRanges, NSArray* newRanges);
+static O_Finalize                  orig_finalize = 0;
+static O_Dealloc                   orig_dealloc  = 0;
+static O_KeyDown                   orig_keyDown  = 0;
+static O__DrawInsertionPointInRect orig_DIPIR_private = 0;
+static O_DrawInsertionPointInRect  orig_DIPIR = 0;
+static O_WillChangeSelection       orig_willChangeSelection = 0;
+// Hijackers:
+static void  configureInsertionPointRect(NSTextView* view, NSRect*);
+static void  hj_finalize(void*, SEL);
+static void  hj_dealloc(void*, SEL);
+static void  hj_keyDown(void*, SEL, NSEvent*);
+static void  hj_DIPIR_private(NSTextView*, SEL, NSRect, NSColor*);
+static void  hj_DIPIR(NSTextView*, SEL, NSRect, NSColor*, BOOL);
+static void* hj_willChangeSelection(void*, SEL, NSTextView*, NSArray* oldRanges, NSArray* newRanges);
+
+// Special init methods:
+static void* orig_init = 0;
+static Class bridgeClass = nil;
+static XTextViewDelegate* delegate = nil;
+
+typedef void* (*O_InitWithCoder) (void*, SEL, void*);
+typedef void* (*O_InitWithFM)    (NSTextView*, SEL, NSRect, BOOL);
+
+static void* hj_initWithCoder(void*, SEL, void*);
+static void* hj_initWithFM(NSTextView*, SEL, NSRect, BOOL);
+
+
+// Hijack info:
+typedef struct s_HijackInfo {
+    NSString* bridgeClassName;       // Can be nil
+    NSString* textViewSubclassName;
+    NSString* delegateClassName;     // Can be nil
+    
+    void*     initHijackFunc;
+    NSString* initSelectorName;
+    
+    NSString* appIdentifier;
+} HijackInfo;
+
+// The hijack info map
+#define SUPPORTED_APP_COUNT 2
+
+// The map:
+static HijackInfo s_hijackInfo_map[SUPPORTED_APP_COUNT] =
+{
+    {nil,
+        @"DVTSourceTextView",
+        @"IDESourceCodeEditor", 
+        hj_initWithCoder, 
+        @"initWithCoder:",
+        @"com.apple.dt.Xcode"}, // XCode
+    
+    {nil,
+        @"EKTextView",
+        nil,
+        hj_initWithFM,
+        @"initWithFrame:makeFieldEditor:",
+        @"com.macrabbit.Espresso"} // Espresso
+};
 
 
 // The entry point of this plugin.
@@ -55,70 +138,100 @@ void removeBridgeForView(NSTextView* tv)
     // directly. Because that will affect line editor control.
     
     NSString* id = [[NSBundle mainBundle] bundleIdentifier];
-    if ([id isEqualToString:@"com.apple.dt.Xcode"])
+    for (int i = 0; i < SUPPORTED_APP_COUNT; ++i)
     {
-        DLog(@"xVim hijacking Xcode");
-        [XCodeTVBridge hijack];
-    } else if ([id isEqualToString:@"com.macrabbit.Espresso"])
-    {
-        DLog(@"xVim hijacking Espresso");
-        [XEspressoTVBridge hijack];
+        HijackInfo* info = s_hijackInfo_map + i;
+        
+        if ([id isEqualToString:info->appIdentifier])
+        {
+            DLog(@"xVim hijacking app: %@", id);
+            
+            bridgeClass = info->bridgeClassName == nil ? 
+                              [XTextViewBridge class] : NSClassFromString(info->bridgeClassName);
+            
+            Class tvSubClass  = NSClassFromString(info->textViewSubclassName);
+            
+            orig_init     = methodSwizzle(tvSubClass, 
+                                          NSSelectorFromString(info->initSelectorName), 
+                                          info->initHijackFunc);
+            
+            orig_dealloc  = methodSwizzle(tvSubClass, @selector(dealloc),  hj_dealloc);
+            orig_finalize = methodSwizzle(tvSubClass, @selector(finalize), hj_finalize);
+            
+            orig_keyDown  = methodSwizzle(tvSubClass, @selector(keyDown:), hj_keyDown);
+            orig_DIPIR    = methodSwizzle(tvSubClass, 
+                                          @selector(drawInsertionPointInRect:color:turnedOn:), 
+                                          hj_DIPIR);
+            orig_DIPIR_private = methodSwizzle(tvSubClass, 
+                                               @selector(_drawInsertionPointInRect:color:), 
+                                               hj_DIPIR_private);
+            
+            if (info->delegateClassName == nil)
+            {
+                delegate = [[XTextViewDelegate alloc] init];
+            } else {
+                
+                Class delegateClass = NSClassFromString(info->delegateClassName);
+                orig_willChangeSelection = methodSwizzle(delegateClass, 
+                                                         @selector(textView:willChangeSelectionFromCharacterRanges:toCharacterRanges:), 
+                                                         hj_willChangeSelection);
+            }
+            
+            break;
+        }
     }
 }
 @end
 
+// ========== XTextViewBridge ==========
+@interface XTextViewBridge()
+{
+@private
+    XVimController*    controller;
+    __weak NSTextView* targetView;
+}
+@end
+@implementation XTextViewBridge
+
+-(NSTextView*)     targetView    { return targetView; }
+-(XVimController*) vimController { return controller; }
+
+-(XTextViewBridge*) initWithTextView:(NSTextView*) view
+{
+    if (self = [super init]) {
+        controller = [[XVimController alloc] initWithBridge:self];
+        targetView = view;
+    }
+    return self;
+}
+
+-(void)    dealloc  { DLog(@"Deallocing XTexViewBridge: %@", self); [controller release]; }
+-(void)    finalize { DLog(@"XTextViewBridge Finalized"); [super finalize]; }
+-(void)    processKeyEvent:(NSEvent*)event { [controller processKeyEvent:event]; }
+-(BOOL)    closePopup { return NO; }
+-(NSRange) visibleParagraphRange { return NSMakeRange(0, 0); }
+
+-(void) handleFakeKeyEvent:(NSEvent*) fakeEvent {
+    if (orig_keyDown) {
+        orig_keyDown(self->targetView, @selector(keyDown:), fakeEvent);
+    }
+}
+
+@end
+
+@implementation XTextViewDelegate
+
+- (NSArray*) textView:(NSTextView*) view willChangeSelectionFromCharacterRanges:(NSArray*) old toCharacterRanges:(NSArray*) new
+{
+    XTextViewBridge* bridge = getBridgeForView(view);
+    if (bridge != nil) {
+        return [[bridge vimController] selectionChangedFrom:old to:new];
+    }
+    return new;
+}
+@end
 
 // ========== General Hijack Functions ==========
-
-typedef void* (*O_InitWithCoder)             (void*, SEL, void*);
-typedef void* (*O_Init)                      (void*, SEL);
-typedef void  (*O_Finalize)                  (void*, SEL);
-typedef void  (*O_Dealloc)                   (void*, SEL);
-typedef void  (*O_KeyDown)                   (void*, SEL, NSEvent*);
-typedef void  (*O__DrawInsertionPointInRect) (NSTextView*, SEL, NSRect, NSColor*); // This one is for private api.
-typedef void  (*O_DrawInsertionPointInRect)  (NSTextView*, SEL, NSRect, NSColor*, BOOL);
-typedef void* (*O_WillChangeSelection)       (void*, SEL, NSTextView*, NSArray* oldRanges, NSArray* newRanges);
-static O_InitWithCoder             orig_initWithCoder = 0;
-static O_Init                      orig_init = 0;
-static O_Finalize                  orig_finalize = 0;
-static O_Dealloc                   orig_dealloc  = 0;
-static O_KeyDown                   orig_keyDown  = 0;
-static O__DrawInsertionPointInRect orig_DIPIR_private = 0;
-static O_DrawInsertionPointInRect  orig_DIPIR = 0;
-static O_WillChangeSelection       orig_willChangeSelection = 0;
-static void  configureInsertionPointRect(NSTextView* view, NSRect*);
-static void* hj_initWithCoder(void*, SEL, void*);
-static void* hj_init(void*, SEL);
-static void  hj_finalize(void*, SEL);
-static void  hj_dealloc(void*, SEL);
-static void  hj_keyDown(void*, SEL, NSEvent*);
-static void  hj_DIPIR_private(NSTextView*, SEL, NSRect, NSColor*);
-static void  hj_DIPIR(NSTextView*, SEL, NSRect, NSColor*, BOOL);
-static void* hj_willChangeSelection(void*, SEL, NSTextView*, NSArray* oldRanges, NSArray* newRanges);
-
-static Class specificBridgeClass = 0;
-void* hj_initWithCoder(void* self, SEL sel, void* p1)
-{
-    DLog(@"HJ_initWithCoder");
-    XTextViewBridge* bridge = [[specificBridgeClass alloc] initWithTextView:self];
-    if (bridge) {
-        associateBridgeAndView(bridge, self);
-        [bridge release];
-    }
-    return orig_initWithCoder(self, sel, p1);
-}
-
-void* hj_init(void* self, SEL sel)
-{
-    DLog(@"HJ_init");
-    XTextViewBridge* bridge = [[specificBridgeClass alloc] initWithTextView:self];
-    if (bridge) {
-        associateBridgeAndView(bridge, self);
-        [bridge release];
-    }
-    return orig_init(self, sel);
-}
-
 void configureInsertionPointRect(NSTextView* view, NSRect* rect)
 {
     XTextViewBridge* bridge = getBridgeForView(view);
@@ -184,7 +297,6 @@ void hj_dealloc(void* self, SEL sel)
 
 void hj_keyDown(void* self, SEL sel, NSEvent* event)
 {
-//    DLog(@"At KeyDown, Bridge: %p, TextView: %p", getBridgeForView(self), self);
     [getBridgeForView(self) processKeyEvent:event];
 }
 
@@ -198,61 +310,46 @@ void* hj_willChangeSelection(void* self, SEL sel, NSTextView* view, NSArray* old
     return newRanges;
 }
 
-void general_hj_finalize(Class c) { orig_finalize = methodSwizzle(c, @selector(finalize), hj_finalize); }
-void general_hj_dealloc(Class c)  { orig_dealloc  = methodSwizzle(c, @selector(dealloc),  hj_dealloc);  }
-void general_hj_keydown(Class c)  { orig_keyDown  = methodSwizzle(c, @selector(keyDown:), hj_keyDown);  }
-void general_hj_DIPIR(Class c)
+
+// ========== Special Init Methods ==========
+static void* hj_initWithCoder(void* self, SEL sel, void* p1)
 {
-    orig_DIPIR_private = methodSwizzle(c, @selector(_drawInsertionPointInRect:color:), hj_DIPIR_private);
-    orig_DIPIR = methodSwizzle(c, @selector(drawInsertionPointInRect:color:turnedOn:), hj_DIPIR);
-}
-void general_hj_willChangeSelection(Class c)
-{
-    orig_willChangeSelection = methodSwizzle(c, @selector(textView:willChangeSelectionFromCharacterRanges:toCharacterRanges:), hj_willChangeSelection);
-}
-
-void general_hj_init(Class c, Class bridgeClass)
-{
-    specificBridgeClass = bridgeClass;
-    orig_initWithCoder = methodSwizzle(c, @selector(initWithCoder:), hj_initWithCoder); 
-    orig_init = methodSwizzle(c, @selector(init), hj_init);
-}
-
-
-
-// ========== XTextViewBridge ==========
-@interface XTextViewBridge()
-{
-@private
-    XVimController*    controller;
-    __weak NSTextView* targetView;
-}
-@end
-
-@implementation XTextViewBridge
-
--(NSTextView*)     targetView    { return targetView; }
--(XVimController*) vimController { return controller; }
-
--(XTextViewBridge*) initWithTextView:(NSTextView*) view
-{
-    if (self = [super init]) {
-        controller = [[XVimController alloc] initWithBridge:self];
-        targetView = view;
+    DLog(@"HJ_initWithCoder");
+    
+    O_InitWithCoder orig_initWithCoder = (O_InitWithCoder) orig_init;
+    NSTextView* r = orig_initWithCoder(self, sel, p1);
+    
+    if (r != nil)
+    {
+        XTextViewBridge* bridge = [[bridgeClass alloc] initWithTextView:self];
+        if (bridge)
+        {
+            associateBridgeAndView(bridge, r);
+            [bridge release];
+        }
+        
+        if (delegate != nil) { [r setDelegate:delegate]; }
     }
-    return self;
+    return r; 
 }
 
--(void)    dealloc  { DLog(@"Deallocing XTexViewBridge: %@", self); [controller release]; }
--(void)    finalize { DLog(@"XTextViewBridge Finalized"); [super finalize]; }
--(void)    processKeyEvent:(NSEvent*)event { [controller processKeyEvent:event]; }
--(BOOL)    closePopup { return NO; }
--(NSRange) visibleParagraphRange { return NSMakeRange(0, 0); }
-
--(void) handleFakeKeyEvent:(NSEvent*) fakeEvent {
-    if (orig_keyDown) {
-        orig_keyDown(self->targetView, @selector(keyDown:), fakeEvent);
+static void* hj_initWithFM(NSTextView* self, SEL sel, NSRect p1, BOOL makeFieldEditor)
+{
+    DLog(@"HJ_initWithFM");
+    
+    O_InitWithFM orig_initWithFM = (O_InitWithFM) orig_init;
+    NSTextView* r = orig_initWithFM(self, sel, p1, makeFieldEditor);
+    
+    if (makeFieldEditor == NO && r != nil)
+    {
+        XTextViewBridge* bridge = [[bridgeClass alloc] initWithTextView:self];
+        if (bridge)
+        {
+            associateBridgeAndView(bridge, r);
+            [bridge release];
+        }
+        
+        if (delegate != nil) { [r setDelegate:delegate]; }
     }
+    return r; 
 }
-
-@end
