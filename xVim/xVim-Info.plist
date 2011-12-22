@@ -24,10 +24,6 @@
 	<array>
 		<dict>
 			<key>BundleIdentifier</key>
-			<string>com.macrabbit.Espresso</string>
-		</dict>
-		<dict>
-			<key>BundleIdentifier</key>
 			<string>com.apple.dt.Xcode</string>
 			<key>MaxBundleVersion</key>
 			<string>828</string>
