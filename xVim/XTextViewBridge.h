@@ -27,5 +27,13 @@
 // Return YES if a popup is closed.
 -(BOOL) closePopup;
 // --------------------
-
 @end
+
+
+// ====================
+// If a target textview doesn't have a delegate,
+// we can use XTextViewDelegate and there's no need to hijack the delgate's method.
+@interface XTextViewDelegate : NSObject <NSTextViewDelegate>
+- (NSArray*) textView:(NSTextView*) view willChangeSelectionFromCharacterRanges:(NSArray*) old toCharacterRanges:(NSArray*) new;
+@end
+// --------------------

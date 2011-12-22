@@ -20,7 +20,6 @@ void* methodSwizzle(Class c, SEL sel, void* overrideMethod)
     return origIMP;
 }
 
-
 NSMutableDictionary* bridgeDict = 0;
 void associateBridgeAndView(XTextViewBridge* b, NSTextView* tv)
 {
@@ -185,14 +184,18 @@ void hj_dealloc(void* self, SEL sel)
 
 void hj_keyDown(void* self, SEL sel, NSEvent* event)
 {
+//    DLog(@"At KeyDown, Bridge: %p, TextView: %p", getBridgeForView(self), self);
     [getBridgeForView(self) processKeyEvent:event];
 }
 
 void* hj_willChangeSelection(void* self, SEL sel, NSTextView* view, NSArray* oldRanges, NSArray* newRanges)
 {
-    NSArray* a = [[getBridgeForView(view) vimController] selectionChangedFrom:oldRanges to:newRanges];
-    if (orig_willChangeSelection) { return orig_willChangeSelection(self, sel, view, oldRanges, a); }
-    return a;
+    XTextViewBridge* bridge = getBridgeForView(view);
+    if (bridge != nil) {
+        newRanges = [[bridge vimController] selectionChangedFrom:oldRanges to:newRanges];
+    }
+    if (orig_willChangeSelection) { return orig_willChangeSelection(self, sel, view, oldRanges, newRanges); }
+    return newRanges;
 }
 
 void general_hj_finalize(Class c) { orig_finalize = methodSwizzle(c, @selector(finalize), hj_finalize); }
@@ -240,7 +243,7 @@ void general_hj_init(Class c, Class bridgeClass)
     return self;
 }
 
--(void)    dealloc  { DLog(@"XTextViewBridge Dealloced"); [controller release]; }
+-(void)    dealloc  { DLog(@"Deallocing XTexViewBridge: %@", self); [controller release]; }
 -(void)    finalize { DLog(@"XTextViewBridge Finalized"); [super finalize]; }
 -(void)    processKeyEvent:(NSEvent*)event { [controller processKeyEvent:event]; }
 -(BOOL)    closePopup { return NO; }

@@ -226,7 +226,7 @@
                     case '^': motionBegin = mv_caret_handler(hijackedView);                break;
                     case '_':
                     case '0': motionBegin = mv_0_handler(hijackedView);                    break;
-                    case '&': motionEnd   = mv_dollar_handler(hijackedView);               break;
+                    case '$': motionEnd   = mv_dollar_handler(hijackedView);               break;
                     case 'j':
                     {
                         NSRange range = [hijackedView selectedRange];
