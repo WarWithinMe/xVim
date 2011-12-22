@@ -3,14 +3,20 @@
 //  Copyright (c) 2011年 http://warwithinme.com . All rights reserved.
 //
 
+
+// ====================
+// Switches:
+#define VIM_KEYMAP_TIMEOUT 220
+// #define MAKE_0_AS_CARET      // If defined, 0 acts as ^
+// --------------------
+
+
 #ifdef DEBUG
 #   define DLog(fmt, ...) NSLog(fmt, ##__VA_ARGS__);
 #else
 #   define DLog(...)
 #endif
 
-// Switches:
-#define VIM_KEYMAP_TIMEOUT 150
 
 // How xVim works:
 // 1.In the entry point of this bundle (defined as XVimPlugin in XGlobal.m),
@@ -42,7 +48,9 @@ void removeBridgeForView(NSTextView*);
 // ====================
 // General hijack methods, if these methods are not called, one should
 // hijack the target method with his own implementation.
+void general_hj_init(Class hijackClass, Class bridgeClass);
 void general_hj_finalize(Class);
+void general_hj_dealloc(Class);
 void general_hj_keydown(Class);
 void general_hj_DIPIR(Class); // NSTextView -drawInsertionPointInRect:color:turnedOn:
 void general_hj_willChangeSelection(Class); // NSTextViewDelegate –textView:willChangeSelectionFromCharacterRanges:toCharacterRanges:

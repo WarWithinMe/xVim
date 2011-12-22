@@ -9,7 +9,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleVersion</key>
-	<string>67</string>
+	<string>113</string>
 	<key>CFBundleExecutable</key>
 	<string>${EXECUTABLE_NAME}</string>
 	<key>NSPrincipalClass</key>
@@ -22,6 +22,10 @@
 	<string>????</string>
 	<key>SIMBLTargetApplications</key>
 	<array>
+		<dict>
+			<key>BundleIdentifier</key>
+			<string>com.macrabbit.Espresso</string>
+		</dict>
 		<dict>
 			<key>BundleIdentifier</key>
 			<string>com.apple.dt.Xcode</string>

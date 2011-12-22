@@ -283,7 +283,7 @@ NSArray* keyStringTokeyArray(NSString* string)
     if (currentKeyEvent != nil)
     {
         // Process the currentKeyEvent.
-        unichar ch = [[currentKeyEvent charactersIgnoringModifiers] characterAtIndex:0];
+        unichar ch = [[currentKeyEvent characters] characterAtIndex:0];
         BOOL handled = [handlers[vi_mode] processKey:ch
                                            modifiers:([currentKeyEvent modifierFlags] & XModifierFlagsMask)];
         if (handled == NO)
@@ -329,7 +329,7 @@ NSArray* keyStringTokeyArray(NSString* string)
     if (timerStarted) { [self stopKeymapTimer]; }
     
     
-    NSString* key = [event charactersIgnoringModifiers];
+    NSString* key = [event characters];
     if ([key length] == 0) { return; }
     
     NSUInteger keyCode = ([event modifierFlags] & XModifierFlagsMaskX) | [key characterAtIndex:0];

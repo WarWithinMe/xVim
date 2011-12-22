@@ -7,11 +7,16 @@
 
 // Hijack class for xCode.
 
+// +++ Xcode +++
 @interface XCodeTVBridge : XTextViewBridge
 +(void) hijack;
--(NSRange) visibleParagraphRange;
 @end
 
-// --- Xcode ---
+
+// +++ Espresso +++
+@interface XEspressoTVBridge : XTextViewBridge
++(void) hijack;
+@end
+
 
 

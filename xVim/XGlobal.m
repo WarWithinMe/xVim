@@ -4,7 +4,7 @@
 //
 
 #import "XGlobal.h"
-#import "XCodeTVBridge.h"
+#import "XSpecificTVBridge.h"
 #import "XVimController.h"
 #import <objc/runtime.h>
 
@@ -19,7 +19,6 @@ void* methodSwizzle(Class c, SEL sel, void* overrideMethod)
     }
     return origIMP;
 }
-
 
 NSMutableDictionary* bridgeDict = 0;
 void associateBridgeAndView(XTextViewBridge* b, NSTextView* tv)
@@ -52,43 +51,73 @@ void removeBridgeForView(NSTextView* tv)
     [XVimController readKeyMapping];
     bridgeDict = [[NSMutableDictionary alloc] init];
     
+    // Warning: When hijacking, we must not hijack NSTextView
+    // directly. Because that will affect line editor control.
+    
     NSString* id = [[NSBundle mainBundle] bundleIdentifier];
     if ([id isEqualToString:@"com.apple.dt.Xcode"])
     {
-        DLog(@"xVim hijacking xcode");
+        DLog(@"xVim hijacking Xcode");
         [XCodeTVBridge hijack];
+    } else if ([id isEqualToString:@"com.macrabbit.Espresso"])
+    {
+        DLog(@"xVim hijacking Espresso");
+        [XEspressoTVBridge hijack];
     }
 }
 @end
 
 
 // ========== General Hijack Functions ==========
-//
-//  Created by Morris Liang on 11-12-7.
-//  Copyright (c) 2011年 http://warwithinme.com . All rights reserved.
-//
 
-#import "XGlobal.h"
-#import "XCodeTVBridge.h"
-#import "XVimController.h"
-#import "vim.h"
-
+typedef void* (*O_InitWithCoder)             (void*, SEL, void*);
+typedef void* (*O_Init)                      (void*, SEL);
 typedef void  (*O_Finalize)                  (void*, SEL);
+typedef void  (*O_Dealloc)                   (void*, SEL);
 typedef void  (*O_KeyDown)                   (void*, SEL, NSEvent*);
 typedef void  (*O__DrawInsertionPointInRect) (NSTextView*, SEL, NSRect, NSColor*); // This one is for private api.
 typedef void  (*O_DrawInsertionPointInRect)  (NSTextView*, SEL, NSRect, NSColor*, BOOL);
 typedef void* (*O_WillChangeSelection)       (void*, SEL, NSTextView*, NSArray* oldRanges, NSArray* newRanges);
+static O_InitWithCoder             orig_initWithCoder = 0;
+static O_Init                      orig_init = 0;
 static O_Finalize                  orig_finalize = 0;
+static O_Dealloc                   orig_dealloc  = 0;
 static O_KeyDown                   orig_keyDown  = 0;
 static O__DrawInsertionPointInRect orig_DIPIR_private = 0;
 static O_DrawInsertionPointInRect  orig_DIPIR = 0;
 static O_WillChangeSelection       orig_willChangeSelection = 0;
 static void  configureInsertionPointRect(NSTextView* view, NSRect*);
+static void* hj_initWithCoder(void*, SEL, void*);
+static void* hj_init(void*, SEL);
 static void  hj_finalize(void*, SEL);
+static void  hj_dealloc(void*, SEL);
 static void  hj_keyDown(void*, SEL, NSEvent*);
 static void  hj_DIPIR_private(NSTextView*, SEL, NSRect, NSColor*);
 static void  hj_DIPIR(NSTextView*, SEL, NSRect, NSColor*, BOOL);
 static void* hj_willChangeSelection(void*, SEL, NSTextView*, NSArray* oldRanges, NSArray* newRanges);
+
+static Class specificBridgeClass = 0;
+void* hj_initWithCoder(void* self, SEL sel, void* p1)
+{
+    DLog(@"HJ_initWithCoder");
+    XTextViewBridge* bridge = [[specificBridgeClass alloc] initWithTextView:self];
+    if (bridge) {
+        associateBridgeAndView(bridge, self);
+        [bridge release];
+    }
+    return orig_initWithCoder(self, sel, p1);
+}
+
+void* hj_init(void* self, SEL sel)
+{
+    DLog(@"HJ_init");
+    XTextViewBridge* bridge = [[specificBridgeClass alloc] initWithTextView:self];
+    if (bridge) {
+        associateBridgeAndView(bridge, self);
+        [bridge release];
+    }
+    return orig_init(self, sel);
+}
 
 void configureInsertionPointRect(NSTextView* view, NSRect* rect)
 {
@@ -146,20 +175,32 @@ void hj_finalize(void* self, SEL sel)
     orig_finalize(self, sel);
 }
 
+void hj_dealloc(void* self, SEL sel)
+{
+    DLog(@"Hj_Dealloc");
+    removeBridgeForView(self);
+    orig_dealloc(self, sel);
+}
+
 void hj_keyDown(void* self, SEL sel, NSEvent* event)
 {
+//    DLog(@"At KeyDown, Bridge: %p, TextView: %p", getBridgeForView(self), self);
     [getBridgeForView(self) processKeyEvent:event];
 }
 
 void* hj_willChangeSelection(void* self, SEL sel, NSTextView* view, NSArray* oldRanges, NSArray* newRanges)
 {
-    NSArray* a = [[getBridgeForView(view) vimController] selectionChangedFrom:oldRanges to:newRanges];
-    if (orig_willChangeSelection) { return orig_willChangeSelection(self, sel, view, oldRanges, a); }
-    return a;
+    XTextViewBridge* bridge = getBridgeForView(view);
+    if (bridge != nil) {
+        newRanges = [[bridge vimController] selectionChangedFrom:oldRanges to:newRanges];
+    }
+    if (orig_willChangeSelection) { return orig_willChangeSelection(self, sel, view, oldRanges, newRanges); }
+    return newRanges;
 }
 
 void general_hj_finalize(Class c) { orig_finalize = methodSwizzle(c, @selector(finalize), hj_finalize); }
-void general_hj_keydown(Class c) { orig_keyDown = methodSwizzle(c, @selector(keyDown:), hj_keyDown); }
+void general_hj_dealloc(Class c)  { orig_dealloc  = methodSwizzle(c, @selector(dealloc),  hj_dealloc);  }
+void general_hj_keydown(Class c)  { orig_keyDown  = methodSwizzle(c, @selector(keyDown:), hj_keyDown);  }
 void general_hj_DIPIR(Class c)
 {
     orig_DIPIR_private = methodSwizzle(c, @selector(_drawInsertionPointInRect:color:), hj_DIPIR_private);
@@ -170,6 +211,12 @@ void general_hj_willChangeSelection(Class c)
     orig_willChangeSelection = methodSwizzle(c, @selector(textView:willChangeSelectionFromCharacterRanges:toCharacterRanges:), hj_willChangeSelection);
 }
 
+void general_hj_init(Class c, Class bridgeClass)
+{
+    specificBridgeClass = bridgeClass;
+    orig_initWithCoder = methodSwizzle(c, @selector(initWithCoder:), hj_initWithCoder); 
+    orig_init = methodSwizzle(c, @selector(init), hj_init);
+}
 
 
 
@@ -196,7 +243,7 @@ void general_hj_willChangeSelection(Class c)
     return self;
 }
 
--(void)    dealloc  { DLog(@"XTextViewBridge Dealloced"); [controller release]; }
+-(void)    dealloc  { DLog(@"Deallocing XTexViewBridge: %@", self); [controller release]; }
 -(void)    finalize { DLog(@"XTextViewBridge Finalized"); [super finalize]; }
 -(void)    processKeyEvent:(NSEvent*)event { [controller processKeyEvent:event]; }
 -(BOOL)    closePopup { return NO; }
@@ -207,7 +254,5 @@ void general_hj_willChangeSelection(Class c)
         orig_keyDown(self->targetView, @selector(keyDown:), fakeEvent);
     }
 }
-
-// handleFakeKeyEvent is implemented in XGlobal.m
 
 @end

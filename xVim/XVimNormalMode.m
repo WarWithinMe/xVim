@@ -226,7 +226,7 @@
                     case '^': motionBegin = mv_caret_handler(hijackedView);                break;
                     case '_':
                     case '0': motionBegin = mv_0_handler(hijackedView);                    break;
-                    case '&': motionEnd   = mv_dollar_handler(hijackedView);               break;
+                    case '$': motionEnd   = mv_dollar_handler(hijackedView);               break;
                     case 'j':
                     {
                         NSRange range = [hijackedView selectedRange];
@@ -359,10 +359,6 @@ interpret_as_command:
         case 'i':
             [controller switchToMode:InsertMode];
             break;
-        case '0':
-            [hijackedView setSelectedRange:
-             NSMakeRange(mv_0_handler(hijackedView), 0)];
-            break;
         case '$':
             [hijackedView setSelectedRange:
              NSMakeRange(mv_dollar_handler(hijackedView), 0)];
@@ -372,6 +368,12 @@ interpret_as_command:
             [hijackedView moveToEndOfLine:nil];
             [controller switchToMode:InsertMode];
             break;
+        case '0':
+#ifndef MAKE_0_AS_CARET
+            [hijackedView setSelectedRange:
+             NSMakeRange(mv_0_handler(hijackedView), 0)];
+            break;
+#endif
         case '_':
         case '^':
         case 'I':
@@ -402,25 +404,37 @@ interpret_as_command:
             break;
             
         case 'H':
-        {
-            NSRange lines = [bridge visibleParagraphRange];
-            if (lines.length != 0) { textview_goto_line(hijackedView,lines.location, NO); }
-        }
-            break;
         case 'M':
-        {
-            NSRange lines = [bridge visibleParagraphRange];
-            if (lines.length != 0) 
-                textview_goto_line(hijackedView, lines.location + lines.length / 2, NO);
-        }
-            break;
         case 'L':
         {
-            NSRange lines = [bridge visibleParagraphRange];
-            if (lines.length != 0) 
-                textview_goto_line(hijackedView, lines.location + lines.length, NO);
+            NSLayoutManager* manager   = [hijackedView layoutManager];
+            NSTextContainer* container = [hijackedView textContainer];
+            NSRect           rect      = [hijackedView visibleRect];
+            NSRange          selection = {0,1};
+            CGFloat          fraction  = 0;
+            
+            if (ch == 'M') {
+                rect.origin.y += rect.size.height / 2;
+            } else if (ch == 'L') {
+                rect.origin.y += rect.size.height;
+            }
+            
+            selection.location = [manager characterIndexForPoint:NSMakePoint(rect.origin.x, rect.origin.y) 
+                                               inTextContainer:container
+                      fractionOfDistanceBetweenInsertionPoints:&fraction];
+            
+            if (selection.location != NSNotFound)
+            {
+                selection.length   = 0;
+                [hijackedView setSelectedRange:selection];
+                selection.location = mv_caret_handler(hijackedView);
+                [hijackedView setSelectedRange:selection];
+                
+                
+            }
         }
             break;
+        
         case 'G':
             textview_goto_line(hijackedView, (commandCountSpecified ? commandCount - 1 : -1), YES);
             break;
