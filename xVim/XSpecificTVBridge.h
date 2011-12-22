@@ -10,7 +10,6 @@
 // +++ Xcode +++
 @interface XCodeTVBridge : XTextViewBridge
 +(void) hijack;
--(NSRange) visibleParagraphRange;
 @end
 
 

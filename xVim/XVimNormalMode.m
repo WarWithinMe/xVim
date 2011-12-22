@@ -403,27 +403,38 @@ interpret_as_command:
         }
             break;
             
-            // TODO: Use layout manager to determine the position, instead of using 3rd API.
         case 'H':
-        {
-            NSRange lines = [bridge visibleParagraphRange];
-            if (lines.length != 0) { textview_goto_line(hijackedView,lines.location, NO); }
-        }
-            break;
         case 'M':
-        {
-            NSRange lines = [bridge visibleParagraphRange];
-            if (lines.length != 0) 
-                textview_goto_line(hijackedView, lines.location + lines.length / 2, NO);
-        }
-            break;
         case 'L':
         {
-            NSRange lines = [bridge visibleParagraphRange];
-            if (lines.length != 0) 
-                textview_goto_line(hijackedView, lines.location + lines.length, NO);
+            NSLayoutManager* manager   = [hijackedView layoutManager];
+            NSTextContainer* container = [hijackedView textContainer];
+            NSRect           rect      = [hijackedView visibleRect];
+            NSRange          selection = {0,1};
+            CGFloat          fraction  = 0;
+            
+            if (ch == 'M') {
+                rect.origin.y += rect.size.height / 2;
+            } else if (ch == 'L') {
+                rect.origin.y += rect.size.height;
+            }
+            
+            selection.location = [manager characterIndexForPoint:NSMakePoint(rect.origin.x, rect.origin.y) 
+                                               inTextContainer:container
+                      fractionOfDistanceBetweenInsertionPoints:&fraction];
+            
+            if (selection.location != NSNotFound)
+            {
+                selection.length   = 0;
+                [hijackedView setSelectedRange:selection];
+                selection.location = mv_caret_handler(hijackedView);
+                [hijackedView setSelectedRange:selection];
+                
+                
+            }
         }
             break;
+        
         case 'G':
             textview_goto_line(hijackedView, (commandCountSpecified ? commandCount - 1 : -1), YES);
             break;

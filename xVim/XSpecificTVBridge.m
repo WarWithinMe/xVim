@@ -7,12 +7,6 @@
 #import "XSpecificTVBridge.h"
 #import "XVimController.h"
 
-@interface NSTextView(XTVBridge)
-// visibleParagraphRange is a method of Xcode's editor,
-// I just want to suppress the warning.
--(NSRange) visibleParagraphRange;
-@end
-
 @implementation XCodeTVBridge
 +(void) hijack
 {
@@ -25,13 +19,10 @@
     Class ideDelegateClass = NSClassFromString(@"IDESourceCodeEditor");
     general_hj_willChangeSelection(ideDelegateClass);
 }
-
--(NSRange) visibleParagraphRange {
-    return [[super targetView] visibleParagraphRange];
-}
 @end
 
 
+// === Espresso === 
 typedef void* (*O_InitWithFrame) (void*, SEL, NSRect);
 typedef void* (*O_InitWithFM)    (void*, SEL, NSRect, BOOL);
 typedef void* (*O_InitWithFTC)   (void*, SEL, NSRect, void*);
