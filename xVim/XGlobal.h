@@ -32,7 +32,6 @@
 -(void)       _scrollRangeToVisible:(NSRange) range forceCenter:(BOOL) flag;
 @end
 @interface NSText(xVim)
--(NSUInteger) accessibilityInsertionPointLineNumber;
 -(NSRange)    accessibilityCharacterRangeForLineNumber:(NSUInteger) lineNumber;
 @end
 // --------------------

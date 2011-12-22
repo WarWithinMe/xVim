@@ -136,7 +136,6 @@ NSArray* keyStringTokeyArray(NSString* string)
 -(void) stopKeymapTimer;
 -(void) startKeymapTimer;
 -(BOOL) isKeymapPrefix:(NSArray*) keys;
--(NSArray*) findMappedKey:(NSArray*) keys;
 @end
 
 
@@ -334,6 +333,7 @@ NSArray* keyStringTokeyArray(NSString* string)
     
     NSUInteger keyCode = ([event modifierFlags] & XModifierFlagsMaskX) | [key characterAtIndex:0];
     NSMutableDictionary* dict = keyMapDicts[vi_mode];
+    DLog(@"KeyCode: %lu, Dict: %@", keyCode, dict);
     if (dict != nil)
     {
         // When there's a key input, we do these checking:
@@ -431,7 +431,8 @@ NSArray* keyStringTokeyArray(NSString* string)
             int i = 0;
             for (; i < keysCount; ++i)
             {
-                if ([keys objectAtIndex:i] != [key objectAtIndex:i]) {
+                if ([[keys objectAtIndex:i] unsignedLongValue] != 
+                    [[key objectAtIndex:i] unsignedLongValue]) {
                     break;
                 }
             }
@@ -439,15 +440,6 @@ NSArray* keyStringTokeyArray(NSString* string)
         }
     }
     return NO;
-}
-
--(NSArray*) findMappedKey:(NSArray*) keys
-{
-    NSMutableDictionary* dict = keyMapDicts[vi_mode];
-    for (NSArray* key in dict) {
-        if ([key isEqualToArray:keys]) { return [dict objectForKey:key]; }
-    }
-    return nil;
 }
 
 -(NSArray*) selectionChangedFrom:(NSArray*)oldRanges to:(NSArray*)newRanges

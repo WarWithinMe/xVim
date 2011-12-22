@@ -8,6 +8,13 @@
 #import "XVimController.h"
 #import <objc/runtime.h>
 
+
+// Hijacking parameters
+static Class bridgeClass = nil;
+static XTextViewDelegate* delegate = nil;
+static BOOL  createBridgeWhenNeeded = NO;
+
+
 // Replace target selector of a target class with our function
 // the overriden method is returned.
 void* methodSwizzle(Class c, SEL sel, void* overrideFunction);
@@ -36,13 +43,21 @@ void removeBridgeForView(NSTextView*);
 // --------------------
 
 NSMutableDictionary* bridgeDict = 0;
+
 void associateBridgeAndView(XTextViewBridge* b, NSTextView* tv)
 {
     [bridgeDict setObject:b forKey:[NSValue valueWithPointer:tv]];
 }
 XTextViewBridge* getBridgeForView(NSTextView* tv)
 {
-    return [bridgeDict objectForKey:[NSValue valueWithPointer:tv]];
+    XTextViewBridge* b = [bridgeDict objectForKey:[NSValue valueWithPointer:tv]];
+    if (b == nil && createBridgeWhenNeeded)
+    {
+        DLog(@"Creating a new bridge when needed");
+        b = [[bridgeClass alloc] initWithTextView:tv];
+        associateBridgeAndView(b, tv);
+    }
+    return b;
 }
 void removeBridgeForView(NSTextView* tv)
 {
@@ -74,14 +89,18 @@ static void* hj_willChangeSelection(void*, SEL, NSTextView*, NSArray* oldRanges,
 
 // Special init methods:
 static void* orig_init = 0;
-static Class bridgeClass = nil;
-static XTextViewDelegate* delegate = nil;
 
+typedef void* (*O_Init)          (void*, SEL);
 typedef void* (*O_InitWithCoder) (void*, SEL, void*);
-typedef void* (*O_InitWithFM)    (NSTextView*, SEL, NSRect, BOOL);
+typedef void* (*O_InitWithFrame) (void*, SEL, NSRect);
+typedef void* (*O_InitWithFTC)   (void*, SEL, NSRect, void*);
+typedef void* (*O_InitWithFM)    (void*, SEL, NSRect, BOOL);
 
-static void* hj_initWithCoder(void*, SEL, void*);
-static void* hj_initWithFM(NSTextView*, SEL, NSRect, BOOL);
+static void* hj_init          (void*, SEL);
+static void* hj_initWithCoder (void*, SEL, void*);
+static void* hj_initWithFrame (void*, SEL, NSRect);
+static void* hj_initWithFTC   (void*, SEL, NSRect, void*);
+static void* hj_initWithFM    (void*, SEL, NSRect, BOOL);
 
 
 // Hijack info:
@@ -90,14 +109,15 @@ typedef struct s_HijackInfo {
     NSString* textViewSubclassName;
     NSString* delegateClassName;     // Can be nil
     
-    void*     initHijackFunc;
-    NSString* initSelectorName;
+    void*     initHijackFunc;        // If this is nil, 
+                                     // we create the bridge the first time we need it.
+    NSString* initSelectorName;      // This can be nil if initHijackFunc is nil.
     
     NSString* appIdentifier;
 } HijackInfo;
 
 // The hijack info map
-#define SUPPORTED_APP_COUNT 2
+#define SUPPORTED_APP_COUNT 3
 
 // The map:
 static HijackInfo s_hijackInfo_map[SUPPORTED_APP_COUNT] =
@@ -114,7 +134,14 @@ static HijackInfo s_hijackInfo_map[SUPPORTED_APP_COUNT] =
         nil,
         hj_initWithFM,
         @"initWithFrame:makeFieldEditor:",
-        @"com.macrabbit.Espresso"} // Espresso
+        @"com.macrabbit.Espresso"}, // Espresso
+    
+    {nil,
+        @"CHFullTextView",
+        @"CHTextViewController",
+        nil,
+        nil,
+        @"com.chocolatapp.Chocolat"} // Chocolat use GC, but finalize never calls.
 };
 
 
@@ -151,9 +178,16 @@ static HijackInfo s_hijackInfo_map[SUPPORTED_APP_COUNT] =
             
             Class tvSubClass  = NSClassFromString(info->textViewSubclassName);
             
-            orig_init     = methodSwizzle(tvSubClass, 
+            if (info->initHijackFunc)
+            {
+                orig_init = methodSwizzle(tvSubClass, 
                                           NSSelectorFromString(info->initSelectorName), 
                                           info->initHijackFunc);
+            } else {
+                createBridgeWhenNeeded = YES;
+            }
+            
+            
             
             orig_dealloc  = methodSwizzle(tvSubClass, @selector(dealloc),  hj_dealloc);
             orig_finalize = methodSwizzle(tvSubClass, @selector(finalize), hj_finalize);
@@ -285,18 +319,19 @@ void hj_finalize(void* self, SEL sel)
 {
     DLog(@"HJ_Finalize");
     removeBridgeForView(self);
-    orig_finalize(self, sel);
+    if(orig_finalize) orig_finalize(self, sel);
 }
 
 void hj_dealloc(void* self, SEL sel)
 {
     DLog(@"Hj_Dealloc");
     removeBridgeForView(self);
-    orig_dealloc(self, sel);
+    if(orig_dealloc) orig_dealloc(self, sel);
 }
 
 void hj_keyDown(void* self, SEL sel, NSEvent* event)
 {
+    DLog(@"HJ_KeyDown");
     [getBridgeForView(self) processKeyEvent:event];
 }
 
@@ -312,44 +347,102 @@ void* hj_willChangeSelection(void* self, SEL sel, NSTextView* view, NSArray* old
 
 
 // ========== Special Init Methods ==========
+static void* hj_init(void* self, SEL sel)
+{
+    DLog(@"HJ_init");
+    
+    O_Init o_init = (O_Init) orig_init;
+    NSTextView* r = o_init(self, sel);
+    
+    if (r == nil) { return nil; }
+    
+    XTextViewBridge* bridge = [[bridgeClass alloc] initWithTextView:r];
+    
+    if (bridge != nil) {
+        associateBridgeAndView(bridge, r);
+        [bridge release];
+    }
+    if (delegate != nil) { [r setDelegate:delegate]; }
+    
+    return r;
+}
+
 static void* hj_initWithCoder(void* self, SEL sel, void* p1)
 {
     DLog(@"HJ_initWithCoder");
     
-    O_InitWithCoder orig_initWithCoder = (O_InitWithCoder) orig_init;
-    NSTextView* r = orig_initWithCoder(self, sel, p1);
+    O_InitWithCoder o_init = (O_InitWithCoder) orig_init;
+    NSTextView* r = o_init(self, sel, p1);
     
-    if (r != nil)
-    {
-        XTextViewBridge* bridge = [[bridgeClass alloc] initWithTextView:self];
-        if (bridge)
-        {
-            associateBridgeAndView(bridge, r);
-            [bridge release];
-        }
-        
-        if (delegate != nil) { [r setDelegate:delegate]; }
+    if (r == nil) { return nil; }
+    
+    XTextViewBridge* bridge = [[bridgeClass alloc] initWithTextView:r];
+    
+    if (bridge != nil) {
+        associateBridgeAndView(bridge, r);
+        [bridge release];
     }
-    return r; 
+    if (delegate != nil) { [r setDelegate:delegate]; }
+    
+    return r;
 }
 
-static void* hj_initWithFM(NSTextView* self, SEL sel, NSRect p1, BOOL makeFieldEditor)
+static void* hj_initWithFrame(void* self, SEL sel, NSRect p1)
+{
+    DLog(@"HJ_initWithFrame");
+    
+    O_InitWithFrame o_init = (O_InitWithFrame) orig_init;
+    NSTextView* r = o_init(self, sel, p1);
+    
+    if (r == nil) { return nil; }
+    
+    XTextViewBridge* bridge = [[bridgeClass alloc] initWithTextView:r];
+    
+    if (bridge != nil) {
+        associateBridgeAndView(bridge, r);
+        [bridge release];
+    }
+    if (delegate != nil) { [r setDelegate:delegate]; }
+    
+    return r;
+}
+
+static void* hj_initWithFTC(void* self, SEL sel, NSRect p1, void* p2)
+{
+    DLog(@"HJ_initWithFTC");
+    
+    O_InitWithFTC o_init = (O_InitWithFTC) orig_init;
+    NSTextView* r = o_init(self, sel, p1, p2);
+    
+    if (r == nil) { return nil; }
+    
+    XTextViewBridge* bridge = [[bridgeClass alloc] initWithTextView:r];
+    
+    if (bridge != nil) {
+        associateBridgeAndView(bridge, r);
+        [bridge release];
+    }
+    if (delegate != nil) { [r setDelegate:delegate]; }
+    
+    return r;
+}
+
+static void* hj_initWithFM(void* self, SEL sel, NSRect p1, BOOL makeFieldEditor)
 {
     DLog(@"HJ_initWithFM");
     
-    O_InitWithFM orig_initWithFM = (O_InitWithFM) orig_init;
-    NSTextView* r = orig_initWithFM(self, sel, p1, makeFieldEditor);
+    O_InitWithFM o_init = (O_InitWithFM) orig_init;
+    NSTextView* r = o_init(self, sel, p1, makeFieldEditor);
     
-    if (makeFieldEditor == NO && r != nil)
-    {
-        XTextViewBridge* bridge = [[bridgeClass alloc] initWithTextView:self];
-        if (bridge)
-        {
-            associateBridgeAndView(bridge, r);
-            [bridge release];
-        }
-        
-        if (delegate != nil) { [r setDelegate:delegate]; }
+    if (makeFieldEditor == YES || r == nil) { return r; }
+    
+    XTextViewBridge* bridge = [[bridgeClass alloc] initWithTextView:r];
+    
+    if (bridge != nil) {
+        associateBridgeAndView(bridge, r);
+        [bridge release];
     }
-    return r; 
+    if (delegate != nil) { [r setDelegate:delegate]; }
+    
+    return r;
 }
