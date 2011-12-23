@@ -9,6 +9,17 @@
 #import "XTextViewBridge.h"
 #import "vim.h"
 
+@interface XVimModeHandler()
+{
+@private
+    NSRect lastRect;
+    NSRect scrollToRect;
+}
+
+-(void) doScrollRect;
+@end
+
+
 @implementation XVimModeHandler
 -(id) initWithController:(XVimController*) c
 {
@@ -21,6 +32,47 @@
 -(void) reset{}
 -(BOOL) processKey:(unichar)k modifiers:(NSUInteger)f { return NO; }
 -(NSArray*) selectionChangedFrom:(NSArray*)oldRanges to:(NSArray*)newRanges { return newRanges; }
+
+-(void) scrollViewRectToVisible:(NSRect)visibleRect
+{
+    lastRect = [[[controller bridge] targetView] visibleRect];
+    scrollToRect = visibleRect;
+    [self doScrollRect];
+}
+
+-(void) doScrollRect
+{
+    NSTextView* view = [[controller bridge] targetView];
+    
+    NSRect visibleRect = [view visibleRect];
+    
+    if (memcmp(&visibleRect, &lastRect, sizeof(NSRect)) != 0)
+    {
+        // The user scroll the text himsel no need to scroll again. 
+        return;
+    }
+    
+    NSInteger dX = visibleRect.origin.x - scrollToRect.origin.x;
+    NSInteger dY = visibleRect.origin.y - scrollToRect.origin.y;
+    
+    if (dX == 0 && dY == 0) { return; }
+    
+    if (dX > SCROLL_STEP) { dX = SCROLL_STEP; } else if (dX < -SCROLL_STEP) { dX = -SCROLL_STEP; }
+    if (dY > SCROLL_STEP) { dY = SCROLL_STEP; } else if (dY < -SCROLL_STEP) { dY = -SCROLL_STEP; }
+    
+    NSRect toRect = visibleRect;
+    toRect.origin.x -= dX;
+    toRect.origin.y -= dY;
+    
+    [view scrollRectToVisible:toRect];
+    lastRect = [view visibleRect];
+    
+    if (memcmp(&lastRect, &scrollToRect, sizeof(NSRect)) != 0)
+    {
+        // We need to scroll again.
+        [self performSelector:@selector(doScrollRect) withObject:nil afterDelay:.03f];
+    }
+}
 @end
 
 @implementation XVimVisualModeHandler

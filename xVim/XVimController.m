@@ -282,9 +282,12 @@ NSArray* keyStringTokeyArray(NSString* string)
     if (currentKeyEvent != nil)
     {
         // Process the currentKeyEvent.
-        unichar ch = [[currentKeyEvent characters] characterAtIndex:0];
+        unichar    ch   = [[currentKeyEvent charactersIgnoringModifiers] characterAtIndex:0];
+        NSUInteger flag = [currentKeyEvent modifierFlags];
+        if ((flag & XMaskCapLock) && ch >= 'a' && ch <= 'z') { ch = ch + 'A' - 'a'; }
+        
         BOOL handled = [handlers[vi_mode] processKey:ch
-                                           modifiers:([currentKeyEvent modifierFlags] & XModifierFlagsMask)];
+                                           modifiers:(flag & XModifierFlagsMask)];
         if (handled == NO)
             [bridge handleFakeKeyEvent:currentKeyEvent];
         
@@ -328,12 +331,17 @@ NSArray* keyStringTokeyArray(NSString* string)
     if (timerStarted) { [self stopKeymapTimer]; }
     
     
-    NSString* key = [event characters];
+    NSString* key = [event charactersIgnoringModifiers];
     if ([key length] == 0) { return; }
     
-    NSUInteger keyCode = ([event modifierFlags] & XModifierFlagsMaskX) | [key characterAtIndex:0];
+    unichar    ch   = [key characterAtIndex:0];
+    NSUInteger flag = [event modifierFlags];
+    if ((flag & XMaskCapLock) && ch >= 'a' && ch <= 'z') { ch = ch + 'A' - 'a'; }
+    
+    NSUInteger keyCode = (flag & XModifierFlagsMaskX) | ch;
+    DLog(@"KeyCode: %lu, Flags: %lu, Char: %C(%i)", keyCode, flag, ch, ch);
+    
     NSMutableDictionary* dict = keyMapDicts[vi_mode];
-    DLog(@"KeyCode: %lu, Dict: %@", keyCode, dict);
     if (dict != nil)
     {
         // When there's a key input, we do these checking:

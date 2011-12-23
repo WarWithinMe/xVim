@@ -12,6 +12,8 @@
         XVimController* controller;
 }
 -(id) initWithController:(XVimController*) controller;
+// Scroll's the target textview with animation
+-(void) scrollViewRectToVisible:(NSRect)visibleRect;
 // Called before entering the mode.
 -(void) enter;
 // Called before leaving the mode.

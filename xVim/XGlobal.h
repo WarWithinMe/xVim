@@ -7,6 +7,10 @@
 // ====================
 // Switches:
 #define VIM_KEYMAP_TIMEOUT 220
+#define SCROLL_STEP        100  // If this is large enough, when exec 'zb' / 'zt'...
+                                // the textview will jump
+#define UNDERSCORE_IS_WORD      // If defined, "a_word" is consider a word,
+                                // otherwise, it's consider three words.
 // #define MAKE_0_AS_CARET      // If defined, 0 acts as ^
 // --------------------
 
@@ -28,9 +32,6 @@
 
 // ====================
 // Hidden API
-@interface NSTextView(xVim)
--(void)       _scrollRangeToVisible:(NSRange) range forceCenter:(BOOL) flag;
-@end
 @interface NSText(xVim)
 -(NSRange)    accessibilityCharacterRangeForLineNumber:(NSUInteger) lineNumber;
 @end

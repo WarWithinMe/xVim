@@ -55,14 +55,14 @@
 }
 
 // Below are commands that are going to be implemented.
+// Ctrl+f one page forward
+// Ctrl+b one page backward
+// Ctrl+d half screen page down
+// Ctrl+u half screen page up.
 // %     Goto to the matching bracket
 // #>    Indent
 // #<    Un-Indent
 // #|    Jump to column (specified by the repeat parameter).
-// {     Goto start of current (or previous) paragraph
-// }     Goto end of current (or next) paragraph
-// zt	 Scroll view so current line becomes the first line
-// zb	 Scroll view so current line is at the bottom (last line)
 // fx    Find char x on current line and go to it
 // tx    Similar to fx, but stops one character short before x
 // Fx    Similar to fx, but searches backwards
@@ -77,12 +77,81 @@
 -(BOOL) processKey:(unichar)ch modifiers:(NSUInteger)flags
 {
     // Currently we have nothing to do with a key, if it has some flags, or a tab.
-    if (ch == '\t' || (flags & XImportantMask) != 0) { return NO; }
+    if (ch == '\t') { return NO; }
     // Esc will reset everything
     if (ch == XEsc) { [self reset]; return YES; }
     
+    flags &= XImportantMask;
+    
     XTextViewBridge* bridge       = [controller bridge];
     NSTextView*      hijackedView = [bridge targetView];
+    
+    if (flags == XMaskControl &&
+        (ch == 'f' || ch =='b' || ch == 'd' || ch == 'u'))
+    {
+        // Ctrl + f one page forward
+        // Ctrl + b one page backward
+        // Ctrl + d half screen down
+        // Ctrl + u harf screen up
+        NSRect    currentRect = [hijackedView visibleRect];
+        NSSize    viewSize    = [hijackedView frame].size;
+        NSInteger scrollToY   = 0;
+        NSInteger delta       = currentRect.size.height; 
+        
+        if (ch == 'f' || ch == 'd')
+        {
+            if (ch == 'd') { delta /= 2; }
+            
+            scrollToY = currentRect.origin.y + delta;
+            NSInteger maxY = viewSize.height - currentRect.size.height;
+            if (scrollToY > maxY) { scrollToY = maxY; }
+            
+        } else {
+            delta /= ch == 'u' ? -2 : -1;
+            scrollToY = currentRect.origin.y + delta;
+            if (scrollToY < 0) { scrollToY = 0; }
+        }
+        
+        if (scrollToY != currentRect.origin.y) 
+        {
+            // Move caret to a new place.
+            
+            NSLayoutManager* manager = [hijackedView layoutManager];
+            NSRange range = [hijackedView selectedRange];
+            range.length = 1;
+            range = [manager glyphRangeForCharacterRange:range actualCharacterRange:nil];
+            
+            NSRect    caretRect   = [manager boundingRectForGlyphRange:range 
+                                                       inTextContainer:[hijackedView textContainer]];
+            NSInteger caretYInScreen = caretRect.origin.y - currentRect.origin.y;
+            NSInteger caretYAtLeast  = 0.2 * currentRect.size.height - caretRect.size.height;
+            NSInteger caretYAtMost   = 0.8 * currentRect.size.height;
+            
+            if (caretYInScreen < caretYAtLeast) {
+                caretYInScreen = caretYAtLeast;
+            } else if (caretYInScreen > caretYAtMost) {
+                caretYInScreen = caretYAtMost;
+            }
+            
+            NSRange insertion = {[hijackedView characterIndexForInsertionAtPoint:
+                                  NSMakePoint(0, caretYInScreen + currentRect.origin.y + delta)],0};
+            [hijackedView setSelectedRange:insertion];
+            insertion.location = mv_caret_handler(hijackedView);
+            [hijackedView setSelectedRange:insertion];
+            
+            // Scroll
+            currentRect.origin.y = scrollToY;
+            [self scrollViewRectToVisible:currentRect];
+        }
+        
+        return YES;
+        
+    } else if (flags != 0) {
+        return NO;
+    }
+    
+    DLog(@"Alt-Key not handled");
+
     
     // If the commandCount is not defined, we treat '0' as a command instead of a number.
     if (ch <= '9' && ((commandCount > 0 && ch >= '0') || (commandCount == 0 && ch > '0')) )
@@ -107,7 +176,35 @@
     if (commandChar != 0)
     {
         if (motionCount != 0) { commandCount *= motionCount; }
-        if (commandChar == ch)
+        
+        if (commandChar == 'z')
+        {
+            if (ch == 't' || ch == 'b' || ch == 'z') 
+            {
+                NSLayoutManager* manager = [hijackedView layoutManager];
+                NSRange range = [hijackedView selectedRange];
+                range.length = 1;
+                range = [manager glyphRangeForCharacterRange:range actualCharacterRange:nil];
+                
+                NSRect caretRect   = [manager boundingRectForGlyphRange:range 
+                                                         inTextContainer:[hijackedView textContainer]];
+                
+                NSRect visibleRect = [hijackedView visibleRect];
+                
+                if (ch == 't') {
+                    visibleRect.origin.y = caretRect.origin.y;
+                } else if (ch == 'b') {
+                    visibleRect.origin.y = caretRect.origin.y + caretRect.size.height - 
+                                            visibleRect.size.height;
+                } else {
+                    visibleRect.origin.y = caretRect.origin.y - visibleRect.size.height / 2;
+                }
+                
+                if (visibleRect.origin.y < 0) { visibleRect.origin.y = 0; }
+                [self scrollViewRectToVisible:visibleRect];
+            }
+                
+        } else if (commandChar == ch)
         {
             switch (ch) {
                 case 'g': 
@@ -167,30 +264,6 @@
                 }
                     break;
             }
-        } else if (commandChar == 'z')
-        {
-            if (ch == 't' || ch == 'b') {
-                // Place current line at top.
-                NSLayoutManager* manager = [hijackedView layoutManager];
-                NSRange range = [hijackedView selectedRange];
-                range.length = 1;
-                range = [manager glyphRangeForCharacterRange:range actualCharacterRange:nil];
-                NSRect currentRect = [manager boundingRectForGlyphRange:range 
-                                                        inTextContainer:[hijackedView textContainer]];
-                DLog(@"Current Rect: %@", NSStringFromRect(currentRect));
-                
-                NSRect visibleRect = [hijackedView visibleRect];
-                
-                if (ch == 't') {
-                    visibleRect.origin.y = currentRect.origin.y;
-                } else {
-                    visibleRect.origin.y = currentRect.origin.y + currentRect.size.height - 
-                                           visibleRect.size.height;
-                    if (visibleRect.origin.y < 0) { visibleRect.origin.y = 0; }
-                }
-                [hijackedView scrollRectToVisible:visibleRect];
-            }
-            
         } else {
             
             // Here we deal with the motion command ydc.
@@ -344,6 +417,7 @@ interpret_as_command:
             [hijackedView scrollRangeToVisible:range];
         }
             break;
+        case ' ':
         case 'l':
         {
             NSRange range = {mv_l_handler(hijackedView,commandCount,YES),0};
@@ -437,8 +511,6 @@ interpret_as_command:
                 [hijackedView setSelectedRange:selection];
                 selection.location = mv_caret_handler(hijackedView);
                 [hijackedView setSelectedRange:selection];
-                
-                
             }
         }
             break;

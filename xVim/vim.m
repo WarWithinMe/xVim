@@ -13,7 +13,11 @@ BOOL testNewLine(unichar ch) { return (ch >= 0xA && ch <= 0xD) || ch == 0x85; }
 BOOL testNonAscii(unichar ch) { return ch > 128; }
 BOOL testAlpha(unichar ch) { 
     return (ch >= 'A' && ch <= 'Z') ||
-    (ch >= 'a' && ch <= 'z') || ch == '_';
+    (ch >= 'a' && ch <= 'z') 
+#ifdef UNDERSCORE_IS_WORD
+    || ch == '_'
+#endif
+    ;
 }
 BOOL testDelimeter(unichar ch) {
     return (ch >= '!' && ch <= '/') ||
@@ -38,7 +42,7 @@ NSUInteger mv_dollar_handler(NSTextView* view)
     {
         if (testNewLine(characterAtIndex(&helper, index)))
         {
-            if (index > 0) { --index; }
+            // if (index > 0) { --index; }
             break;
         }
         ++index;

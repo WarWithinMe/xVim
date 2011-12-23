@@ -7,11 +7,11 @@
 
 typedef enum e_VimMode
 {
-    InsertMode = 0,
-    NormalMode = 1,
-    VisualMode = 2,
-    ExMode     = 3,
-    ReplaceMode = 4,
+    InsertMode   = 0,
+    NormalMode   = 1,
+    VisualMode   = 2,
+    ExMode       = 3,
+    ReplaceMode  = 4,
     SingleReplaceMode = 5,
     VimModeCount
 } VimMode;

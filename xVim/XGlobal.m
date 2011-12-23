@@ -337,6 +337,7 @@ void hj_keyDown(void* self, SEL sel, NSEvent* event)
 
 void* hj_willChangeSelection(void* self, SEL sel, NSTextView* view, NSArray* oldRanges, NSArray* newRanges)
 {
+    DLog(@"Selection Changed, Affinity: %lu", [view selectionAffinity]);
     XTextViewBridge* bridge = getBridgeForView(view);
     if (bridge != nil) {
         newRanges = [[bridge vimController] selectionChangedFrom:oldRanges to:newRanges];
