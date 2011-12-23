@@ -111,35 +111,6 @@ NSUInteger mv_0_handler(NSTextView* view)
     return index;
 }
 
-void textview_goto_line(NSTextView* view, NSInteger lineNumber, BOOL ensureVisible)
-{
-    NSRange range = {0,0};
-    if (lineNumber > 0) {
-        range = [view accessibilityCharacterRangeForLineNumber:lineNumber];
-        range.length = 0;
-        if (range.location == 0 && lineNumber != 0) {
-            // The lineNumber is not valid,
-            // We move it to the last line.
-            lineNumber = -1;
-        }
-    }
-    
-    if (lineNumber == -1) {
-        // Goto last line
-        NSString*  string   = [view string];
-        NSUInteger maxIndex = [string length];
-        if (testNewLine([string characterAtIndex:maxIndex - 1]) == NO)
-            --maxIndex;
-        
-        range.location = maxIndex;
-    }
-    
-    [view setSelectedRange:range];
-    range.location = mv_caret_handler(view);
-    [view setSelectedRange:range];
-    if (ensureVisible) { [view scrollRangeToVisible:range]; }
-}
-
 NSUInteger mv_h_handler(NSTextView* view, int repeatCount)
 {
     NSUInteger index  = [view selectedRange].location;

@@ -110,7 +110,15 @@
         if (commandChar == ch)
         {
             switch (ch) {
-                case 'g': textview_goto_line(hijackedView, 0, YES); break;
+                case 'g': 
+                {
+                    NSRange range = {0,0};
+                    [hijackedView setSelectedRange:range];
+                    range.location = mv_caret_handler(hijackedView);
+                    [hijackedView setSelectedRange:range];
+                    [hijackedView scrollRangeToVisible:range];
+                }
+                    break;
                 case 'z': [hijackedView _scrollRangeToVisible:[hijackedView selectedRange]
                                                   forceCenter:YES]; break;
                 case 'y':
@@ -436,7 +444,35 @@ interpret_as_command:
             break;
         
         case 'G':
-            textview_goto_line(hijackedView, (commandCountSpecified ? commandCount - 1 : -1), YES);
+        {
+            NSRange   range      = {0, 0};
+            NSInteger lineNumber = commandCountSpecified ? commandCount - 1 : -1;
+            
+            if (lineNumber > 0){
+                range = [hijackedView accessibilityCharacterRangeForLineNumber:lineNumber];
+                range.length = 0;
+                if (range.location == 0 && lineNumber != 0) {
+                    // The lineNumber is not valid,
+                    // We move it to the last line.
+                    lineNumber = -1;
+                }
+            }
+            
+            if (lineNumber == -1)
+            {
+                // Goto last line
+                NSString*  string   = [hijackedView string];
+                NSUInteger maxIndex = [string length];
+                if (testNewLine([string characterAtIndex:maxIndex - 1]) == NO)
+                    --maxIndex;
+                range.location = maxIndex;
+            }
+            
+            [hijackedView setSelectedRange:range];
+            range.location = mv_caret_handler(hijackedView);
+            [hijackedView setSelectedRange:range];
+            [hijackedView scrollRangeToVisible:range];
+        }
             break;
             
             

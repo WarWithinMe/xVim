@@ -14,10 +14,35 @@
 			<key>orderHint</key>
 			<integer>1</integer>
 		</dict>
+		<key>xVim-WWM-Debug.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>2</integer>
+		</dict>
+		<key>xVim-WWM-Release.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>3</integer>
+		</dict>
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
 		<key>A56CE20B148F640100A06106</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>A5929E1914A4288B009AFACA</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>A5929E2614A4288F009AFACA</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>A5929E3E14A428C0009AFACA</key>
 		<dict>
 			<key>primary</key>
 			<true/>
