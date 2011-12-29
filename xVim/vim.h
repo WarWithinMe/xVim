@@ -14,6 +14,9 @@ NSUInteger mv_dollar_handler(NSTextView* view);
 // This one returns index of the CR
 NSUInteger mv_dollar_inc_handler(NSTextView* view);
 
+// Return the index of the character in the column of current line.
+NSUInteger columnToIndex(NSTextView* view, NSUInteger column);
+
 // Return the new location of the caret, after handler h,j,w,W,e,E,b,B
 NSUInteger mv_h_handler(NSTextView* view, int repeatCount);
 NSUInteger mv_l_handler(NSTextView* view, int repeatCount, BOOL stepForward);

@@ -385,3 +385,33 @@ NSRange motion_word_bound(NSTextView* view, BOOL fuzzy, BOOL trailing)
     
     return NSMakeRange(begin, end - begin + 1);
 }
+
+NSUInteger columnToIndex(NSTextView* view, NSUInteger column)
+{
+    NSUInteger index  = [view selectedRange].location;
+    NSString*  string = [view string];
+    NSUInteger strLen = [string length];
+    
+    if (index >= strLen) { return index; }
+    
+    NSStringHelper helper;
+    initNSStringHelperBackward(&helper, string, strLen);
+    
+    NSInteger lastLineEnd = index;
+    for (; lastLineEnd >= 0; --lastLineEnd)
+    {
+        unichar ch = characterAtIndex(&helper, lastLineEnd);
+        if (testNewLine(ch)) { break; }
+    }
+    
+    if (lastLineEnd == index) { return index; }
+    
+    NSInteger thisLineEnd = index + 1;
+    for (; thisLineEnd < strLen; ++thisLineEnd) {
+        unichar ch = characterAtIndex(&helper, thisLineEnd);
+        if (testNewLine(ch)) { break; }
+    }
+    
+    index = lastLineEnd + column;
+    return index < thisLineEnd ? index : thisLineEnd;
+}

@@ -293,12 +293,12 @@ void configureInsertionPointRect(NSTextView* view, NSRect* rect)
                                                                    inTextContainer:[view textContainer]];
                 rect->size.width = glyphRect.size.width;
             }
+        }
             
-            if (mode == ReplaceMode || mode == SingleReplaceMode) {
-                rect->origin.y += rect->size.height;
-                rect->origin.y -= 3;
-                rect->size.height = 3;
-            }
+        if (mode == ReplaceMode || mode == SingleReplaceMode) {
+            rect->origin.y += rect->size.height;
+            rect->origin.y -= 3;
+            rect->size.height = 3;
         }
     }
 }

@@ -55,10 +55,6 @@
 }
 
 // Below are commands that are going to be implemented.
-// Ctrl+f one page forward
-// Ctrl+b one page backward
-// Ctrl+d half screen page down
-// Ctrl+u half screen page up.
 // %     Goto to the matching bracket
 // #>    Indent
 // #<    Un-Indent
@@ -149,9 +145,6 @@
     } else if (flags != 0) {
         return NO;
     }
-    
-    DLog(@"Alt-Key not handled");
-
     
     // If the commandCount is not defined, we treat '0' as a command instead of a number.
     if (ch <= '9' && ((commandCount > 0 && ch >= '0') || (commandCount == 0 && ch > '0')) )
@@ -795,6 +788,11 @@ interpret_as_command:
                 [hijackedView insertText:@"" replacementRange:range];
             }
         }
+            break;
+            
+        case '|':
+            // Go to column
+            [hijackedView setSelectedRange:NSMakeRange(columnToIndex(hijackedView, commandCount), 0)];
             break;
             
             // Below are commands that need a parameter

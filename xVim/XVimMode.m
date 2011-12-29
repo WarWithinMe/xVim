@@ -94,10 +94,7 @@
             NSTextView* view     = [bridge targetView];
             NSString*   string   = [[view textStorage] string];
             NSUInteger  index    = [view selectedRange].location;
-            NSUInteger  maxIndex = [string length] - 1;
-            if (index > maxIndex) {
-                index = maxIndex;
-            }
+            
             if (index > 0) {
                 if (testNewLine([string characterAtIndex:index - 1]) == NO) {
                     [view setSelectedRange:NSMakeRange(index - 1, 0)];
@@ -147,9 +144,17 @@
     
     if (key == XEsc)
     {
-        if ([[controller bridge] closePopup] == NO) {
-            [controller switchToMode:NormalMode];
+        NSTextView* view     = [[controller bridge] targetView];
+        NSString*   string   = [[view textStorage] string];
+        NSUInteger  index    = [view selectedRange].location;
+        
+        if (index > 0) {
+            if (testNewLine([string characterAtIndex:index - 1]) == NO) {
+                [view setSelectedRange:NSMakeRange(index - 1, 0)];
+            }
         }
+        
+        [controller switchToMode:NormalMode];
         return YES;
     }
     
@@ -169,7 +174,7 @@
     NSString*   string       = [[hijackedView textStorage] string];
     NSUInteger  maxIndex     = [string length] - 1;
     NSRange     range        = [hijackedView selectedRange];
-    if (range.location >= maxIndex || testNewLine([string characterAtIndex:range.location]))
+    if (range.location > maxIndex || testNewLine([string characterAtIndex:range.location]))
     {
         // Let the textview process the key input, that is inserting the char.
         return NO;
@@ -194,20 +199,38 @@
     
     if (key == XEsc)
     {
-        if ([[controller bridge] closePopup] == NO) {
+        if ([[controller bridge] closePopup] == NO)
+        {
+            NSTextView* view     = [[controller bridge] targetView];
+            NSString*   string   = [[view textStorage] string];
+            NSUInteger  index    = [view selectedRange].location;
+            
+            if (index > 0) {
+                if (testNewLine([string characterAtIndex:index - 1]) == NO) {
+                    [view setSelectedRange:NSMakeRange(index - 1, 0)];
+                }
+            }
+            
             [controller switchToMode:NormalMode];
         }
         return YES;
     }
     
     NSTextView* hijackedView = [[controller bridge] targetView];
+    NSString*   string       = [hijackedView string];
     NSRange range = [hijackedView selectedRange];
     range.length = 1;
+
+    if (range.location < [string length] && [string characterAtIndex:range.location] != '\n')
+    {
+        // Don't insert anything if we are at the bottom of an empty line.
+        NSString* ch = [NSString stringWithCharacters:&key length:1];
+        [hijackedView insertText:ch replacementRange:range];
+        range.length = 0;
+        [hijackedView setSelectedRange:range];
+    }
     
-    NSString* ch = [NSString stringWithCharacters:&key length:1];
-    [hijackedView insertText:ch replacementRange:range];
-    range.length = 0;
-    [hijackedView setSelectedRange:range];
+    
     [controller switchToMode:NormalMode];
     return YES;
 }
