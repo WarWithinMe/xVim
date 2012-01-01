@@ -33,8 +33,18 @@
 
 -(NSArray*) selectionChangedFrom:(NSArray*)oldRanges to:(NSArray*)newRanges
 {
+#ifdef ENABLE_VISUALMODE
+    if ([[newRanges objectAtIndex:0] rangeValue].length > 0)
+    {
+        // Switch to visual mode if 
+        [controller switchToMode:VisualMode subMode:NoSubMode];
+        return newRanges;
+    }
+#endif
+    
+    
     if (dontCheckTrailingCR == YES) { return newRanges; }
-    if ([newRanges count] > 1) { return newRanges; }
+    if ([newRanges count] > 1)      { return newRanges; }
     
     NSRange selected = [[newRanges objectAtIndex:0] rangeValue];
     if (selected.length > 0 || selected.location == 0) { return newRanges; }
@@ -419,8 +429,16 @@ interpret_as_command:
         }
             break;
             
-        case 'r': [controller switchToMode:SingleReplaceMode]; break;
-        case 'R': [controller switchToMode:ReplaceMode];       break;
+        case 'r':
+        case 'R': [controller switchToMode:ReplaceMode 
+                                   subMode:(ch == 'r' ? SingleReplaceMode : NoSubMode)];
+            break;
+#ifdef ENABLE_VISUALMODE
+        case 'v':
+        case 'V': [controller switchToMode:VisualMode 
+                                   subMode:(ch == 'V' ? VisualLineMode : NoSubMode)];
+            break;
+#endif
             
         case 'u': for (int i = 0; i < commandCount; ++i) { [[hijackedView undoManager] undo]; } break;
         case 'U': for (int i = 0; i < commandCount; ++i) { [[hijackedView undoManager] redo]; } break;

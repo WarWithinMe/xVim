@@ -72,11 +72,11 @@ typedef void  (*O_KeyDown)                   (void*, SEL, NSEvent*);
 typedef void  (*O__DrawInsertionPointInRect) (NSTextView*, SEL, NSRect, NSColor*); // This one is for private api.
 typedef void  (*O_DrawInsertionPointInRect)  (NSTextView*, SEL, NSRect, NSColor*, BOOL);
 typedef void* (*O_WillChangeSelection)       (void*, SEL, NSTextView*, NSArray* oldRanges, NSArray* newRanges);
-static O_Finalize                  orig_finalize = 0;
-static O_Dealloc                   orig_dealloc  = 0;
-static O_KeyDown                   orig_keyDown  = 0;
-static O__DrawInsertionPointInRect orig_DIPIR_private = 0;
-static O_DrawInsertionPointInRect  orig_DIPIR = 0;
+static O_Finalize                  orig_finalize            = 0;
+static O_Dealloc                   orig_dealloc             = 0;
+static O_KeyDown                   orig_keyDown             = 0;
+static O__DrawInsertionPointInRect orig_DIPIR_private       = 0;
+static O_DrawInsertionPointInRect  orig_DIPIR               = 0;
 static O_WillChangeSelection       orig_willChangeSelection = 0;
 // Hijackers:
 static void  configureInsertionPointRect(NSTextView* view, NSRect*);
@@ -254,14 +254,9 @@ static HijackInfo s_hijackInfo_map[SUPPORTED_APP_COUNT] =
 @end
 
 @implementation XTextViewDelegate
-
-- (NSArray*) textView:(NSTextView*) view willChangeSelectionFromCharacterRanges:(NSArray*) old toCharacterRanges:(NSArray*) new
+-(NSArray*) textView:(NSTextView*) view willChangeSelectionFromCharacterRanges:(NSArray*) old toCharacterRanges:(NSArray*) new
 {
-    XTextViewBridge* bridge = getBridgeForView(view);
-    if (bridge != nil) {
-        return [[bridge vimController] selectionChangedFrom:old to:new];
-    }
-    return new;
+    return hj_willChangeSelection(nil, nil, view, old, new);
 }
 @end
 
@@ -337,7 +332,6 @@ void hj_keyDown(void* self, SEL sel, NSEvent* event)
 
 void* hj_willChangeSelection(void* self, SEL sel, NSTextView* view, NSArray* oldRanges, NSArray* newRanges)
 {
-    DLog(@"Selection Changed, Affinity: %lu", [view selectionAffinity]);
     XTextViewBridge* bridge = getBridgeForView(view);
     if (bridge != nil) {
         newRanges = [[bridge vimController] selectionChangedFrom:oldRanges to:newRanges];

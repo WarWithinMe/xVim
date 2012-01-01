@@ -229,7 +229,6 @@ NSArray* keyStringTokeyArray(NSString* string)
         handlers[InsertMode] = [[XVimInsertModeHandler alloc] initWithController:self];
         handlers[ExMode]     = [[XVimExModeHandler alloc] initWithController:self];
         handlers[ReplaceMode] = [[XVimReplaceModeHandler alloc] initWithController:self];
-        handlers[SingleReplaceMode] = [[ XVimSReplaceModeHandler alloc] initWithController:self];
     }
     return self;
 }
@@ -260,6 +259,12 @@ NSArray* keyStringTokeyArray(NSString* string)
 -(VimMode) mode { return vi_mode; }
 -(void) switchToMode:(VimMode)mode
 {
+    [self switchToMode:mode subMode:NoSubMode];
+}
+
+-(void) switchToMode:(VimMode)mode subMode:(VimMode)sub
+{
+    NSAssert(mode < VimModeCount, @"The vim mode is wrong");
     if (vi_mode == mode) { return; }
     
     [handlers[vi_mode] reset];
@@ -274,7 +279,7 @@ NSArray* keyStringTokeyArray(NSString* string)
         [[bridge targetView] updateInsertionPointStateAndRestartTimer:YES];
     }
     
-    [handlers[vi_mode] enter];
+    [handlers[vi_mode] enterWith:sub];
 }
 
 -(void) processBuffer

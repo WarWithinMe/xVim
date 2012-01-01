@@ -12,6 +12,7 @@
 #define UNDERSCORE_IS_WORD      // If defined, "a_word" is consider a word,
                                 // otherwise, it's consider three words.
 // #define MAKE_0_AS_CARET      // If defined, 0 acts as ^
+// #define ENABLE_VISUALMODE    // If defined, visual mode is enabled.
 // --------------------
 
 
@@ -34,5 +35,6 @@
 // Hidden API
 @interface NSText(xVim)
 -(NSRange)    accessibilityCharacterRangeForLineNumber:(NSUInteger) lineNumber;
+-(void)       _scrollRangeToVisible:(NSRange) range forceCenter:(BOOL) flag;
 @end
 // --------------------

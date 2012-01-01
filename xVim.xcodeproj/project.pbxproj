@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		A504A452149DF9F40084C754 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = A504A451149DF9F40084C754 /* README.md */; };
+		A520764F14B0AB44005B8077 /* XVimVisualMode.m in Sources */ = {isa = PBXBuildFile; fileRef = A520764E14B0AB44005B8077 /* XVimVisualMode.m */; };
+		A520765014B0AB44005B8077 /* XVimVisualMode.m in Sources */ = {isa = PBXBuildFile; fileRef = A520764E14B0AB44005B8077 /* XVimVisualMode.m */; };
 		A52E943B1499A95F00FA6045 /* keymap-example in Resources */ = {isa = PBXBuildFile; fileRef = A52E943A1499A95F00FA6045 /* keymap-example */; };
 		A543C39A148FBBB10070E986 /* XVimController.m in Sources */ = {isa = PBXBuildFile; fileRef = A543C399148FBBB10070E986 /* XVimController.m */; };
 		A55056BE14A19B4300067686 /* keymap in Resources */ = {isa = PBXBuildFile; fileRef = A55056BD14A19B4300067686 /* keymap */; };
@@ -58,6 +60,7 @@
 
 /* Begin PBXFileReference section */
 		A504A451149DF9F40084C754 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = README.md; path = ../README.md; sourceTree = "<group>"; };
+		A520764E14B0AB44005B8077 /* XVimVisualMode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XVimVisualMode.m; sourceTree = "<group>"; };
 		A52E943A1499A95F00FA6045 /* keymap-example */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "keymap-example"; path = "Resources/keymap-example"; sourceTree = "<group>"; };
 		A543C398148FBBB10070E986 /* XVimController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XVimController.h; sourceTree = "<group>"; };
 		A543C399148FBBB10070E986 /* XVimController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XVimController.m; sourceTree = "<group>"; };
@@ -187,6 +190,7 @@
 				A58D5A7D149F491F00921622 /* XVimNormalMode.m */,
 				A5BD0F33149C598F0089BF5E /* vim.m */,
 				A56B36D9149F2A0A00AE44CC /* NSStringHelper.m */,
+				A520764E14B0AB44005B8077 /* XVimVisualMode.m */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -351,6 +355,7 @@
 				A5DD1A96149DD112000AAE3D /* XVimMode.m in Sources */,
 				A56B36DA149F2A0A00AE44CC /* NSStringHelper.m in Sources */,
 				A58D5A7E149F491F00921622 /* XVimNormalMode.m in Sources */,
+				A520764F14B0AB44005B8077 /* XVimVisualMode.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -364,6 +369,7 @@
 				A5929E4314A428C0009AFACA /* XVimMode.m in Sources */,
 				A5929E4414A428C0009AFACA /* NSStringHelper.m in Sources */,
 				A5929E4514A428C0009AFACA /* XVimNormalMode.m in Sources */,
+				A520765014B0AB44005B8077 /* XVimVisualMode.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

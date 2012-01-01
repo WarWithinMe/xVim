@@ -12,8 +12,12 @@ typedef enum e_VimMode
     VisualMode   = 2,
     ExMode       = 3,
     ReplaceMode  = 4,
-    SingleReplaceMode = 5,
-    VimModeCount
+    VimModeCount,
+    
+    // Submode
+    NoSubMode,
+    VisualLineMode,
+    SingleReplaceMode
 } VimMode;
 
 typedef enum e_SpecialKeys
@@ -51,6 +55,7 @@ typedef enum e_ModifierFlags
 @property (readonly) VimMode          mode;
 
 -(void) switchToMode:(VimMode) mode;
+-(void) switchToMode:(VimMode) mode subMode:(VimMode) sub;
 
 // Yank the text. This should not copy to clipboard
 // Yank the text in range of the target textview.

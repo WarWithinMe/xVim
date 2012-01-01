@@ -28,10 +28,22 @@
     }
     return self;
 }
--(void) enter{}
+-(void) enterWith:(VimMode)submode{}
 -(void) reset{}
 -(BOOL) processKey:(unichar)k modifiers:(NSUInteger)f { return NO; }
--(NSArray*) selectionChangedFrom:(NSArray*)oldRanges to:(NSArray*)newRanges { return newRanges; }
+-(NSArray*) selectionChangedFrom:(NSArray*)oldRanges to:(NSArray*)newRanges
+{
+#ifdef ENABLE_VISUALMODE
+    // We may need to switch between Visual mode and other modes here.
+    if ([controller mode] != VisualMode && 
+        [[newRanges objectAtIndex:0] rangeValue].length > 0)
+    {
+        [controller switchToMode:VisualMode subMode:NoSubMode];
+    }
+#endif
+    
+    return newRanges;
+}
 
 -(void) scrollViewRectToVisible:(NSRect)visibleRect
 {
@@ -75,8 +87,6 @@
 }
 @end
 
-@implementation XVimVisualModeHandler
-@end
 @implementation XVimExModeHandler
 @end
 
@@ -133,8 +143,20 @@
 @end
 
 
+@interface XVimReplaceModeHandler()
+{
+    @private
+        BOOL isSingleMode;
+}
+@end
 
 @implementation XVimReplaceModeHandler
+
+-(void) enterWith:(VimMode)submode
+{
+    isSingleMode = (submode == SingleReplaceMode);
+}
+
 -(BOOL) processKey:(unichar)key modifiers:(NSUInteger)flags
 {
     if ((flags & XImportantMask) != 0) {
@@ -174,64 +196,36 @@
     NSString*   string       = [[hijackedView textStorage] string];
     NSUInteger  maxIndex     = [string length] - 1;
     NSRange     range        = [hijackedView selectedRange];
+    
+    range.length = 1;
+    
+    // Handle Single Mode
+    if (isSingleMode)
+    {
+        if (range.location < [string length] && [string characterAtIndex:range.location] != '\n')
+        {
+            // Don't insert anything if we are at the bottom of an empty line.
+            NSString* ch = [NSString stringWithCharacters:&key length:1];
+            [hijackedView insertText:ch replacementRange:range];
+            range.length = 0;
+            [hijackedView setSelectedRange:range];
+        }
+        
+        
+        [controller switchToMode:NormalMode];
+        return YES;
+    }
+    
+    // Handle Replace Mode
     if (range.location > maxIndex || testNewLine([string characterAtIndex:range.location]))
     {
         // Let the textview process the key input, that is inserting the char.
         return NO;
     } else {
-        range.length = 1;
+        
         NSString* ch = [NSString stringWithCharacters:&key length:1];
         [hijackedView insertText:ch replacementRange:range];
         return YES;
     }
-}
-@end
-
-
-
-@implementation XVimSReplaceModeHandler
--(BOOL) processKey:(unichar)key modifiers:(NSUInteger)flags
-{
-    if ((flags & XImportantMask) != 0) {
-        // This may not be a visible character, let the NSTextView process it.
-        return NO;
-    }
-    
-    if (key == XEsc)
-    {
-        if ([[controller bridge] closePopup] == NO)
-        {
-            NSTextView* view     = [[controller bridge] targetView];
-            NSString*   string   = [[view textStorage] string];
-            NSUInteger  index    = [view selectedRange].location;
-            
-            if (index > 0) {
-                if (testNewLine([string characterAtIndex:index - 1]) == NO) {
-                    [view setSelectedRange:NSMakeRange(index - 1, 0)];
-                }
-            }
-            
-            [controller switchToMode:NormalMode];
-        }
-        return YES;
-    }
-    
-    NSTextView* hijackedView = [[controller bridge] targetView];
-    NSString*   string       = [hijackedView string];
-    NSRange range = [hijackedView selectedRange];
-    range.length = 1;
-
-    if (range.location < [string length] && [string characterAtIndex:range.location] != '\n')
-    {
-        // Don't insert anything if we are at the bottom of an empty line.
-        NSString* ch = [NSString stringWithCharacters:&key length:1];
-        [hijackedView insertText:ch replacementRange:range];
-        range.length = 0;
-        [hijackedView setSelectedRange:range];
-    }
-    
-    
-    [controller switchToMode:NormalMode];
-    return YES;
 }
 @end

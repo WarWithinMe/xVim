@@ -54,5 +54,5 @@
 ## TODO
 * Handle __replace mode__ properly.
 * Implement __motion commands__
-* Implement __visual mode__, __ex mode__
+* Implement __visual mode__
 * Add a text control to show command line.
