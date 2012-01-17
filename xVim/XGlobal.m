@@ -158,7 +158,7 @@ static HijackInfo s_hijackInfo_map[SUPPORTED_APP_COUNT] =
 // The entry point of our plugin
 +(void) load
 {
-    [XVimController readKeyMapping];
+    // [XVimController load];
     bridgeDict = [[NSMutableDictionary alloc] init];
     
     // Warning: When hijacking, we must not hijack NSTextView

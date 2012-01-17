@@ -9,8 +9,14 @@
 #import "XTextViewBridge.h"
 #import "vim.h"
 
+// Kill buffer
+NSMutableString* killBuffer = nil;
+BOOL             killBufferIsWholeLine = NO;
+
+// Key mapping dicts
 static NSMutableDictionary* keyMapDicts[VimModeCount] = {nil};
-static NSDictionary* specialKeys = nil;
+static NSDictionary*        specialKeys               = nil;
+
 
 NSArray* keyStringTokeyArray(NSString* string);
 NSArray* keyStringTokeyArray(NSString* string)
@@ -124,9 +130,6 @@ NSArray* keyStringTokeyArray(NSString* string)
         NSEvent*         currentKeyEvent;
         NSUInteger       currentKey;
     
-        NSMutableString* killBuffer;
-        BOOL             killBufferIsWholeLine;
-        
         BOOL             timerStarted;
 }
 
@@ -147,38 +150,40 @@ NSArray* keyStringTokeyArray(NSString* string)
     [super finalize];
 }
 
-+(void) readKeyMapping
++(void) load 
 {
-     specialKeys = [[NSDictionary alloc] initWithObjectsAndKeys:
-                                 [NSNumber numberWithInt:NSDeleteCharacter],         @"BS",
-                                 [NSNumber numberWithInt:NSTabCharacter],            @"Tab",
-                                 [NSNumber numberWithInt:NSCarriageReturnCharacter], @"CR",
-                                 [NSNumber numberWithInt:NSEnterCharacter],          @"Enter",
-                                 [NSNumber numberWithInt:27],                        @"Esc",
-                                 [NSNumber numberWithInt:' '],                       @"Space",
-                                 [NSNumber numberWithInt:NSUpArrowFunctionKey],      @"Up",
-                                 [NSNumber numberWithInt:NSDownArrowFunctionKey],    @"Down",
-                                 [NSNumber numberWithInt:NSLeftArrowFunctionKey],    @"Left",
-                                 [NSNumber numberWithInt:NSRightArrowFunctionKey],   @"Right",
-                                 [NSNumber numberWithInt:NSF1FunctionKey],           @"F1",
-                                 [NSNumber numberWithInt:NSF2FunctionKey],           @"F2",
-                                 [NSNumber numberWithInt:NSF3FunctionKey],           @"F3",
-                                 [NSNumber numberWithInt:NSF4FunctionKey],           @"F4",
-                                 [NSNumber numberWithInt:NSF5FunctionKey],           @"F5",
-                                 [NSNumber numberWithInt:NSF6FunctionKey],           @"F6",
-                                 [NSNumber numberWithInt:NSF7FunctionKey],           @"F7",
-                                 [NSNumber numberWithInt:NSF8FunctionKey],           @"F8",
-                                 [NSNumber numberWithInt:NSF9FunctionKey],           @"F9",
-                                 [NSNumber numberWithInt:NSF10FunctionKey],          @"F10",
-                                 [NSNumber numberWithInt:NSF11FunctionKey],          @"F11",
-                                 [NSNumber numberWithInt:NSF12FunctionKey],          @"F12",
-                                 [NSNumber numberWithInt:NSInsertCharFunctionKey],   @"Insert",
-                                 [NSNumber numberWithInt:NSDeleteFunctionKey],       @"Del",
-                                 [NSNumber numberWithInt:NSHomeFunctionKey],         @"Home",
-                                 [NSNumber numberWithInt:NSEndFunctionKey],          @"End",
-                                 [NSNumber numberWithInt:NSPageUpFunctionKey],       @"PageUp",
-                                 [NSNumber numberWithInt:NSPageDownFunctionKey],     @"PageDown",
-                                 nil];
+    killBuffer = [[NSMutableString alloc] init];
+    
+    specialKeys = [[NSDictionary alloc] initWithObjectsAndKeys:
+                   [NSNumber numberWithInt:NSDeleteCharacter],         @"BS",
+                   [NSNumber numberWithInt:NSTabCharacter],            @"Tab",
+                   [NSNumber numberWithInt:NSCarriageReturnCharacter], @"CR",
+                   [NSNumber numberWithInt:NSEnterCharacter],          @"Enter",
+                   [NSNumber numberWithInt:27],                        @"Esc",
+                   [NSNumber numberWithInt:' '],                       @"Space",
+                   [NSNumber numberWithInt:NSUpArrowFunctionKey],      @"Up",
+                   [NSNumber numberWithInt:NSDownArrowFunctionKey],    @"Down",
+                   [NSNumber numberWithInt:NSLeftArrowFunctionKey],    @"Left",
+                   [NSNumber numberWithInt:NSRightArrowFunctionKey],   @"Right",
+                   [NSNumber numberWithInt:NSF1FunctionKey],           @"F1",
+                   [NSNumber numberWithInt:NSF2FunctionKey],           @"F2",
+                   [NSNumber numberWithInt:NSF3FunctionKey],           @"F3",
+                   [NSNumber numberWithInt:NSF4FunctionKey],           @"F4",
+                   [NSNumber numberWithInt:NSF5FunctionKey],           @"F5",
+                   [NSNumber numberWithInt:NSF6FunctionKey],           @"F6",
+                   [NSNumber numberWithInt:NSF7FunctionKey],           @"F7",
+                   [NSNumber numberWithInt:NSF8FunctionKey],           @"F8",
+                   [NSNumber numberWithInt:NSF9FunctionKey],           @"F9",
+                   [NSNumber numberWithInt:NSF10FunctionKey],          @"F10",
+                   [NSNumber numberWithInt:NSF11FunctionKey],          @"F11",
+                   [NSNumber numberWithInt:NSF12FunctionKey],          @"F12",
+                   [NSNumber numberWithInt:NSInsertCharFunctionKey],   @"Insert",
+                   [NSNumber numberWithInt:NSDeleteFunctionKey],       @"Del",
+                   [NSNumber numberWithInt:NSHomeFunctionKey],         @"Home",
+                   [NSNumber numberWithInt:NSEndFunctionKey],          @"End",
+                   [NSNumber numberWithInt:NSPageUpFunctionKey],       @"PageUp",
+                   [NSNumber numberWithInt:NSPageDownFunctionKey],     @"PageDown",
+                   nil];
     
     // Read the key mapping.
     // The key mapping syntax is like: {[niv]} {originalKey} {mappedKey}
@@ -222,7 +227,6 @@ NSArray* keyStringTokeyArray(NSString* string)
         bridge = b;
         vi_mode = NormalMode;
         inputBuffer = [[NSMutableArray alloc] init];
-        killBuffer  = [[NSMutableString alloc] init];
         
         handlers[NormalMode] = [[XVimNormalModeHandler alloc] initWithController:self];
         handlers[VisualMode] = [[XVimVisualModeHandler alloc] initWithController:self];
@@ -236,7 +240,6 @@ NSArray* keyStringTokeyArray(NSString* string)
 -(void) dealloc
 {
     [inputBuffer release];
-    [killBuffer  release];
     for (int i = 0; i < VimModeCount; ++i) { [handlers[i] release]; }
 }
 

@@ -3,6 +3,13 @@
 //  Copyright (c) 2011年 http://warwithinme.com . All rights reserved.
 //
 
+/*
+ * XVimController is used to process key event for NSTextView.
+ * It first try to translate the key sequence if they are mapped keys.
+ * Then it ask the current mode handler (subclasses of XVimMode) to handle
+ * the keys.
+ */
+
 @class XTextViewBridge;
 
 typedef enum e_VimMode
@@ -57,9 +64,9 @@ typedef enum e_ModifierFlags
 -(void) switchToMode:(VimMode) mode;
 -(void) switchToMode:(VimMode) mode subMode:(VimMode) sub;
 
-// Yank the text. This should not copy to clipboard
-// Yank the text in range of the target textview.
+// Yank the text to the noname register, which is shared among the application.
 -(void) yank:(NSString*) string withRange:(NSRange) range wholeLine:(BOOL) flag;
+// Return the content currently in the noname register.
 -(NSString*) yankContent:(BOOL*) isWholeLine;
 
 // These methods should only be called by XTextViewBridge.
@@ -68,6 +75,6 @@ typedef enum e_ModifierFlags
 -(void) processKeyEvent:(NSEvent*) event;
 -(NSArray*) selectionChangedFrom:(NSArray*)oldRanges to:(NSArray*)newRanges;
 
-+(void) readKeyMapping;
++(void) load;
 -(void) finalize;
 @end

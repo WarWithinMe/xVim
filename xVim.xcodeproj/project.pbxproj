@@ -110,9 +110,9 @@
 		A56CE201148F640100A06106 = {
 			isa = PBXGroup;
 			children = (
-				A56CE215148F640100A06106 /* xVim */,
 				A56CE20E148F640100A06106 /* Frameworks */,
 				A56CE20D148F640100A06106 /* Products */,
+				A56CE215148F640100A06106 /* xVim */,
 			);
 			sourceTree = "<group>";
 		};

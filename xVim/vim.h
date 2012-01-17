@@ -3,6 +3,10 @@
 //  Copyright (c) 2011年 http://warwithinme.com . All rights reserved.
 //
 
+/*
+ * vim.h defines the common functions that are used to handle vim commands.
+ */
+
 // Return the location of the start of indentation on current line. '^'
 NSUInteger mv_caret_handler(NSTextView* view);
 
@@ -13,6 +17,9 @@ NSUInteger mv_0_handler(NSTextView* view);
 NSUInteger mv_dollar_handler(NSTextView* view);
 // This one returns index of the CR
 NSUInteger mv_dollar_inc_handler(NSTextView* view);
+
+// Return the index after procesing %
+NSUInteger mv_percent_handler(NSTextView* view);
 
 // Return the index of the character in the column of current line.
 NSUInteger columnToIndex(NSTextView* view, NSUInteger column);

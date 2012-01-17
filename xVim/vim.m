@@ -102,6 +102,25 @@ NSUInteger mv_caret_handler(NSTextView* view)
     return resultIndex;
 }
 
+NSUInteger mv_percent_handler(NSTextView* view)
+{
+    NSString*  string = [view string];
+    NSUInteger index  = [view selectedRange].location;
+    
+    unichar ch = [string characterAtIndex:index];
+    if (ch == '{' || ch == '[' || ch == '(' || ch == '<')
+    {
+        
+    } else if (ch == '}' || ch == ']' || ch == ')' || ch == '>')
+    {
+        
+    } else 
+    {
+    }
+    return 0;
+    
+}
+
 NSUInteger mv_0_handler(NSTextView* view)
 {
     NSString*  string = [view string];

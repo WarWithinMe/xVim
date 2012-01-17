@@ -3,9 +3,15 @@
 //  Copyright (c) 2011年 http://warwithinme.com . All rights reserved.
 //
 
+/*
+ * XTextViewBridge is used as an adapter between the XVimController 
+ * and the subclass of NSTextView. Subclass XTextViewBridge to provide 
+ * application specific implementations for to controller.
+ *
+ * XTextViewBridge is implemented in XGlobal.m
+ */
 @class XVimController;
 
-// XTextViewBridge is implemented in XGlobal.m
 @interface XTextViewBridge : NSObject
 
 -(XTextViewBridge*) initWithTextView:(NSTextView*) view;
@@ -26,10 +32,10 @@
 @end
 
 
-// ====================
-// If a target textview doesn't have a delegate,
-// we can use XTextViewDelegate and there's no need to hijack the delgate's method.
+/*
+ * If a target textview doesn't have a delegate,
+ * we can use XTextViewDelegate and there's no need to hijack the delgate's method.
+ */
 @interface XTextViewDelegate : NSObject <NSTextViewDelegate>
 - (NSArray*) textView:(NSTextView*) view willChangeSelectionFromCharacterRanges:(NSArray*) old toCharacterRanges:(NSArray*) new;
 @end
-// --------------------

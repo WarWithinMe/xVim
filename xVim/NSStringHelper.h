@@ -5,6 +5,10 @@
 
 #define ITERATE_STRING_BUFFER_SIZE 64
 
+/*
+ * NSStringHelper is used to provide fast character iteration.
+*/
+
 typedef struct s_NSStringHelper
 {
     unichar    buffer[ITERATE_STRING_BUFFER_SIZE];
