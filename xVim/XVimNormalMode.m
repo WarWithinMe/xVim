@@ -856,6 +856,17 @@
             [hijackedView setSelectedRange:NSMakeRange(columnToIndex(hijackedView, commandCount), 0)];
             break;
             
+        case NSCarriageReturnCharacter:
+        {
+            NSUInteger oldIdx = [hijackedView selectedRange].location;
+            [hijackedView moveDown:nil];
+            if (oldIdx != [hijackedView selectedRange].location) {
+                // We are not at the last line.
+                [hijackedView setSelectedRange:NSMakeRange(mv_caret_handler(hijackedView), 0)];
+            }
+        }
+            break;
+            
         case 'H':
         case 'M':
         case 'L':
