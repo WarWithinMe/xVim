@@ -651,7 +651,6 @@
 }
 
 // Below are commands that are going to be implemented.
-// %     Goto to the matching bracket
 // #>    Indent
 // #<    Un-Indent
 // fx    Find char x on current line and go to it
@@ -868,6 +867,15 @@
         case '|':
             // Go to column
             [hijackedView setSelectedRange:NSMakeRange(columnToIndex(hijackedView, commandCount), 0)];
+            break;
+            
+        case '%':
+        {
+            // Matching brace.
+            NSRange range = NSMakeRange(mv_percent_handler(hijackedView), 0);
+            [hijackedView setSelectedRange:range];
+            [hijackedView scrollRangeToVisible:range];
+        }
             break;
             
         case '+': // First non-blank next line.

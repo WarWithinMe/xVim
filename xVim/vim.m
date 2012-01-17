@@ -114,23 +114,123 @@ NSUInteger mv_caret_handler(NSTextView* view)
     return resultIndex;
 }
 
+
+
+
+
+
+
+
+
+
+//YCursor YModeCommand::percentCommand(const YMotionArgs &args, CmdState *state, MotionStick* ms )
+//{
+//    if ( ms != NULL ) *ms = MotionNoStick;
+//    *state = CmdOk;
+//    YCursor cursorBefore = args.view->viewCursor().buffer()  , newCursorPos;
+//    QString line = args.view->buffer()->textline(cursorBefore.line());
+//    // Characters on which the cursor will jump
+//    QString toMatch("\\(\\[\\{") , correspondingMatch("\\)\\]\\}");
+//    
+//    // Find the next opening or closing character on the current line
+//    int pos = line.indexOf(QRegExp("["+toMatch+correspondingMatch+"]"), cursorBefore.column());
+//    
+//    // If a supported char is found, switch to the corresponding one
+//    if(pos>=0)
+//    {
+//        newCursorPos.setLineColumn(cursorBefore.line(), pos);
+//        int nOpen=0 , nClose=0;
+//        int maxLine , l = newCursorPos.line();  
+//        int direction; // Match forward or backwards ?
+//        QChar ch = line[newCursorPos.column()] , correspondingCh;
+//        // If it is an opening character (like (, [ ...), go to the closing character
+//        if(toMatch.indexOf(ch) != -1)
+//        {
+//            correspondingCh = correspondingMatch.at(toMatch.indexOf(ch));
+//            direction = 1; //search forward
+//            maxLine =  args.view->buffer()->lineCount();
+//        } else if (correspondingMatch.indexOf(ch) != -1) 
+//        {
+//            correspondingCh = toMatch.at(correspondingMatch.indexOf(ch));
+//            direction = -1; // search backwards
+//            maxLine = -1;
+//        }
+//        int c = newCursorPos.column();
+//        // Find the correponding char
+//        while(l != maxLine)
+//        {
+//            while(c<=line.length() && c>=0)
+//            {
+//                if(ch == line[c]) nOpen++;
+//                else if(correspondingCh == line[c]) {
+//                    nClose++;
+//                    if (nOpen == nClose) {
+//                        newCursorPos.setLineColumn(l, c);
+//                        return newCursorPos;
+//                    }
+//                }
+//                c += direction;
+//            }
+//            l += direction;
+//            if(l == maxLine) break;
+//            line = args.view->buffer()->textline(l);
+//            if(direction == 1) c = 0;   else c = line.length()-1;
+//        }
+//    }
+//    return cursorBefore;
+//}
+
 NSUInteger mv_percent_handler(NSTextView* view)
 {
-    NSString*  string = [view string];
-    NSUInteger index  = [view selectedRange].location;
-    
-    unichar ch = [string characterAtIndex:index];
-    if (ch == '{' || ch == '[' || ch == '(' || ch == '<')
+    NSString*  string    = [view string];
+    NSUInteger idxBefore = [view selectedRange].location;
+
+    // Find the first brace in this line that is after the caret.
+    NSCharacterSet* set  = [NSCharacterSet characterSetWithCharactersInString:@"([{)]}"];
+    NSRange    range     = NSMakeRange(idxBefore, mv_dollar_handler(view)-idxBefore);
+    NSUInteger idxNew    = [string rangeOfCharacterFromSet:set 
+                                                   options:0 
+                                                     range:range].location;
+    if (idxNew != NSNotFound)
     {
+        // Found brace, switch to the corresponding one.
+        unichar correspondingCh = 0;
+        unichar ch     = [string characterAtIndex:idxNew];
+        int     dir    = 1;
+        switch (ch) {
+            case '(': correspondingCh = ')'; break;
+            case '[': correspondingCh = ']'; break;
+            case '{': correspondingCh = '}'; break;
+            case ')': correspondingCh = '('; dir = -1; break;
+            case ']': correspondingCh = '['; dir = -1; break;
+            case '}': correspondingCh = '{'; dir = -1; break;
+        }
         
-    } else if (ch == '}' || ch == ']' || ch == ')' || ch == '>')
-    {
+        NSUInteger maxIdx = [string length] - 1;
+        int nOpen  = 0;
+        int nClose = 0;
         
-    } else 
-    {
+        NSStringHelper helper;
+        NSStringHelper* h = &helper;
+        dir == 1 ? initNSStringHelper(h, string, maxIdx+1) : initNSStringHelperBackward(h, string, maxIdx+1);
+        
+        while (idxNew <= maxIdx && idxNew > 0)
+        {
+            unichar c = characterAtIndex(h, idxNew);
+            if (c == ch) {
+                ++nOpen;
+            } else if (c == correspondingCh) {
+                ++nClose;
+                if (nOpen == nClose)
+                {
+                    return idxNew;
+                }
+            }
+            idxNew += dir;
+        }
     }
-    return 0;
     
+    return idxBefore;
 }
 
 NSUInteger mv_0_handler(NSTextView* view)
