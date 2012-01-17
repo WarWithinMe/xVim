@@ -36,6 +36,5 @@
 // Hidden API
 @interface NSText(xVim)
 -(NSRange)    accessibilityCharacterRangeForLineNumber:(NSUInteger) lineNumber;
--(void)       _scrollRangeToVisible:(NSRange) range forceCenter:(BOOL) flag;
 @end
 // --------------------

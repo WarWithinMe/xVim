@@ -30,8 +30,14 @@
 @end
 
 
+
+
+
+
+
 @interface XVimNormalModeHandler : XVimModeHandler
 -(void) reset;
+-(id) initWithController:(XVimController*) controller;
 -(BOOL) processKey:(unichar)key modifiers:(NSUInteger)flags;
 -(NSArray*) selectionChangedFrom:(NSArray*)oldRanges to:(NSArray*)newRanges;
 @end

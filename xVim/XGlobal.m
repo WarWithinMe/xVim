@@ -233,8 +233,8 @@ static HijackInfo s_hijackInfo_map[SUPPORTED_APP_COUNT] =
 -(XTextViewBridge*) initWithTextView:(NSTextView*) view
 {
     if (self = [super init]) {
+        targetView = view; // Must assigned this before creating the XVimController.
         controller = [[XVimController alloc] initWithBridge:self];
-        targetView = view;
     }
     return self;
 }
