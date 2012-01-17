@@ -636,6 +636,7 @@
         NSRange range = {motionBegin, motionEnd - motionBegin};
         [controller yank:string withRange:range wholeLine:wholeLine];
         if (commandChar != 'y') {
+            if (commandChar == 'c') { dontCheckTrailingCR = YES; }
             [hijackedView insertText:@"" replacementRange:range];
             if (commandChar == 'c') { [controller switchToMode:InsertMode]; }
         }

@@ -198,15 +198,14 @@ NSUInteger mv_w_handler(NSTextView* view, int repeatCount, BOOL bigWord)
     NSString*  string   = [view string];
     NSUInteger maxIndex = [string length] - 1;
     
+    if (index == maxIndex) { return maxIndex + 1; }
+    
     for (int i = 0; i < repeatCount && index < maxIndex; ++i)
     {
         unichar ch = [string characterAtIndex:index];
         
-        // There are two situations that the ch is a newLine(CR):
-        // 1. (CR)|(CR) // We are between two CR. The caret is in a blank line.
-        // 2. ABC|(CR)  // We are at the end of the line, because the 
-        //                 user place the caret with mouse.
-        // For both case, we move the caret forward and consider we are at the
+        // If this the ch is a newLine(CR): e.g. ABC|(CR)
+        // We move the caret forward and consider we are at the
         // beginning of the next word.
         
         BOOL blankLine = NO;
@@ -234,13 +233,10 @@ NSUInteger mv_w_handler(NSTextView* view, int repeatCount, BOOL bigWord)
         }
     }
     
-    if (index == maxIndex && testNewLine([string characterAtIndex:index]))
+    if (index == maxIndex && 
+        testNewLine([string characterAtIndex:index]) &&
+        !testNewLine([string characterAtIndex:index - 1]))
     {
-        // We are at the end of the text, and the end is a new line.
-        // So place the caret behind the new line.
-        // FIXME: If the end of the text is like : ABC|(CR)(CR)
-        // After 'w', it becomes : ABC|(CR)(CR) -> ABC(CR)(CR)|
-        // But we expect this    : ABC|(CR)(CR) -> ABC(CR)|(CR)
         ++index;
     }
     
@@ -436,3 +432,4 @@ NSUInteger columnToIndex(NSTextView* view, NSUInteger column)
     index = lastLineEnd + column;
     return index < thisLineEnd ? index : thisLineEnd;
 }
+
