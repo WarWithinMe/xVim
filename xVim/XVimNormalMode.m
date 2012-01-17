@@ -553,6 +553,19 @@
             case '_':
             case '0': motionBegin = mv_0_handler(hijackedView);                    break;
             case '$': motionEnd   = mv_dollar_handler(hijackedView);               break;
+            case '%':
+            {
+                NSUInteger newIdx = mv_percent_handler(hijackedView) + 1;
+                NSUInteger currIdx = [hijackedView selectedRange].location;
+                if (currIdx < newIdx) {
+                    motionBegin = currIdx;
+                    motionEnd   = newIdx;
+                } else {
+                    motionBegin = newIdx;
+                    motionEnd   = currIdx;
+                }
+            }
+                break;
             case 'j':
             {
                 NSRange range = [hijackedView selectedRange];
