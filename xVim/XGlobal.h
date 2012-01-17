@@ -12,6 +12,8 @@
                                 // The smaller the smoother and slower.
 #define UNDERSCORE_IS_WORD      // If defined, "a_word" is consider a word,
                                 // otherwise, it's consider three words.
+#define U_AS_REDO               // If defined, bind 'U' to redo, otherwise
+                                // bind 'ctrl + r' to redo.
 // #define MAKE_0_AS_CARET      // If defined, 0 acts as ^
 // #define ENABLE_VISUALMODE    // If defined, visual mode is enabled.
 // --------------------

@@ -579,6 +579,11 @@
                 [hijackedView setSelectedRange:range];
             }
                 break;
+            case 'G':
+                motionBegin = mv_0_handler(hijackedView);
+                if (motionBegin > 0) { --motionBegin; }
+                motionEnd = [[hijackedView string] length];
+                break;
         }
         
     } else
@@ -668,13 +673,20 @@
     flags &= XImportantMask;
         
     // 1. Deal with key that has modifiers.
-    if (flags == XMaskControl &&
-        (ch == 'f' || ch =='b' || ch == 'd' || ch == 'u'))
+    if (flags == XMaskControl)
     {
-        [self cmdScroll:ch];
-        return YES;
-        
+        if (ch == 'f' || ch =='b' || ch == 'd' || ch == 'u') {
+            [self cmdScroll:ch];
+            return YES;
+        }
+#ifndef U_AS_REDO
+        if (ch == 'r') {
+            if (commandCount == 0) { commandCount = 1; }
+            for (int i = 0; i < commandCount; ++i) { [[hijackedView undoManager] redo]; }
+        }
+#endif
     }
+        
     if (flags != 0) { return NO; } // No other supported modifiers.
     
     
@@ -789,7 +801,9 @@
 #endif
             
         case 'u': for (int i = 0; i < commandCount; ++i) { [[hijackedView undoManager] undo]; } break;
+#ifdef U_AS_REDO
         case 'U': for (int i = 0; i < commandCount; ++i) { [[hijackedView undoManager] redo]; } break;
+#endif
             
             
             // TODO: commandCount for aAiIoOrR is not implemented.
@@ -856,10 +870,21 @@
             [hijackedView setSelectedRange:NSMakeRange(columnToIndex(hijackedView, commandCount), 0)];
             break;
             
+        case '+': // First non-blank next line.
         case NSCarriageReturnCharacter:
         {
             NSUInteger oldIdx = [hijackedView selectedRange].location;
             [hijackedView moveDown:nil];
+            if (oldIdx != [hijackedView selectedRange].location) {
+                // We are not at the last line.
+                [hijackedView setSelectedRange:NSMakeRange(mv_caret_handler(hijackedView), 0)];
+            }
+        }
+            break;
+        case '-': // First non-blank prev line.
+        {
+            NSUInteger oldIdx = [hijackedView selectedRange].location;
+            [hijackedView moveUp:nil];
             if (oldIdx != [hijackedView selectedRange].location) {
                 // We are not at the last line.
                 [hijackedView setSelectedRange:NSMakeRange(mv_caret_handler(hijackedView), 0)];
