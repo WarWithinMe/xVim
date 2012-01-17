@@ -68,7 +68,6 @@
 // %     Goto to the matching bracket
 // #>    Indent
 // #<    Un-Indent
-// #|    Jump to column (specified by the repeat parameter).
 // fx    Find char x on current line and go to it
 // tx    Similar to fx, but stops one character short before x
 // Fx    Similar to fx, but searches backwards
@@ -174,7 +173,7 @@
         return YES;
     }
     
-    BOOL commandCountSpecified = commandCount > 0; // This is need only for 'G'
+    BOOL commandCountSpecified = commandCount > 0; // This is needed only for 'G'
     if (commandCount == 0) commandCount = 1;
     if (commandChar != 0)
     {
@@ -825,6 +824,7 @@ interpret_as_command:
             break;
     }
     
+    // Reset
     commandChar     = 0;
     commandCount    = 0;
     dontCheckTrailingCR = NO;

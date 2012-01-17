@@ -92,55 +92,6 @@
 
 
 
-@implementation XVimInsertModeHandler
--(BOOL) processKey:(unichar)key modifiers:(NSUInteger)flags
-{
-    if (key == XEsc && (flags & XImportantMask) == 0)
-    {
-        XTextViewBridge* bridge = [controller bridge];
-        if ([bridge closePopup] == NO)
-        {
-            // There's no popup, so we now switch to Normal Mode.
-            NSTextView* view     = [bridge targetView];
-            NSString*   string   = [[view textStorage] string];
-            NSUInteger  index    = [view selectedRange].location;
-            
-            if (index > 0) {
-                if (testNewLine([string characterAtIndex:index - 1]) == NO) {
-                    [view setSelectedRange:NSMakeRange(index - 1, 0)];
-                }
-            }
-            
-            [controller switchToMode:NormalMode];
-        }
-        return YES;
-    }
-    
-    if(flags == (XMaskNumeric | XMaskFn))
-    {
-        NSTextView* view     = [[controller bridge] targetView];
-        NSString*   string   = [[view textStorage] string];
-        NSUInteger  index    = [view selectedRange].location;
-        NSUInteger  maxIndex = [string length] - 1;
-        if (key == NSLeftArrowFunctionKey)
-        {
-            if (index > 0 && testNewLine([string characterAtIndex:index - 1]) == NO) {
-                return NO;
-            } else {
-                return YES;
-            }
-        } else if (key == NSRightArrowFunctionKey) {
-            if (index <= maxIndex && testNewLine([string characterAtIndex:index]) == NO) {
-                return NO;
-            } else {
-                return YES;
-            }
-        }
-    }
-    
-    return NO;
-}
-@end
 
 
 @interface XVimReplaceModeHandler()
@@ -159,12 +110,9 @@
 
 -(BOOL) processKey:(unichar)key modifiers:(NSUInteger)flags
 {
-    if ((flags & XImportantMask) != 0) {
-        // This may not be a visible character, let the NSTextView process it.
-        return NO;
-    }
-    
-    if (key == XEsc)
+    if ((key == XEsc && (flags & XImportantMask) == 0) || 
+        (flags == XMaskControl && (key == 'c' || key == '['))
+        )
     {
         NSTextView* view     = [[controller bridge] targetView];
         NSString*   string   = [[view textStorage] string];
@@ -178,6 +126,11 @@
         
         [controller switchToMode:NormalMode];
         return YES;
+    }
+    
+    if ((flags & XImportantMask) != 0) {
+        // This may not be a visible character, let the NSTextView process it.
+        return NO;
     }
     
     // Replace mode behaviour:

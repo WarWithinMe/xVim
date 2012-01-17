@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A504238114C5B4AF009399E4 /* XVimInsertMode.m in Sources */ = {isa = PBXBuildFile; fileRef = A504238014C5B4AF009399E4 /* XVimInsertMode.m */; };
+		A504238314C5B6AE009399E4 /* XVimInsertMode.m in Sources */ = {isa = PBXBuildFile; fileRef = A504238014C5B4AF009399E4 /* XVimInsertMode.m */; };
 		A504A452149DF9F40084C754 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = A504A451149DF9F40084C754 /* README.md */; };
 		A520764F14B0AB44005B8077 /* XVimVisualMode.m in Sources */ = {isa = PBXBuildFile; fileRef = A520764E14B0AB44005B8077 /* XVimVisualMode.m */; };
 		A520765014B0AB44005B8077 /* XVimVisualMode.m in Sources */ = {isa = PBXBuildFile; fileRef = A520764E14B0AB44005B8077 /* XVimVisualMode.m */; };
@@ -59,6 +61,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		A504238014C5B4AF009399E4 /* XVimInsertMode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XVimInsertMode.m; sourceTree = "<group>"; };
 		A504A451149DF9F40084C754 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = README.md; path = ../README.md; sourceTree = "<group>"; };
 		A520764E14B0AB44005B8077 /* XVimVisualMode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XVimVisualMode.m; sourceTree = "<group>"; };
 		A52E943A1499A95F00FA6045 /* keymap-example */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "keymap-example"; path = "Resources/keymap-example"; sourceTree = "<group>"; };
@@ -184,12 +187,13 @@
 		A5A905D1149C42DB00810962 /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				A56B36D9149F2A0A00AE44CC /* NSStringHelper.m */,
+				A5BD0F33149C598F0089BF5E /* vim.m */,
 				A5A905CB149C41C000810962 /* XGlobal.m */,
 				A543C399148FBBB10070E986 /* XVimController.m */,
+				A504238014C5B4AF009399E4 /* XVimInsertMode.m */,
 				A5DD1A95149DD112000AAE3D /* XVimMode.m */,
 				A58D5A7D149F491F00921622 /* XVimNormalMode.m */,
-				A5BD0F33149C598F0089BF5E /* vim.m */,
-				A56B36D9149F2A0A00AE44CC /* NSStringHelper.m */,
 				A520764E14B0AB44005B8077 /* XVimVisualMode.m */,
 			);
 			name = Source;
@@ -356,6 +360,7 @@
 				A56B36DA149F2A0A00AE44CC /* NSStringHelper.m in Sources */,
 				A58D5A7E149F491F00921622 /* XVimNormalMode.m in Sources */,
 				A520764F14B0AB44005B8077 /* XVimVisualMode.m in Sources */,
+				A504238114C5B4AF009399E4 /* XVimInsertMode.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -363,6 +368,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A504238314C5B6AE009399E4 /* XVimInsertMode.m in Sources */,
 				A5929E4014A428C0009AFACA /* XVimController.m in Sources */,
 				A5929E4114A428C0009AFACA /* XGlobal.m in Sources */,
 				A5929E4214A428C0009AFACA /* vim.m in Sources */,

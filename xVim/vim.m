@@ -202,8 +202,8 @@ NSUInteger mv_w_handler(NSTextView* view, int repeatCount, BOOL bigWord)
     {
         unichar ch = [string characterAtIndex:index];
         
-        // There are three situations that the ch is a newLine(CR):
-        // 1. (CR)|(CR) // We are between two CR.
+        // There are two situations that the ch is a newLine(CR):
+        // 1. (CR)|(CR) // We are between two CR. The caret is in a blank line.
         // 2. ABC|(CR)  // We are at the end of the line, because the 
         //                 user place the caret with mouse.
         // For both case, we move the caret forward and consider we are at the
@@ -423,7 +423,9 @@ NSUInteger columnToIndex(NSTextView* view, NSUInteger column)
         if (testNewLine(ch)) { break; }
     }
     
-    if (lastLineEnd == index) { return index; }
+    // If we are at a blank line, return the current index.
+    if (lastLineEnd == index &&
+        (index == 0 || testNewLine(characterAtIndex(&helper, index - 1)) )) { return index; }
     
     NSInteger thisLineEnd = index + 1;
     for (; thisLineEnd < strLen; ++thisLineEnd) {
