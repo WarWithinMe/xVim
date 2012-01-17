@@ -17,6 +17,8 @@ NSUInteger mv_0_handler(NSTextView* view);
 NSUInteger mv_dollar_handler(NSTextView* view);
 // This one returns index of the CR
 NSUInteger mv_dollar_inc_handler(NSTextView* view);
+// Return the last non-blank of the line. 'g_'
+NSUInteger mv_g__handler(NSTextView* view);
 
 // Return the index after procesing %
 NSUInteger mv_percent_handler(NSTextView* view);

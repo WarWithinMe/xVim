@@ -42,7 +42,6 @@ NSUInteger mv_dollar_handler(NSTextView* view)
     {
         if (testNewLine(characterAtIndex(&helper, index)))
         {
-            // if (index > 0) { --index; }
             break;
         }
         ++index;
@@ -67,6 +66,19 @@ NSUInteger mv_dollar_inc_handler(NSTextView* view)
             break;
         }
         ++index;
+    }
+    return index;
+}
+
+NSUInteger mv_g__handler(NSTextView* view)
+{
+    NSUInteger index  = mv_dollar_handler(view);
+    NSString*  string = [view string];
+    while (index > 0)
+    {
+        --index;
+        if (!testWhiteSpace([string characterAtIndex:index]))
+            break;
     }
     return index;
 }

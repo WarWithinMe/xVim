@@ -684,11 +684,23 @@
     {
         if (commandChar == 0) {
             commandCount = commandCount * 10 + ch - '0';
-        } else if(motionChar == 0) {
-            motionCount = motionCount * 10 + ch - '0';
         } else {
-            // Bad command, ignore it.
-            [self reset];
+            // We are waiting for another character to complete the command.
+            // And we only accept numbers before the motion is entered.
+            // Otherwise, we consider this is a bad command, and reset everything.
+            BOOL shouldAccept = NO;
+            
+            if (commandChar == 'y' || commandChar == 'd' || commandChar == 'c') {
+                if (motionChar == 0) {
+                    shouldAccept = YES;
+                }
+            }
+            
+            if (shouldAccept) {
+                motionCount = motionCount * 10 + ch - '0';
+            } else {
+                [self reset];
+            }
         }
         return YES;
     }
@@ -703,26 +715,34 @@
         {
             [self cmdPlaceLine:ch];
 
-        } else if (commandChar == 'g' && ch == 'g')
-        {
-            [self cmdGoto:YES];
-        }
-        
-        // Apply the motion count.
-        if (motionCount != 0) { commandCount *= motionCount; }
-        
-        if (commandChar == ch)
+        } else if (commandChar == 'g')
         {
             switch (ch) {
-                case 'c':
-                case 'd': [self cmdddcc:ch];  break;
-                case 'y': [self cmdYDC:'Y'];  break;                    
-            } 
-        } else {
-            // Handle the motions here.
-            // If cmdMotions returns YES, we shouldn't reset.
-            if ([self cmdMotions:ch]) { 
-                return YES;
+                case 'g': [self cmdGoto:YES]; break;
+                case '_': // Goto last non-blank of the line.
+                    [hijackedView setSelectedRange:NSMakeRange(mv_g__handler(hijackedView), 0)];
+                    break;
+            }
+        } else
+        {
+            // Deal with y/d/c
+            
+            // Apply the motion count.
+            if (motionCount != 0) { commandCount *= motionCount; }
+            
+            if (commandChar == ch)
+            {
+                switch (ch) {
+                    case 'c':
+                    case 'd': [self cmdddcc:ch];  break;
+                    case 'y': [self cmdYDC:'Y'];  break;                    
+                } 
+            } else {
+                // Handle the motions here.
+                // If cmdMotions returns YES, we shouldn't reset.
+                if ([self cmdMotions:ch]) { 
+                    return YES;
+                }
             }
         }
         
