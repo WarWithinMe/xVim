@@ -537,8 +537,8 @@
     {
         // handle basic motion here
         switch (ch) {
-            case 'w': motionEnd   = mv_w_handler(hijackedView, commandCount, NO);  break;
-            case 'W': motionEnd   = mv_w_handler(hijackedView, commandCount, YES); break;
+            case 'w': motionEnd   = mv_w_motion_handler(hijackedView, commandCount, NO);  break;
+            case 'W': motionEnd   = mv_w_motion_handler(hijackedView, commandCount, YES); break;
                 
             case 'e': motionEnd   = mv_e_handler(hijackedView, commandCount, NO)+1;  break;
             case 'E': motionEnd   = mv_e_handler(hijackedView, commandCount, YES)+1; break;
@@ -703,15 +703,24 @@
         {
             [self cmdPlaceLine:ch];
 
-        } else if (commandChar == ch)
+        } else if (commandChar == 'g' && ch == 'g')
+        {
+            [self cmdGoto:YES];
+        }
+        
+        // Apply the motion count.
+        if (motionCount != 0) { commandCount *= motionCount; }
+        
+        if (commandChar == ch)
         {
             switch (ch) {
                 case 'c':
                 case 'd': [self cmdddcc:ch];  break;
-                case 'g': [self cmdGoto:YES]; break;
                 case 'y': [self cmdYDC:'Y'];  break;                    
             } 
         } else {
+            // Handle the motions here.
+            // If cmdMotions returns YES, we shouldn't reset.
             if ([self cmdMotions:ch]) { 
                 return YES;
             }

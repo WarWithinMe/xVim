@@ -243,6 +243,31 @@ NSUInteger mv_w_handler(NSTextView* view, int repeatCount, BOOL bigWord)
     return index;
 }
 
+NSUInteger mv_w_motion_handler(NSTextView* view, int repeatCount, BOOL bigWord)
+{
+    // Reduce index if we are at the beginning indentation of another line.
+    NSUInteger oldIdx  = [view selectedRange].location;
+    NSUInteger newIdx  = mv_w_handler(view, repeatCount, bigWord);
+    NSUInteger testIdx = newIdx - 1;
+    NSString*  string  = [view string];
+    
+    while (testIdx > oldIdx)
+    {
+        unichar ch = [string characterAtIndex:testIdx];
+        if (testWhiteSpace(ch)) {
+            --testIdx;
+            continue;
+        } else if (!testNewLine(ch))
+        {
+            // We can't reach the line before, the newIdx should not change.
+            return newIdx;
+        }
+        break;
+    }
+    
+    return oldIdx == testIdx ? newIdx : testIdx;
+}
+
 NSUInteger mv_b_handler(NSTextView* view, int repeatCount, BOOL bigWord)
 {
     // 'b' If we are not at the beginning of a word, go to the beginning of it.

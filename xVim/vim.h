@@ -27,9 +27,11 @@ NSUInteger columnToIndex(NSTextView* view, NSUInteger column);
 // Return the new location of the caret, after handler h,j,w,W,e,E,b,B
 NSUInteger mv_h_handler(NSTextView* view, int repeatCount);
 NSUInteger mv_l_handler(NSTextView* view, int repeatCount, BOOL stepForward);
-NSUInteger mv_w_handler(NSTextView* view, int repeatCount, BOOL bigWord);
-NSUInteger mv_e_handler(NSTextView* view, int repeatCount, BOOL bigWord);
 NSUInteger mv_b_handler(NSTextView* view, int repeatCount, BOOL bigWord);
+NSUInteger mv_e_handler(NSTextView* view, int repeatCount, BOOL bigWord);
+NSUInteger mv_w_handler(NSTextView* view, int repeatCount, BOOL bigWord);
+// mv_w_motion_handler slightly differs from mv_w_handler.
+NSUInteger mv_w_motion_handler(NSTextView* view, int repeatCount, BOOL bigWord);
 // There's no function by now for 'j' and 'k', 
 // since NSTextView has a moveUp: and moveDown: method
 
