@@ -781,7 +781,7 @@ int findmatchlimit(NSString* string, NSUInteger pos, unichar initc, BOOL cpo_mat
     return -1;
 }
 
-NSRange current_block(NSTextView* view, int count, char what, char other)
+NSRange current_block(NSTextView* view, int count, BOOL inclusive, char what, char other)
 {
     NSString* string = [view string];
     NSUInteger idx   = [view selectedRange].location;

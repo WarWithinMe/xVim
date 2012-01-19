@@ -296,9 +296,8 @@ typedef enum e_handle_stat
     if (!cmdCountSpecified) { firstCount = 1; }
     if (secondCount != -1)  { firstCount *= secondCount; }
     
-    if (cmdChar == 'g') 
+    if (cmdChar == 'g') // g commands.
     {
-        // g commands.
         switch (secondCmdChar)
         {
             case 'g': 
@@ -318,16 +317,57 @@ typedef enum e_handle_stat
                 break;
         }
         
-    } else if (cmdChar == 'i' || cmdChar == 'a')
+    } else if (cmdChar == 'i' || cmdChar == 'a') // Text objects.
     {
-        // Text objects.
-        switch (secondCmdChar)
-        {
+        switch (secondCmdChar) {
+            case 'w':
+            case 'W': // A word
+                range = current_word(hijackedView, firstCount, cmdChar == 'a', secondCmdChar == 'W');
+                break;
+            case 'B':
+            case '{':
+            case '}': // A {} block
+            {
+                // If we are at indent, make the caret after the indent.
+                NSUInteger oIdx = [hijackedView selectedRange].location;
+                NSUInteger nIdx = mv_caret_handler_h(hijackedView);
+                if (nIdx != oIdx) {
+                    [hijackedView setSelectedRange:NSMakeRange(nIdx, 0)];
+                }
+                range = current_block(hijackedView, firstCount, cmdChar == 'a', '{', '}');
+                if (range.location == NSNotFound && nIdx != oIdx) {
+                    [hijackedView setSelectedRange:NSMakeRange(oIdx, 0)];
+                }
+            }
+                break;
+            case 'b':
+            case '(':
+            case ')': // A () block
+                range = current_block(hijackedView, firstCount, cmdChar == 'a', '(', ')');
+                break;
+            case '[':
+            case ']': // A [] block
+                range = current_block(hijackedView, firstCount, cmdChar == 'a', '[', ']');
+                break;
+            case '<':
+            case '>': // A <> block
+                range = current_block(hijackedView, firstCount, cmdChar == 'a', '<', '>');
+                break;
                 
+            case 't':  // A xml tag block
+                range = current_tagblock(hijackedView, firstCount, cmdChar == 'a');
+                break;
+            case '"':  // A double quoted string
+            case '\'': // A single quoted string
+            case '`':  // A backtick quoted string
+                range = current_quote(hijackedView, firstCount, cmdChar == 'a', secondCmdChar);
+                break;
+                
+            default:
+                break;
         }
-    } else 
+    } else // Normal motion commands.
     {
-        // Normal motion commands.
         switch (cmdChar)
         {
             case 'f' | XMaskControl:
@@ -1065,72 +1105,4 @@ typedef enum e_handle_stat
     
     return newIdx == oldIdx ? NSNotFound : newIdx;
 }
-
-
-
-//-(BOOL) cmdMotions:(unichar) ch
-//{        
-//    NSString* awMotion = @"wbeWBE{[(<'\"";
-//    NSString* input = [NSString stringWithCharacters:&ch length:1];
-//    if ([awMotion rangeOfString:input].location != NSNotFound)
-//    {
-//        switch (ch) {
-//            case 'w':
-//            case 'W':
-//                // If we are at whitespace, delete the whitespace, otherwise
-//                // delete the word. If it is aw, delete the trailing whitespace
-//                // Either way, the caret will stay at the same line.
-//            {
-//                NSRange range = motion_word_bound(hijackedView, ch == 'W', motionChar == 'a');
-//                motionBegin = range.location;
-//                motionEnd   = range.location + range.length;
-//            }
-//                break;
-//            case 'B':
-//            case '{':
-//            case '}':
-//            {
-//                NSRange range = current_block(hijackedView, commandCount, '{', '}');
-//                motionBegin = range.location;
-//                motionEnd   = range.location + range.length;
-//            }
-//                break;
-//            case 'b':
-//            case '(':
-//            case ')':
-//            {
-//                NSRange range = current_block(hijackedView, commandCount, '(', ')');
-//                motionBegin = range.location;
-//                motionEnd   = range.location + range.length;
-//            }
-//                break;
-//            case '[':
-//            case ']':
-//            {
-//                NSRange range = current_block(hijackedView, commandCount, '[', ']');
-//                motionBegin = range.location;
-//                motionEnd   = range.location + range.length;
-//            }
-//                break;
-//            case '<':
-//            case '>':
-//            {
-//                NSRange range = current_block(hijackedView, commandCount, '<', '>');
-//                motionBegin = range.location;
-//                motionEnd   = range.location + range.length;
-//            }
-//                break;
-//                break;
-//            case 't':  /* "at" = a tag block (xml and html) */
-//            case '"':  /* "a"" = a double quoted string     */
-//            case '\'': /* "a'" = a single quoted string     */
-//            case '`':  /* "a`" = a backtick quoted string   */
-//                // TODO: Implement a efficient bracket matching algorithm, and we are all set.
-//                break;
-//                
-//            default:
-//                break;
-//        }
-//    }
-//}
 @end

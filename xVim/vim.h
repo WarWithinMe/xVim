@@ -43,7 +43,10 @@ NSRange motion_word_bound(NSTextView* view, BOOL fuzzy, BOOL includeTrailing);
 
 // Unlike vim, this function won't ignore indent before the current character
 // even if what is '{'
-NSRange current_block(NSTextView* view, int repeatCount, char what, char other);
+NSRange current_block(NSTextView* view, int repeatCount, BOOL inclusive, char what, char other);
+NSRange current_word(NSTextView* view, int repeatCount, BOOL inclusive, BOOL fuzzy);
+NSRange current_quote(NSTextView* view, int repeatCount, BOOL inclusive, char what);
+NSRange current_tagblock(NSTextView* view, int repeatCount, BOOL inclusive);
 
 BOOL testDigit(unichar ch);
 BOOL testAlpha(unichar ch);
