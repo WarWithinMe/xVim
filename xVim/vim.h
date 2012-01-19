@@ -39,6 +39,10 @@ NSUInteger mv_w_motion_handler(NSTextView* view, int repeatCount, BOOL bigWord);
 
 NSRange motion_word_bound(NSTextView* view, BOOL fuzzy, BOOL includeTrailing);
 
+// Unlike vim, this function won't ignore indent before the current character
+// even if what is '{'
+NSRange current_block(NSTextView* view, int repeatCount, char what, char other);
+
 BOOL testDigit(unichar ch);
 BOOL testAlpha(unichar ch);
 BOOL testDelimeter(unichar ch);

@@ -174,12 +174,12 @@
 		A5A905D0149C42C200810962 /* Header */ = {
 			isa = PBXGroup;
 			children = (
+				A56B36D8149F29FF00AE44CC /* NSStringHelper.h */,
+				A5BD0F32149C598F0089BF5E /* vim.h */,
 				A5A905CA149C41C000810962 /* XGlobal.h */,
 				A5A905CD149C429300810962 /* XTextViewBridge.h */,
 				A543C398148FBBB10070E986 /* XVimController.h */,
 				A5FA0F9A149AF56B0020C76A /* XVimMode.h */,
-				A5BD0F32149C598F0089BF5E /* vim.h */,
-				A56B36D8149F29FF00AE44CC /* NSStringHelper.h */,
 			);
 			name = Header;
 			sourceTree = "<group>";

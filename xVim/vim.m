@@ -504,3 +504,321 @@ NSUInteger columnToIndex(NSTextView* view, NSUInteger column)
     return index < thisLineEnd ? index : thisLineEnd;
 }
 
+// A port from vim's findmatchlimit, simplied version.
+// This one only works for (), [], {}, <>
+// Return -1 if we cannot find it.
+// cpo_match is YES means ignore quotes.
+#define MAYBE     2
+#define FORWARD   1
+#define BACKWARD -1
+int findmatchlimit(NSString* string, NSUInteger pos, unichar initc, BOOL cpo_match);
+int findmatchlimit(NSString* string, NSUInteger pos, unichar initc, BOOL cpo_match)
+{ 
+    // ----------
+    unichar    findc           = 0; // The char to find.
+    BOOL       backwards       = NO;
+    
+    int        count           = 0;      // Cumulative number of braces.
+    int        do_quotes       = -1;     // Check for quotes in current line.
+    int        at_start        = -1;     // do_quotes value at start position.
+    int        start_in_quotes = MAYBE;  // Start position is in quotes
+    BOOL       inquote         = NO;     // YES when inside quotes
+    int        match_escaped   = 0;      // Search for escaped match.
+    
+    // NSUInteger pos             = cursor; // Current search position
+    // BOOL       cpo_match       = YES;    // cpo_match = (vim_strchr(p_cpo, CPO_MATCH) != NULL);
+    BOOL       cpo_bsl         = NO;     // cpo_bsl = (vim_strchr(p_cpo, CPO_MATCHBSL) != NULL);
+    
+    // ----------
+    char*      b_p_mps         = "(:),{:},[:],<:>";
+    for (char* ptr = b_p_mps; *b_p_mps; ptr += 2) 
+    {
+        if (*ptr == initc) {
+            findc = initc;
+            initc = ptr[2];
+            backwards = YES;
+            break;
+        }
+        
+        ptr += 2;
+        if (*ptr == initc) {
+            findc = initc;
+            initc = *(ptr - 2);
+            backwards = NO;
+            break;
+        }
+        
+        if (ptr[1] != ',') { break; } // Invalid initc!
+    }
+    
+    if (findc == 0) { return -1; }
+    
+    // ----------
+
+    
+    // ----------
+    NSStringHelper  help;
+    NSStringHelper* h        = &help;
+    NSUInteger      maxIndex = [string length] - 1; 
+    backwards ? initNSStringHelperBackward(h, string, maxIndex+1) : initNSStringHelper(h, string, maxIndex+1);
+    
+    // ----------
+    while (YES)
+    {
+        if (backwards)
+        {
+            if (pos == 0) { break; } // At start of file
+            --pos;
+            
+            if (testNewLine(characterAtIndex(h, pos)))
+            {
+                // At prev line.
+                do_quotes = -1;
+            }
+        } else {  // Forward search
+            if (pos == maxIndex) { break; } // At end of file
+            
+            if (testNewLine(characterAtIndex(h, pos))) {
+                do_quotes = -1;
+            }
+            
+            ++pos;
+        }
+        
+        // ----------
+        // if (pos.col == 0 && (flags & FM_BLOCKSTOP) && (linep[0] == '{' || linep[0] == '}'))
+        // if (comment_dir)
+        // ----------
+        
+        if (cpo_match) {
+            do_quotes = 0;
+        } else if (do_quotes == -1)
+        {
+            /*
+             * Count the number of quotes in the line, skipping \" and '"'.
+             * Watch out for "\\".
+             */
+            at_start = do_quotes;
+            
+            NSUInteger ptr = pos;
+            while (ptr > 0 && !testNewLine([string characterAtIndex:ptr-1])) { --ptr; }
+            NSUInteger sta = ptr;
+            
+            while (ptr < maxIndex && 
+                   !testNewLine(characterAtIndex(h, ptr)))
+            {
+                if (ptr == pos + backwards) { at_start = (do_quotes & 1); }
+                
+                if (characterAtIndex(h, ptr) == '"' &&
+                    (ptr == sta || 
+                     characterAtIndex(h, ptr - 1) != '\'' || 
+                     characterAtIndex(h, ptr + 1) != '\'')) 
+                {
+                    ++do_quotes;
+                }
+                
+                if (characterAtIndex(h, ptr) == '\\' && 
+                    ptr + 1 < maxIndex && 
+                    !testNewLine(characterAtIndex(h, ptr+1))) 
+                { ++ptr; }
+                ++ptr;
+            }
+            do_quotes &= 1; // result is 1 with even number of quotes
+            
+            //
+            // If we find an uneven count, check current line and previous
+            // one for a '\' at the end.
+            //
+            if (do_quotes == 0)
+            {
+                inquote = NO;
+                if (start_in_quotes == MAYBE)
+                {
+                    // Do we need to use at_start here?
+                    inquote = YES;
+                    start_in_quotes = YES;
+                } else if (backwards)
+                {
+                    inquote = YES;
+                }
+                
+                if (sta > 1 && characterAtIndex(h, sta - 2) == '\\')
+                {
+                    // Checking last char fo previous line.
+                    do_quotes = 1;
+                    if (start_in_quotes == MAYBE) {
+                        inquote = at_start != 0;
+                        if (inquote) {
+                            start_in_quotes = YES;
+                        }
+                    } else if (!backwards)
+                    {
+                        inquote = YES;
+                    }
+                }
+            }
+        }
+        if (start_in_quotes == MAYBE) {
+            start_in_quotes = NO;
+        }
+        
+        unichar c = characterAtIndex(h, pos);
+        switch (c) {
+                
+            case '"':
+                /* a quote that is preceded with an odd number of backslashes is
+                 * ignored */
+                if (do_quotes)
+                {
+                    NSUInteger col = pos;
+                    int qcnt = 0;
+                    unichar c2;
+                    while (col > 0) {
+                        --col;
+                        c2 = characterAtIndex(h, col);
+                        if (testNewLine(c2) || c2 != '\\') {
+                            break;
+                        }
+                        ++qcnt;
+                    }
+                    if ((qcnt & 1) == 0) {
+                        inquote = !inquote;
+                        start_in_quotes = NO;
+                    }
+                }
+                break;
+                
+            case '\'':
+                if (!cpo_match && initc != '\'' && findc != '\'')
+                {
+                    if (backwards)
+                    {
+                        NSUInteger p1 = pos;
+                        int col = 0;
+                        while (p1 > 0 && col < 3) {
+                            --p1;
+                            if (testNewLine(characterAtIndex(h, p1))) {
+                                break;
+                            }
+                            ++col;
+                        }
+                        
+                        if (col > 1)
+                        {
+                            if (characterAtIndex(h, pos - 2) == '\'')
+                            {
+                                pos -= 2;
+                                break;
+                            } else if (col > 2 &&
+                                       characterAtIndex(h, pos - 2) == '\\' &&
+                                       characterAtIndex(h, pos - 3) == '\'')
+                            {
+                                pos -= 3;
+                                break;
+                            }
+                        }
+                    } else {
+                        // Forward search
+                        if (pos < maxIndex && !testNewLine(characterAtIndex(h, pos + 1)))
+                        {
+                            if (characterAtIndex(h, pos + 1) == '\\' &&
+                                (pos < maxIndex - 2) &&
+                                !testNewLine(characterAtIndex(h, pos + 2)) &&
+                                characterAtIndex(h, pos + 3) == '\'') 
+                            {
+                                pos += 3;
+                                break;
+                            } else if (pos < maxIndex - 1 && 
+                                       characterAtIndex(h, pos + 2) == '\'')
+                            {
+                                pos += 2;
+                                break;
+                            }
+                        }
+                    }
+                }
+                /* FALLTHROUGH */
+                
+            default:
+                /* Check for match outside of quotes, and inside of
+                 * quotes when the start is also inside of quotes. */
+                if ((!inquote || start_in_quotes == YES) && 
+                    (c == initc || c == findc))
+                {
+                    int bslcnt = 0;
+                    
+                    if (!cpo_bsl)
+                    {
+                        NSUInteger col = pos;
+                        unichar c2;
+                        while (col > 0) {
+                            --col;
+                            c2 = characterAtIndex(h, col);
+                            if (testNewLine(c2) || c2 != '\\') {
+                                break;
+                            }
+                            ++bslcnt;
+                        }
+                    }
+                    /* Only accept a match when 'M' is in 'cpo' or when escaping
+                     * is what we expect. */
+                    if (cpo_bsl || (bslcnt & 1) == match_escaped)
+                    {
+                        if (c == initc)
+                            count++;
+                        else
+                        {
+                            if (count == 0)
+                                return (int)pos;
+                            --count;
+                        }
+                    }
+                }
+        }
+        
+    } // End of while
+    
+    return -1;
+}
+
+NSRange current_block(NSTextView* view, int count, char what, char other)
+{
+    NSString* string = [view string];
+    NSUInteger idx   = [view selectedRange].location;
+    
+    if ([string characterAtIndex:idx] == what)
+    {
+        /* cursor on '(' or '{', move cursor just after it */
+        ++idx;
+        if (idx >= [string length]) {
+            return NSMakeRange(NSNotFound, 0);
+        }
+    }
+    
+    /*
+     * Search backwards for unclosed '(', '{', etc..
+     * Put this position in start_pos.
+     * Ignore quotes here.
+     */
+    
+    int start_pos = (int)idx;
+    int end_pos   = (int)idx;
+    
+    while (count-- > 0)
+    {
+        if ((start_pos = findmatchlimit(string, start_pos, what, YES)) == -1)
+        {
+            return NSMakeRange(NSNotFound, 0);
+        }
+        
+        /*
+         * Search for matching ')', '}', etc.
+         * Put this position in curwin->w_cursor.
+         */
+        if ((end_pos = findmatchlimit(string, end_pos, other, NO)) == -1) {
+            return NSMakeRange(NSNotFound, 0);
+        }
+    }
+    
+    return NSMakeRange(start_pos, end_pos - start_pos + 1);
+}

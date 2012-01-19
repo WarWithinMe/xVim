@@ -533,6 +533,9 @@
         return YES;
     }
     
+    // Apply the motion count.
+    if (motionCount != 0) { commandCount *= motionCount; }
+    
     if (motionChar != 'i' && motionChar != 'a')
     {
         // handle basic motion here
@@ -617,16 +620,45 @@
                     motionEnd   = range.location + range.length;
                 }
                     break;
+                case 'B':
                 case '{':
                 case '}':
+                {
+                    NSRange range = current_block(hijackedView, commandCount, '{', '}');
+                    motionBegin = range.location;
+                    motionEnd   = range.location + range.length;
+                }
+                    break;
+                case 'b':
                 case '(':
                 case ')':
+                {
+                    NSRange range = current_block(hijackedView, commandCount, '(', ')');
+                    motionBegin = range.location;
+                    motionEnd   = range.location + range.length;
+                }
+                    break;
                 case '[':
                 case ']':
+                {
+                    NSRange range = current_block(hijackedView, commandCount, '[', ']');
+                    motionBegin = range.location;
+                    motionEnd   = range.location + range.length;
+                }
+                    break;
                 case '<':
                 case '>':
-                case '\'':
-                case '"':
+                {
+                    NSRange range = current_block(hijackedView, commandCount, '<', '>');
+                    motionBegin = range.location;
+                    motionEnd   = range.location + range.length;
+                }
+                    break;
+                    break;
+                case 't':  /* "at" = a tag block (xml and html) */
+                case '"':  /* "a"" = a double quoted string     */
+                case '\'': /* "a'" = a single quoted string     */
+                case '`':  /* "a`" = a backtick quoted string   */
                     // TODO: Implement a efficient bracket matching algorithm, and we are all set.
                     break;
                     
@@ -750,12 +782,11 @@
         } else
         {
             // Deal with y/d/c
-            
-            // Apply the motion count.
-            if (motionCount != 0) { commandCount *= motionCount; }
-            
             if (commandChar == ch)
             {
+                // Apply the motion count.
+                if (motionCount != 0) { commandCount *= motionCount; }
+                
                 switch (ch) {
                     case 'c':
                     case 'd': [self cmdddcc:ch];  break;
