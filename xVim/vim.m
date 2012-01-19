@@ -795,17 +795,16 @@ NSRange current_block(NSTextView* view, int count, BOOL inclusive, char what, ch
         }
     }
     
-    /*
-     * Search backwards for unclosed '(', '{', etc..
-     * Put this position in start_pos.
-     * Ignore quotes here.
-     */
-    
     int start_pos = (int)idx;
     int end_pos   = (int)idx;
     
     while (count-- > 0)
     {
+        /*
+         * Search backwards for unclosed '(', '{', etc..
+         * Put this position in start_pos.
+         * Ignore quotes here.
+         */
         if ((start_pos = findmatchlimit(string, start_pos, what, YES)) == -1)
         {
             return NSMakeRange(NSNotFound, 0);
@@ -820,5 +819,35 @@ NSRange current_block(NSTextView* view, int count, BOOL inclusive, char what, ch
         }
     }
     
-    return NSMakeRange(start_pos, end_pos - start_pos + 1);
+    if (!inclusive)
+    {
+        ++start_pos;
+        if (what == '{')
+        {
+            NSUInteger idx = mv_caret_handler(string, end_pos);
+            if (idx == end_pos)
+            {
+                // The '}' is only preceded by indent, skip that indent.
+                end_pos = (int) mv_0_handler(string, end_pos);
+            }
+        }
+        --end_pos;
+    } else {
+        ++end_pos;
+    }
+    
+    return NSMakeRange(start_pos, end_pos - start_pos);
+}
+
+NSRange current_word(NSTextView* view, int repeatCount, BOOL inclusive, BOOL fuzzy)
+{
+    return NSMakeRange(NSNotFound, 0);
+}
+NSRange current_quote(NSTextView* view, int repeatCount, BOOL inclusive, char what)
+{
+    return NSMakeRange(NSNotFound, 0);
+}
+NSRange current_tagblock(NSTextView* view, int repeatCount, BOOL inclusive)
+{
+    return NSMakeRange(NSNotFound, 0);
 }

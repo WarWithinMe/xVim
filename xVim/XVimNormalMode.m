@@ -481,7 +481,7 @@ typedef enum e_handle_stat
 -(BOOL) executeCMD
 {
     // ===== Special handle for yy / dd / cc
-    if (cmdChar == secondCmdChar)
+    if (cmdChar == operatorChar)
     {
         if (firstCount == -1)  { firstCount = 1; }
         if (secondCount != -1) { firstCount *= secondCount; }
