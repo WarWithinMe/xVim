@@ -323,7 +323,7 @@ typedef enum e_handle_stat
             case '_': // Goto last non-blank of the line.
             {
                 NSRange old = [hijackedView selectedRange];
-                for (int i = 0; i < firstCount; ++i) {
+                for (int i = 1; i < firstCount; ++i) {
                     [hijackedView moveDown:nil];
                 }
                 range.location = mv_g__handler(hijackedView);
