@@ -8,15 +8,17 @@
  */
 
 // Return the location of the start of indentation on current line. '^'
-NSUInteger mv_caret_handler(NSTextView* view);
+NSUInteger mv_caret_handler_h(NSTextView* view);
+NSUInteger mv_caret_handler(NSString* string, NSUInteger index);
 
 // Return the beginning of line location. '0'
-NSUInteger mv_0_handler(NSTextView* view);
+NSUInteger mv_0_handler_h(NSTextView* view);
+NSUInteger mv_0_handler(NSString* string, NSUInteger index);
 
 // Return the end of the line. '$'
 NSUInteger mv_dollar_handler(NSTextView* view);
 // This one returns index of the CR
-NSUInteger mv_dollar_inc_handler(NSTextView* view);
+NSUInteger mv_dollar_inc_handler(NSString* string, NSUInteger index);
 // Return the last non-blank of the line. 'g_'
 NSUInteger mv_g__handler(NSTextView* view);
 

@@ -49,11 +49,9 @@ NSUInteger mv_dollar_handler(NSTextView* view)
     return index;
 }
 
-NSUInteger mv_dollar_inc_handler(NSTextView* view)
+NSUInteger mv_dollar_inc_handler(NSString* string, NSUInteger index)
 {
-    NSString*  string = [view string];
     NSUInteger strLen = [string length];
-    NSUInteger index  = [view selectedRange].location;
     
     NSStringHelper helper;
     initNSStringHelper(&helper, string, strLen);
@@ -83,10 +81,12 @@ NSUInteger mv_g__handler(NSTextView* view)
     return index;
 }
 
-NSUInteger mv_caret_handler(NSTextView* view)
+NSUInteger mv_caret_handler_h(NSTextView* view)
 {
-    NSString*  string       = [view string];
-    NSUInteger index        = [view selectedRange].location;
+    return mv_caret_handler([view string], [view selectedRange].location);
+}
+NSUInteger mv_caret_handler(NSString* string, NSUInteger index)
+{
     NSUInteger resultIndex  = index;
     NSUInteger seekingIndex = index;
     
@@ -167,11 +167,11 @@ NSUInteger mv_percent_handler(NSTextView* view)
     return idxBefore;
 }
 
-NSUInteger mv_0_handler(NSTextView* view)
-{
-    NSString*  string = [view string];
-    NSUInteger index  = [view selectedRange].location;
-    
+NSUInteger mv_0_handler_h(NSTextView* view) {
+    return mv_0_handler([view string], [view selectedRange].location);
+}
+NSUInteger mv_0_handler(NSString* string, NSUInteger index)
+{    
     while (index > 0)
     {
         if (testNewLine([string characterAtIndex:index-1])) { break; }

@@ -10,72 +10,99 @@
 #import "vim.h"
 #import "NSStringHelper.h"
 
+typedef enum e_affect_range
+{
+    DefaultAffectRange = 0,
+    CharacterWise = 1,
+    LineWise      = 2
+} AffectRange;
+
 @interface XVimNormalModeHandler()
 {
-    @private
-        int     commandCount;
-        int     motionCount;
-        unichar commandChar;
-        unichar motionChar;
-        BOOL    dontCheckTrailingCR;
+@private
     
-        XTextViewBridge* bridge;
-        NSTextView*      hijackedView;
+    // e.g. 3d5g_ :        |     e.g. 3gg :
+    // firstCount    = 3   |   firstCount    = 3
+    // secondCount   = 5
+    // operatorChar  = d
+    // cmdChar       = g   |   cmdChar       = g
+    // secondCmdChar = _   |   secondCmdChar = g
+    
+    int        firstCount;    // Number before the command.
+    int        secondCount;   // Number after the command.
+    unichar    operatorChar;  // The operator. Currently can only be y,d,c
+    NSUInteger cmdChar;       // The command.
+    NSUInteger secondCmdChar; // The second command char.
+    
+    AffectRange affect;
+    
+    // When dontCheckTrailingCR == YES, we can place the caret
+    // right before CR.
+    BOOL dontCheckTrailingCR;
+    
+    XTextViewBridge* bridge;
+    NSTextView*      hijackedView;
 }
 
--(void) cmdScroll: (unichar) cmdChar; // Accepts f/b/d/u.
--(void) cmdYDC:    (unichar) cmdChar; // Accepts Y/D/C. cmdYDC will reset everything.
--(void) cmdHML:    (unichar) cmdChar; // Accepts H/M/L.
--(void) cmdPaste:  (unichar) cmdChar; // Accepts p/P.
--(void) cmdChangeCase; // ~
--(void) cmdJoin;       // J
--(void) cmdGoto:       (BOOL) cmdCountSpecified; // G
--(void) cmdDelChar:    (BOOL) isAfter; // x/X
--(void) cmdOpenNewline:(BOOL) isAfter; //o/O
--(void) cmdPlaceLine:(unichar) cmdChar; // For zz/zt/zb
--(void) cmdddcc:     (unichar) cmdChar; // For dd/cc.
--(BOOL) cmdMotions:  (unichar) cmdChar; // Return NO if we need to reset.
+// Generate the range for cmdChar and secondCmdChar
+// If the range is invalid. The location of returned value is NSNotFound.
+// generateRange will check the firstCount and secondCount!
+-(NSRange) generateRange:(BOOL*) ensureVisible defaultLinewise:(BOOL*) flag;
+
+// Return YES if we execute the command.
+-(BOOL) executeCMD;
+-(BOOL) executeNormalCMD;
+
+
+-(void) cmdJoin;
+-(void) cmdYDC;
+-(void) cmdChangeCase;  //~
+-(void) cmdDelChar;     //x/X
+-(void) cmdOpenNewline; //o/O
+-(void) cmdPaste;       //p/P.
+-(void) cmdPlaceLine;   //zz/zt/zb
+
+-(void) cmdddcc; // For dd/cc.
+
+-(NSUInteger) cmdScroll; // ctrl-[f/b/d/u].
+-(NSUInteger) cmdHML;    // H/M/L.
+-(NSUInteger) cmdGoto: (BOOL) cmdCountSpecified; // G
+-(NSUInteger) cmdSOL; // Enter/+/-
 @end
 
 @implementation XVimNormalModeHandler
--(void) reset
-{
-    commandCount = 0;
-    motionCount  = 0;
-    commandChar  = 0;
-    motionChar   = 0;
-    dontCheckTrailingCR = NO;
-}
-
 -(id) initWithController:(XVimController*) c
 {
     if (self = [super initWithController:c])
     {
         bridge       = [c bridge];
-        hijackedView = [bridge targetView]; 
+        hijackedView = [bridge targetView];
+        firstCount   = -1;
+        secondCount  = -1;
     }
     return self;
 }
 
+-(void) reset
+{
+    firstCount    = -1;
+    secondCount   = -1;
+    operatorChar  = 0;
+    cmdChar       = 0;
+    secondCmdChar = 0;
+    affect        = DefaultAffectRange;
+    dontCheckTrailingCR = NO;
+}
+
 -(NSArray*) selectionChangedFrom:(NSArray*)oldRanges to:(NSArray*)newRanges
 {
-#ifdef ENABLE_VISUALMODE
-    if ([[newRanges objectAtIndex:0] rangeValue].length > 0)
-    {
-        // Switch to visual mode if 
-        [controller switchToMode:VisualMode subMode:NoSubMode];
-        return newRanges;
-    }
-#endif
-    
-    
     if (dontCheckTrailingCR == YES) { return newRanges; }
     if ([newRanges count] > 1)      { return newRanges; }
     
     NSRange selected = [[newRanges objectAtIndex:0] rangeValue];
     if (selected.length > 0 || selected.location == 0) { return newRanges; }
     
-    NSString*   string       = [hijackedView string];
+    NSString* string = [hijackedView string];
     
     if (!testNewLine([string characterAtIndex:selected.location - 1]))
     {
@@ -89,214 +116,501 @@
     return newRanges;
 }
 
--(void) cmdScroll:(unichar) ch
+typedef enum e_handle_stat
 {
-    // Ctrl + f one page forward
-    // Ctrl + b one page backward
-    // Ctrl + d half screen down
-    // Ctrl + u harf screen up
-    NSRect    currentRect = [hijackedView visibleRect];
-    NSSize    viewSize    = [hijackedView frame].size;
-    NSInteger scrollToY   = 0;
-    NSInteger delta       = currentRect.size.height; 
-    
-    if (ch == 'f' || ch == 'd')
-    {
-        if (ch == 'd') { delta /= 2; }
-        
-        scrollToY = currentRect.origin.y + delta;
-        NSInteger maxY = viewSize.height - currentRect.size.height;
-        if (scrollToY > maxY) { scrollToY = maxY; }
-        
-    } else {
-        delta /= ch == 'u' ? -2 : -1;
-        scrollToY = currentRect.origin.y + delta;
-        if (scrollToY < 0) { scrollToY = 0; }
-    }
-    
-    if (scrollToY != currentRect.origin.y) 
-    {
-        // Move caret to a new place.
-        
-        NSLayoutManager* manager = [hijackedView layoutManager];
-        NSRange range = [hijackedView selectedRange];
-        range.length = 1;
-        range = [manager glyphRangeForCharacterRange:range actualCharacterRange:nil];
-        
-        NSRect    caretRect   = [manager boundingRectForGlyphRange:range 
-                                                   inTextContainer:[hijackedView textContainer]];
-        NSInteger caretYInScreen = caretRect.origin.y - currentRect.origin.y;
-        NSInteger caretYAtLeast  = 0.2 * currentRect.size.height - caretRect.size.height;
-        NSInteger caretYAtMost   = 0.8 * currentRect.size.height;
-        
-        if (caretYInScreen < caretYAtLeast) {
-            caretYInScreen = caretYAtLeast;
-        } else if (caretYInScreen > caretYAtMost) {
-            caretYInScreen = caretYAtMost;
-        }
-        
-        NSRange insertion = {[hijackedView characterIndexForInsertionAtPoint:
-                              NSMakePoint(0, caretYInScreen + currentRect.origin.y + delta)],0};
-        [hijackedView setSelectedRange:insertion];
-        insertion.location = mv_caret_handler(hijackedView);
-        [hijackedView setSelectedRange:insertion];
-        
-        // Scroll
-        currentRect.origin.y = scrollToY;
-        [self scrollViewRectToVisible:currentRect];
-    }
-}
+    NotHandled = 0,
+    Handled    = 1,
+    BadChar    = 2,
+    Execute    = 3,
+    ExecuteNormal = 4
+} HandleState;
 
--(void) cmdYDC:(unichar) ch
+// Below are commands that are going to be implemented.
+// #>    Indent
+// #<    Un-Indent
+// fx    Find char x on current line and go to it
+// tx    Similar to fx, but stops one character short before x
+// Fx    Similar to fx, but searches backwards
+// Tx    Similar to tx, but searches backwards
+// #;    Repeat last find motion
+// #,    Repeat last find motion, but in reverse
+// #*    Find next occurance of identifier under caret or currently selected text
+// ##    Similar to * but backwards
+// :#    Jump to line number #.
+// :q, :q!, :w, :wq, :x
+-(BOOL) processKey:(unichar)c modifiers:(NSUInteger)flags
 {
-    // All these 3 command does not include trailing CR
-    NSString*  string   = [hijackedView string];
-    NSUInteger current  = [hijackedView selectedRange].location;
-    NSUInteger lineEnd  = current;
-    NSUInteger maxIndex = [string length];
+    if (c == '\t') { return NO; } // Don't interpret tabs.
+    if (c == XEsc) { [self reset]; return YES; } // Esc will reset everything
     
-    NSStringHelper  helper;
-    NSStringHelper* h = &helper;
-    initNSStringHelper(h, string, maxIndex);
-    --maxIndex;
+    // In this method, we check what kind of ch is 
+    // and assign it to the proper member.
     
-    while (lineEnd <= maxIndex)
+    // 1. Check number.
+    HandleState state = NotHandled;
+    if (c >= '0' && c <= '9')
     {
-        if (testNewLine(characterAtIndex(&helper, lineEnd))) {
-            --commandCount;
-            if (commandCount == 0) { break; }
-        }
-        ++lineEnd;
-    }
-    
-    NSUInteger lineBegin = ch == 'Y' ? mv_0_handler(hijackedView) : current;
-    NSRange    range     = {lineBegin, lineEnd - lineBegin};
-    [controller yank:string withRange:range wholeLine:(ch == 'Y')];
-    
-    if (ch == 'C')
-    {
-        dontCheckTrailingCR = YES;
-        [hijackedView insertText:@"" replacementRange:range];
-        [controller switchToMode:InsertMode];
-    } else if(ch == 'D')
-    {
-        [hijackedView insertText:@"" replacementRange:range];
-    }
-    
-    // Reset
-    commandChar     = 0;
-    commandCount    = 0;
-    dontCheckTrailingCR = NO;
-}
-
--(void) cmdHML:(unichar) ch
-{
-    NSLayoutManager* manager   = [hijackedView layoutManager];
-    NSTextContainer* container = [hijackedView textContainer];
-    NSRect           rect      = [hijackedView visibleRect];
-    CGFloat          fraction  = 0;
-    
-    NSRange          selection = [hijackedView selectedRange];
-    selection.length = 1;
-    selection        = [manager glyphRangeForCharacterRange:selection 
-                                       actualCharacterRange:nil];
-    
-    NSRect caretRect           = [manager boundingRectForGlyphRange:selection 
-                                                    inTextContainer:[hijackedView textContainer]];
-    
-    
-    if (ch == 'M') {
-        rect.origin.y += rect.size.height / 2;
-    } else if (ch == 'L') {
-        rect.origin.y += rect.size.height - caretRect.size.height / 2;
-    } else {
-        rect.origin.y += caretRect.size.height / 2;
-    }
-    
-    selection.location = [manager characterIndexForPoint:NSMakePoint(rect.origin.x, rect.origin.y) 
-                                         inTextContainer:container
-                fractionOfDistanceBetweenInsertionPoints:&fraction];
-    
-    if (selection.location != NSNotFound)
-    {
-        selection.length   = 0;
-        [hijackedView setSelectedRange:selection];
-        selection.location = mv_caret_handler(hijackedView);
-        [hijackedView setSelectedRange:selection];
-    }
-}
-
--(void) cmdPaste:(unichar) ch
-{
-    BOOL wholeLine = NO;
-    NSString* yankContent = [controller yankContent:&wholeLine];
-    if (yankContent != nil)
-    {
-        dontCheckTrailingCR = YES;
-        if (wholeLine)
-        {
-            if (ch == 'p') {
-                [hijackedView moveToEndOfLine:nil];
-            } else {
-                NSRange currRange = [hijackedView selectedRange];
-                [hijackedView moveUp:nil];
-                if (currRange.location == [hijackedView selectedRange].location) {
-                    [hijackedView moveToBeginningOfLine:nil];
-                } else {
-                    [hijackedView moveToEndOfLine:nil];
+        // We only accept number only if cmdChar is 0.
+        if (cmdChar != 0) {
+            state = BadChar;
+        } else {
+            // The number adds to firstCount if operator is 0.
+            // Otherwise it adds to secondCount.
+            int* tc = operatorChar == 0 ? &firstCount : &secondCount;
+            if (*tc == -1)
+            {
+                if (c != '0') 
+                { 
+                    *tc = c - '0';
+                    state = Handled;
                 }
-            }
-            [hijackedView moveRight:nil];
-        } else if (ch == 'p') { 
-            [hijackedView moveRight:nil];
-        }
-        
-        NSRange currentIndex = [hijackedView selectedRange];
-        
-        for (int i = 0; i < commandCount; ++i) {
-            [hijackedView insertText:yankContent];
-            if (wholeLine) {
-                [hijackedView setSelectedRange:currentIndex];
+            } else {
+                *tc = *tc * 10 + c - '0';
+                state = Handled;
             }
         }
     }
+    
+    flags &= XImportantMask;
+    NSUInteger ch = flags | c; // Combine ch and flags
+    
+    // 2. Check cmd.
+    if (state == NotHandled)
+    {
+        state = Execute;
+        switch (ch) {
+                
+                // Operators
+            case 'y':
+            case 'd':
+            case 'c':
+                if (operatorChar == 0)
+                {
+                    // Wait for the motion.
+                    operatorChar = ch;
+                    state = Handled;
+                } else {
+                    cmdChar = ch;
+                }
+                break;
+                
+                // Not motion commands.
+            case 'J': // Join
+            case 'Y': // Yank   line
+            case 'D': // Delete line
+            case 'C': // Change line
+            case '~': // Change case
+            case 'X': // Delete char before
+            case 'x': // Delete char after
+            case 'O': // Open line above
+            case 'o': // Open line below
+            case 'p': // Paste
+            case 'P': // Pate before
+            case 'I': // Insert at beginning.
+            case 'A': // Append at end
+            case 'u': // Undo
+            case 'U': // Redo
+            case 'r' | XMaskControl: // Redo
+            case 'r': // Replace single
+            case 'R': // Replace
+                if (operatorChar != 0) {
+                    state = BadChar;
+                } else {
+                    // if (cmdChar == 'g') { secondCmdChar = ch; } else
+                    if (cmdChar != 0) 
+                    { 
+                        state = BadChar; 
+                    } else { 
+                        cmdChar = ch;
+                        state = ExecuteNormal;
+                    }
+                }
+                break;
+                
+            case 'i': // Insert
+            case 'a': // Append
+                if (cmdChar != 0) {
+                    state = BadChar;
+                } else {
+                    cmdChar = ch;
+                    if (operatorChar != 0)
+                    {
+                        // They become text objects.
+                        state = Handled;
+                    } else {
+                        state = ExecuteNormal;
+                    }
+                }
+                break;
+                
+                // Motion commands.
+            default:
+                if (cmdChar == 0)
+                {
+                    cmdChar = ch;
+                    if (ch == 'z' || ch == 'g')
+                    {
+                        // Wait for another input.
+                        state = Handled;
+                    }
+                } else {
+                    secondCmdChar = ch;
+                    if (cmdChar == 'z') { // zx command is not motion.
+                        state = ExecuteNormal;
+                    }
+                }
+                break;
+        }
+    }
+    
+    BOOL handledKey = YES;
+    if (state != Handled)
+    {
+        BOOL res = YES;
+        if (state == Execute)
+        {
+            res = [self executeCMD];
+        } else if (state == ExecuteNormal) {
+            res = [self executeNormalCMD];
+        }
+        
+        if (res == NO && flags != 0)
+        {
+            // Let the NSTextView to process keys with modifiers.
+            handledKey = NO;
+        }
+        // Reset everything only when state is Execute or BadChar.
+        [self reset];
+    }
+    
+    return handledKey;
 }
 
--(void) cmdChangeCase
+-(NSRange) generateRange:(BOOL*) visible defaultLinewise:(BOOL*) linewise
 {
-    // ~ will only work on the character in current line.
-    NSString*  string   = [hijackedView string];
-    NSUInteger maxIndex = [string length] - 1;
-    NSUInteger index    = [hijackedView selectedRange].location;
-    if (index <= maxIndex && testNewLine([string characterAtIndex:index]) == NO)
+    NSRange range             = {NSNotFound, 0};
+    BOOL    ensureVisible     = NO;
+    BOOL    defaultLineWise   = NO;
+    BOOL    cmdCountSpecified = firstCount != -1;
+    
+    if (!cmdCountSpecified) { firstCount = 1; }
+    if (secondCount != -1)  { firstCount *= secondCount; }
+    
+    if (cmdChar == 'g') 
     {
-        NSUInteger length = 1;
-        if (commandCount > 1)
+        // g commands.
+        switch (secondCmdChar)
         {
-            NSUInteger lineEndIndex = mv_dollar_handler(hijackedView) + 1;
-            length = lineEndIndex - index;
-            if (length > commandCount) { length = commandCount; }
+            case 'g': 
+                range.location  = [self cmdGoto:YES];
+                defaultLineWise = YES;
+                ensureVisible   = YES;
+                break;
+            case '_': // Goto last non-blank of the line.
+            {
+                NSRange old = [hijackedView selectedRange];
+                for (int i = 0; i < firstCount; ++i) {
+                    [hijackedView moveDown:nil];
+                }
+                range.location = mv_g__handler(hijackedView);
+                [hijackedView setSelectedRange:old];
+            }
+                break;
         }
         
-        NSRange range = {index, length};
-        NSMutableString* subString = [NSMutableString stringWithString:[string substringWithRange:range]];
-        NSRange r = {0,1};
-        for (; r.location < length; ++r.location) {
-            unichar c = [subString characterAtIndex:r.location];
-            if (c >= 'a' && c <= 'z')
-                c = c + 'A' - 'a';
-            else if (c >= 'A' && c <= 'Z')
-                c = c + 'a' - 'A';
-            [subString replaceCharactersInRange:r 
-                                     withString:[NSString stringWithCharacters:&c 
-                                                                        length:1]];
+    } else if (cmdChar == 'i' || cmdChar == 'a')
+    {
+        // Text objects.
+        switch (secondCmdChar)
+        {
+                
         }
-        [hijackedView insertText:subString replacementRange:range];
-        
-        range.length = 0;
-        range.location += length;
-        [hijackedView setSelectedRange:range];
+    } else 
+    {
+        // Normal motion commands.
+        switch (cmdChar)
+        {
+            case 'f' | XMaskControl:
+            case 'b' | XMaskControl:
+            case 'd' | XMaskControl:
+            case 'u' | XMaskControl:
+                // Scrolls
+                if (operatorChar == 0) {
+                    range.location = [self cmdScroll];
+                }
+                break;
+            case 'H':
+            case 'M':
+            case 'L':
+                range.location = [self cmdHML];
+                defaultLineWise = YES;
+                break;
+            case 'G': 
+                range.location = [self cmdGoto:cmdCountSpecified];
+                ensureVisible   = YES;
+                defaultLineWise = YES;
+                break;
+            case '|': // Go to column
+                range.location = columnToIndex(hijackedView, firstCount);
+                break;
+            case '%':
+                range.location = mv_percent_handler(hijackedView);
+                ensureVisible = YES;
+                break;
+            case '$':
+                range.location = mv_dollar_handler(hijackedView);
+                break;
+            case '0':
+#ifndef MAKE_0_AS_CARET
+                range.location = mv_0_handler_h(hijackedView);
+                break;
+#endif
+            case '^':
+            case 'I':
+                range.location = mv_caret_handler_h(hijackedView);
+                break;
+                
+            case '_':
+            case '-': // First non-blank prev line.
+            case '+': // First non-blank next line.
+            case NSCarriageReturnCharacter:
+                range.location  = [self cmdSOL];
+                ensureVisible   = YES;
+                defaultLineWise = YES;
+                break;
+                
+            case 'w': 
+            case 'W':
+                range.location = operatorChar == 0 ? 
+                mv_w_handler(hijackedView, firstCount, cmdChar == 'W') :
+                mv_w_motion_handler(hijackedView, firstCount, cmdChar == 'W');
+                ensureVisible = YES;
+                break;
+                
+            case 'e':
+            case 'E':
+                range.location = mv_e_handler(hijackedView, firstCount, cmdChar == 'E');
+                if (operatorChar != 0) { ++range.location; }
+                ensureVisible = YES;
+                break;
+            case 'b':
+            case 'B':
+                range.location = mv_b_handler(hijackedView, firstCount, cmdChar == 'B');
+                ensureVisible = YES;
+                break;
+                
+            case NSDeleteCharacter:
+            case 'h': range.location = mv_h_handler(hijackedView, firstCount);
+                break;
+                
+            case XSpace:
+            case 'l': range.location = mv_l_handler(hijackedView, firstCount, operatorChar == 0);  
+                break;
+                
+            case 'j': 
+            {
+                NSRange old = [hijackedView selectedRange];
+                for (int i = 0; i < firstCount; ++i) { [hijackedView moveDown:nil]; }  
+                NSRange n   = [hijackedView selectedRange];
+                if (old.location != n.location) {
+                    range.location = n.location;
+                    [hijackedView setSelectedRange:old];
+                }
+                defaultLineWise = YES;
+            }
+                break;
+            case 'k': 
+            {
+                NSRange old = [hijackedView selectedRange];
+                for (int i = 0; i < firstCount; ++i) { [hijackedView moveUp:nil]; }  
+                NSRange n   = [hijackedView selectedRange];
+                if (old.location != n.location) {
+                    range.location = n.location;
+                    [hijackedView setSelectedRange:old];
+                }
+                defaultLineWise = YES;
+            }
+        }
     }
+
+    if (visible)  { *visible  = ensureVisible;   }
+    if (linewise) { *linewise = defaultLineWise; }
+    return range;
+}
+
+-(BOOL) executeCMD
+{
+    // ===== Special handle for yy / dd / cc
+    if (cmdChar == secondCmdChar)
+    {
+        if (firstCount == -1)  { firstCount = 1; }
+        if (secondCount != -1) { firstCount *= secondCount; }
+        switch (cmdChar) {
+            case 'c':
+            case 'd': [self cmdddcc]; return YES;
+            case 'y': cmdChar = 'Y'; [self cmdYDC]; return YES;
+        }
+    }
+    
+    // ===== Finds out the range.
+    BOOL    ensureVisible   = NO;
+    BOOL    defaultLineWise = NO;
+    NSRange range = [self generateRange:&ensureVisible
+                        defaultLinewise:&defaultLineWise];
+    
+    // ===== The command is not supported.
+    if (range.location == NSNotFound) {
+        return NO;
+    }
+    
+    // ===== The command doesn't change anything.
+    if (range.length == 0 && 
+        range.location == [hijackedView selectedRange].location)
+    {
+        return YES;
+    }
+    
+    // ===== Deal with normal command.
+    if (operatorChar == 0)
+    {
+        // This simply moves the caret.
+        [hijackedView setSelectedRange:range];
+        if (ensureVisible) {
+            [hijackedView scrollRangeToVisible:range];
+        }
+        
+        return YES;
+    }
+    
+    // ===== Deal with operators.
+    NSInteger motionBegin = -1;
+    NSInteger motionEnd   = -1;
+    
+    if (range.length == 0)
+    {
+        // The range only specified the new caret position.
+        // Calc the real range here.
+        
+        NSUInteger currentIdx = [hijackedView selectedRange].location;
+        if (currentIdx > range.location)
+        {
+            motionBegin = range.location;
+            motionEnd   = currentIdx;
+        } else {
+            motionBegin = currentIdx;
+            motionEnd   = range.location;
+        }
+    } else {
+        motionBegin = range.location;
+        motionEnd   = range.location + range.length;
+    }
+    
+    NSString* string = [hijackedView string];
+    
+    // Check linewise and characterwise (We don't support block wise)
+    if (affect == LineWise) {
+        defaultLineWise = YES;
+    } else if (affect == CharacterWise) {
+        defaultLineWise = NO;
+    }
+    if (defaultLineWise)
+    {
+        motionBegin = mv_0_handler(string, motionBegin);
+        motionEnd   = mv_dollar_inc_handler(string, motionEnd);
+    }
+    
+    range.location = motionBegin;
+    range.length   = motionEnd - motionBegin;
+    
+    [controller yank:string withRange:range wholeLine:defaultLineWise];
+    if (operatorChar != 'y') {
+        if (operatorChar == 'c') { dontCheckTrailingCR = YES; }
+        [hijackedView insertText:@"" replacementRange:range];
+        if (operatorChar == 'c') { [controller switchToMode:InsertMode]; }
+    }
+        
+    return YES;
+}
+
+-(BOOL) executeNormalCMD
+{
+    if (firstCount == -1) { firstCount = 1; }
+    
+    switch (cmdChar)
+    {
+        case 'J': [self cmdJoin]; break;
+        case '~': [self cmdChangeCase]; break;
+            
+        case 'Y':
+        case 'D':
+        case 'C':
+            [self cmdYDC];
+            break;
+
+        case 'X':
+        case 'x':
+            [self cmdDelChar];
+            break;
+            
+        case 'O':
+        case 'o':
+            [self cmdOpenNewline];
+            break;
+            
+        case 'p':
+        case 'P':
+            [self cmdPaste];
+            break;
+            
+        case 'A':
+            dontCheckTrailingCR = YES;
+            [hijackedView moveToEndOfLine:nil];
+            [controller switchToMode:InsertMode];
+            break;
+        case 'I':
+            [hijackedView setSelectedRange: NSMakeRange(mv_caret_handler_h(hijackedView), 0)];
+            [controller switchToMode:InsertMode];
+            break;
+            
+        case 'a':
+        {
+            NSString*  string = [hijackedView string];
+            NSUInteger idx    = [hijackedView selectedRange].location;
+            NSUInteger max    = [string length];
+            if (idx < max && !testNewLine([string characterAtIndex:idx]))
+            {
+                dontCheckTrailingCR = YES;
+                [hijackedView moveRight:nil];
+            }
+            [controller switchToMode:InsertMode];
+        }
+            break;
+        case 'i':
+            [controller switchToMode:InsertMode];
+            break;
+            
+#ifdef U_AS_REDO
+        case 'U': // Redo
+#else
+        case 'r' | XMaskControl: // Redo
+#endif
+            for (int i = 0; i < firstCount; ++i) { [[hijackedView undoManager] redo]; } 
+            break;
+        case 'u': // Undo
+            for (int i = 0; i < firstCount; ++i) { [[hijackedView undoManager] undo]; } 
+            break;
+            
+        case 'r':
+        case 'R': [controller switchToMode:ReplaceMode 
+                                   subMode:(cmdChar == 'r' ? SingleReplaceMode : NoSubMode)];
+            break;
+            
+        case 'z':
+            [self cmdPlaceLine];
+            break;
+    }
+    
+    return YES;
 }
 
 -(void) cmdJoin
@@ -310,11 +624,11 @@
     NSStringHelper* h = &helper;
     unichar ch = 0;
     
-    commandCount = commandCount > 2 ? commandCount - 1 : 1;
+    firstCount = firstCount > 2 ? firstCount - 1 : 1;
     
     [undoManager beginUndoGrouping];
     
-    for (int i = 0; i < commandCount; ++i)
+    for (int i = 0; i < firstCount; ++i)
     {
         NSUInteger maxIndex = [string length];
         initNSStringHelper(h, string, maxIndex);
@@ -364,55 +678,103 @@
     [undoManager endUndoGrouping];
 }
 
--(void) cmdGoto:(BOOL) commandCountSpecified
+-(void) cmdYDC
 {
-    NSRange   range      = {0, 0};
-    NSInteger lineNumber = commandCountSpecified ? commandCount - 1 : -1;
+    // All these 3 command does not include trailing CR
+    NSString*  string   = [hijackedView string];
+    NSUInteger current  = [hijackedView selectedRange].location;
+    NSUInteger lineEnd  = current;
+    NSUInteger maxIndex = [string length];
     
-    if (lineNumber > 0){
-        range = [hijackedView accessibilityCharacterRangeForLineNumber:lineNumber];
-        range.length = 0;
-        if (range.location == 0 && lineNumber != 0) {
-            // The lineNumber is not valid,
-            // We move it to the last line.
-            lineNumber = -1;
-        }
-    }
+    NSStringHelper  helper;
+    NSStringHelper* h = &helper;
+    initNSStringHelper(h, string, maxIndex);
+    --maxIndex;
     
-    if (lineNumber == -1)
+    while (lineEnd <= maxIndex)
     {
-        // Goto last line
-        NSString*  string   = [hijackedView string];
-        NSUInteger maxIndex = [string length];
-        if (testNewLine([string characterAtIndex:maxIndex - 1]) == NO)
-            --maxIndex;
-        range.location = maxIndex;
+        if (testNewLine(characterAtIndex(&helper, lineEnd))) {
+            --firstCount;
+            if (firstCount == 0) { break; }
+        }
+        ++lineEnd;
     }
     
-    [hijackedView setSelectedRange:range];
-    range.location = mv_caret_handler(hijackedView);
-    [hijackedView setSelectedRange:range];
-    [hijackedView scrollRangeToVisible:range];
+    NSUInteger lineBegin = cmdChar == 'Y' ? mv_0_handler(string, current) : current;
+    NSRange    range     = {lineBegin, lineEnd - lineBegin};
+    [controller yank:string 
+           withRange:range 
+           wholeLine:(cmdChar == 'Y')];
+    
+    if (cmdChar == 'C')
+    {
+        dontCheckTrailingCR = YES;
+        [hijackedView insertText:@"" replacementRange:range];
+        [controller switchToMode:InsertMode];
+    } else if(cmdChar == 'D')
+    {
+        [hijackedView insertText:@"" replacementRange:range];
+    }
 }
 
--(void) cmdDelChar:(BOOL)after
+-(void) cmdChangeCase
+{
+    // ~ will only work on the character in current line.
+    NSString*  string   = [hijackedView string];
+    NSUInteger maxIndex = [string length] - 1;
+    NSUInteger index    = [hijackedView selectedRange].location;
+    
+    if (index <= maxIndex && testNewLine([string characterAtIndex:index]) == NO)
+    {
+        NSUInteger length = 1;
+        if (firstCount > 1)
+        {
+            NSUInteger lineEndIndex = mv_dollar_handler(hijackedView) + 1;
+            length = lineEndIndex - index;
+            if (length > firstCount) { length = firstCount; }
+        }
+        
+        NSRange range = {index, length};
+        NSMutableString* subString = [NSMutableString stringWithString:[string substringWithRange:range]];
+        NSRange r = {0,1};
+        
+        for (; r.location < length; ++r.location) 
+        {
+            unichar c = [subString characterAtIndex:r.location];
+            if (c >= 'a' && c <= 'z')
+                c = c + 'A' - 'a';
+            else if (c >= 'A' && c <= 'Z')
+                c = c + 'a' - 'A';
+            [subString replaceCharactersInRange:r 
+                                     withString:[NSString stringWithCharacters:&c 
+                                                                        length:1]];
+        }
+        [hijackedView insertText:subString replacementRange:range];
+        
+        range.length = 0;
+        range.location += length;
+        [hijackedView setSelectedRange:range];
+    }
+}
+
+-(void) cmdDelChar
 {
     NSString* string = [hijackedView string];
     NSInteger index  = [hijackedView selectedRange].location;
     NSRange   range  = {0, 0};
     
-    if (after)
+    if (cmdChar == 'x')
     {
         NSUInteger maxIndex = [string length] - 1;
-
+        
         if (index <= maxIndex)
         {
             range.location = index;
-            range.length   = commandCount;
+            range.length   = firstCount;
         } 
     } else {
         
-        NSUInteger rIndex = index > commandCount ? index - commandCount : 0;
+        NSUInteger rIndex = index > firstCount ? index - firstCount : 0;
         if (index > rIndex)
         {
             range.location = rIndex;
@@ -426,8 +788,9 @@
     }
 }
 
--(void) cmdOpenNewline:(BOOL)isAfter
+-(void) cmdOpenNewline
 {
+    BOOL isAfter = cmdChar == 'o';
     dontCheckTrailingCR = YES;
     
     if (isAfter == NO) {
@@ -447,9 +810,50 @@
     [controller switchToMode:InsertMode];
 }
 
--(void) cmdPlaceLine:(unichar) ch
+-(void) cmdPaste
 {
-    if (ch != 't' && ch != 'b' && ch != 'z') return;
+    BOOL wholeLine = NO;
+    NSString* yankContent = [controller yankContent:&wholeLine];
+    if (yankContent != nil)
+    {
+        dontCheckTrailingCR = YES;
+        if (wholeLine)
+        {
+            if (cmdChar == 'p') {
+                [hijackedView moveToEndOfLine:nil];
+            } else {
+                NSRange currRange = [hijackedView selectedRange];
+                [hijackedView moveUp:nil];
+                if (currRange.location == [hijackedView selectedRange].location) {
+                    [hijackedView moveToBeginningOfLine:nil];
+                } else {
+                    [hijackedView moveToEndOfLine:nil];
+                }
+            }
+            [hijackedView moveRight:nil];
+        } else if (cmdChar == 'p') { 
+            [hijackedView moveRight:nil];
+        }
+        
+        NSRange currentIndex = [hijackedView selectedRange];
+        
+        for (int i = 0; i < firstCount; ++i) {
+            [hijackedView insertText:yankContent];
+            if (wholeLine) {
+                [hijackedView setSelectedRange:currentIndex];
+            }
+        }
+    }
+}
+
+-(void) cmdPlaceLine
+{
+    switch (secondCmdChar) {
+        case 't':
+        case 'b':
+        case 'z': break;
+        default: return;
+    }
     
     NSLayoutManager* manager = [hijackedView layoutManager];
     NSRange range = [hijackedView selectedRange];
@@ -461,9 +865,9 @@
     
     NSRect visibleRect = [hijackedView visibleRect];
     
-    if (ch == 't') {
+    if (secondCmdChar == 't') {
         visibleRect.origin.y = caretRect.origin.y;
-    } else if (ch == 'b') {
+    } else if (secondCmdChar == 'b') {
         visibleRect.origin.y = caretRect.origin.y + caretRect.size.height - 
         visibleRect.size.height;
     } else {
@@ -474,7 +878,136 @@
     [self scrollViewRectToVisible:visibleRect];
 }
 
--(void) cmdddcc:(unichar) ch
+-(NSUInteger) cmdScroll
+{
+    // Ctrl + f one page forward
+    // Ctrl + b one page backward
+    // Ctrl + d half screen down
+    // Ctrl + u harf screen up
+    NSRect    currentRect = [hijackedView visibleRect];
+    NSSize    viewSize    = [hijackedView frame].size;
+    NSInteger scrollToY   = 0;
+    NSInteger delta       = currentRect.size.height;
+    
+    NSUInteger ch = cmdChar & XUnicharMask;
+    
+    if (ch == 'f' || ch == 'd')
+    {
+        if (ch == 'd') { delta /= 2; }
+        
+        scrollToY = currentRect.origin.y + delta;
+        NSInteger maxY = viewSize.height - currentRect.size.height;
+        if (scrollToY > maxY) { scrollToY = maxY; }
+        
+    } else {
+        delta /= ch == 'u' ? -2 : -1;
+        scrollToY = currentRect.origin.y + delta;
+        if (scrollToY < 0) { scrollToY = 0; }
+    }
+    
+    if (scrollToY != currentRect.origin.y) 
+    {
+        // Move caret to a new place.
+        
+        NSLayoutManager* manager = [hijackedView layoutManager];
+        NSRange range = [hijackedView selectedRange];
+        range.length = 1;
+        range = [manager glyphRangeForCharacterRange:range actualCharacterRange:nil];
+        
+        NSRect    caretRect   = [manager boundingRectForGlyphRange:range 
+                                                   inTextContainer:[hijackedView textContainer]];
+        NSInteger caretYInScreen = caretRect.origin.y - currentRect.origin.y;
+        NSInteger caretYAtLeast  = 0.2 * currentRect.size.height - caretRect.size.height;
+        NSInteger caretYAtMost   = 0.8 * currentRect.size.height;
+        
+        if (caretYInScreen < caretYAtLeast) {
+            caretYInScreen = caretYAtLeast;
+        } else if (caretYInScreen > caretYAtMost) {
+            caretYInScreen = caretYAtMost;
+        }
+        
+        NSUInteger newIdx = [hijackedView characterIndexForInsertionAtPoint:
+                             NSMakePoint(0, caretYInScreen + currentRect.origin.y + delta)];
+        newIdx = mv_caret_handler([hijackedView string], newIdx);
+        
+        // Scroll
+        currentRect.origin.y = scrollToY;
+        [self scrollViewRectToVisible:currentRect];
+        
+        return newIdx;
+    }
+    
+    return [hijackedView selectedRange].location;
+}
+
+-(NSUInteger) cmdHML
+{
+    NSLayoutManager* manager   = [hijackedView layoutManager];
+    NSTextContainer* container = [hijackedView textContainer];
+    NSRect           rect      = [hijackedView visibleRect];
+    CGFloat          fraction  = 0;
+    
+    NSRange          selection = [hijackedView selectedRange];
+    selection.length = 1;
+    selection        = [manager glyphRangeForCharacterRange:selection 
+                                       actualCharacterRange:nil];
+    
+    NSRect caretRect           = [manager boundingRectForGlyphRange:selection 
+                                                    inTextContainer:[hijackedView textContainer]];
+    
+    
+    if (cmdChar == 'M') {
+        rect.origin.y += rect.size.height / 2;
+    } else if (cmdChar == 'L') {
+        rect.origin.y += rect.size.height - caretRect.size.height / 2;
+    } else {
+        rect.origin.y += caretRect.size.height / 2;
+    }
+    
+    selection.location = [manager characterIndexForPoint:NSMakePoint(rect.origin.x, rect.origin.y) 
+                                         inTextContainer:container
+                fractionOfDistanceBetweenInsertionPoints:&fraction];
+    
+    if (selection.location != NSNotFound)
+    {
+        selection.location = mv_caret_handler([hijackedView string], selection.location);
+    }
+    
+    return selection.location;
+}
+
+-(NSUInteger) cmdGoto:(BOOL) ccSpecified
+{
+    NSInteger  lineNumber = ccSpecified ? firstCount - 1 : -1;
+    NSUInteger idx = 0;
+    
+    if (lineNumber > 0)
+    {
+        idx = [hijackedView accessibilityCharacterRangeForLineNumber:lineNumber].location;
+        if (idx == 0 && lineNumber != 0) 
+        {
+            // The lineNumber is not valid,
+            // We move it to the last line.
+            lineNumber = -1;
+        }
+    }
+    
+    NSString* string = [hijackedView string];
+    
+    if (lineNumber == -1)
+    {
+        // Goto last line
+        NSUInteger maxIndex = [string length];
+        if (testNewLine([string characterAtIndex:maxIndex - 1]) == NO)
+            --maxIndex;
+        idx = maxIndex;
+    }
+    
+    idx = mv_caret_handler(string, idx);
+    return idx;
+}
+
+-(void) cmdddcc
 {
     // Delete whole lines except last new line character. And enter insert mode.
     NSString*  string   = [hijackedView string];
@@ -490,516 +1023,114 @@
         while (lineEnd < strLen)
         {
             if (testNewLine(characterAtIndex(h, lineEnd))) {
-                --commandCount;
-                if (commandCount == 0) { break; }
+                --firstCount;
+                if (firstCount == 0) { break; }
             }
             ++lineEnd;
         }
         
         // We need to include a new line character if there's any.
-        if (ch == 'd' && testNewLine(characterAtIndex(h, lineEnd))) {
+        if (cmdChar == 'd' && testNewLine(characterAtIndex(h, lineEnd))) {
             ++lineEnd;
         }
         
-        NSUInteger lineBegin = mv_0_handler(hijackedView);
+        NSUInteger lineBegin = mv_0_handler_h(hijackedView);
         NSRange    range     = {lineBegin, lineEnd - lineBegin};
         
         [controller yank:string withRange:range wholeLine:YES];
         
         [hijackedView insertText:@"" replacementRange:range];
-        if (ch == 'c') { [controller switchToMode:InsertMode]; }
+        if (cmdChar == 'c') { [controller switchToMode:InsertMode]; }
     }
 }
 
--(BOOL) cmdMotions:(unichar) ch
+-(NSUInteger) cmdSOL
 {
-    // Unsupported:
-    // {[()]} // not much useful
-    // (left)/(down)/(up)/(right) // the same as hjkl, 
-    //                               but we filter them out at the beginning
-    //
-    // Supported motions: 
-    // wbeWBE, hjkl, ^$0_
-    // i wW{[(<'"
-    // a wW{[(<'"
-    // v // toggle character range and line range.(jk is line range, others are character range)
+    NSUInteger oldIdx = [hijackedView selectedRange].location;
     
-    NSInteger motionBegin = -1;
-    NSInteger motionEnd   = -1;
+    if (cmdChar == '_') { --firstCount; }
     
-    if (motionChar == 0 && (ch == 'i' || ch == 'a' || ch == 'v'))
+    for (int i = 0; i < firstCount; ++i)
     {
-        motionChar = ch;
-        return YES;
-    }
-    
-    // Apply the motion count.
-    if (motionCount != 0) { commandCount *= motionCount; }
-    
-    if (motionChar != 'i' && motionChar != 'a')
-    {
-        // handle basic motion here
-        switch (ch) {
-            case 'w': motionEnd   = mv_w_motion_handler(hijackedView, commandCount, NO);  break;
-            case 'W': motionEnd   = mv_w_motion_handler(hijackedView, commandCount, YES); break;
-                
-            case 'e': motionEnd   = mv_e_handler(hijackedView, commandCount, NO)+1;  break;
-            case 'E': motionEnd   = mv_e_handler(hijackedView, commandCount, YES)+1; break;
-                
-            case 'b': motionBegin = mv_b_handler(hijackedView, commandCount, NO);  break;
-            case 'B': motionBegin = mv_b_handler(hijackedView, commandCount, YES); break;
-                
-            case 'h': motionBegin = mv_h_handler(hijackedView, commandCount);      break;
-            case 'l': motionEnd   = mv_l_handler(hijackedView, commandCount, NO);  break;
-                
-            case '^': motionBegin = mv_caret_handler(hijackedView);                break;
-            case '_':
-            case '0': motionBegin = mv_0_handler(hijackedView);                    break;
-            case '$': motionEnd   = mv_dollar_handler(hijackedView);               break;
-            case '%':
-            {
-                NSUInteger newIdx = mv_percent_handler(hijackedView) + 1;
-                NSUInteger currIdx = [hijackedView selectedRange].location;
-                if (currIdx < newIdx) {
-                    motionBegin = currIdx;
-                    motionEnd   = newIdx;
-                } else {
-                    motionBegin = newIdx;
-                    motionEnd   = currIdx;
-                }
-            }
-                break;
-            case 'j':
-            {
-                NSRange range = [hijackedView selectedRange];
-                for (int i = 0; i < commandCount; ++i) { [hijackedView moveDown:nil]; }
-                NSRange newRange = [hijackedView selectedRange];
-                // For now, we record only character range.
-                if (range.location != newRange.location) {
-                    motionBegin = range.location;
-                    motionEnd   = newRange.location;
-                }
-                [hijackedView setSelectedRange:range];
-            }
-                break;
-            case 'k':
-            {
-                NSRange range = [hijackedView selectedRange];
-                for (int i = 0; i < commandCount; ++i) { [hijackedView moveUp:nil]; }
-                NSRange newRange = [hijackedView selectedRange];
-                // For now, we record only character range.
-                if (range.location != newRange.location) {
-                    motionBegin = newRange.location;
-                    motionEnd   = range.location;
-                }
-                [hijackedView setSelectedRange:range];
-            }
-                break;
-            case 'G':
-                motionBegin = mv_0_handler(hijackedView);
-                if (motionBegin > 0) { --motionBegin; }
-                motionEnd = [[hijackedView string] length];
-                break;
-        }
-        
-    } else
-    {
-        NSString* awMotion = @"wbeWBE{[(<'\"";
-        NSString* input = [NSString stringWithCharacters:&ch length:1];
-        if ([awMotion rangeOfString:input].location != NSNotFound)
+        NSUInteger idx = [hijackedView selectedRange].location;
+        cmdChar == '-' ? [hijackedView moveUp:nil] : [hijackedView moveDown:nil];
+        if (idx == [hijackedView selectedRange].location)
         {
-            switch (ch) {
-                case 'w':
-                case 'W':
-                    // If we are at whitespace, delete the whitespace, otherwise
-                    // delete the word. If it is aw, delete the trailing whitespace
-                    // Either way, the caret will stay at the same line.
-                {
-                    NSRange range = motion_word_bound(hijackedView, ch == 'W', motionChar == 'a');
-                    motionBegin = range.location;
-                    motionEnd   = range.location + range.length;
-                }
-                    break;
-                case 'B':
-                case '{':
-                case '}':
-                {
-                    NSRange range = current_block(hijackedView, commandCount, '{', '}');
-                    motionBegin = range.location;
-                    motionEnd   = range.location + range.length;
-                }
-                    break;
-                case 'b':
-                case '(':
-                case ')':
-                {
-                    NSRange range = current_block(hijackedView, commandCount, '(', ')');
-                    motionBegin = range.location;
-                    motionEnd   = range.location + range.length;
-                }
-                    break;
-                case '[':
-                case ']':
-                {
-                    NSRange range = current_block(hijackedView, commandCount, '[', ']');
-                    motionBegin = range.location;
-                    motionEnd   = range.location + range.length;
-                }
-                    break;
-                case '<':
-                case '>':
-                {
-                    NSRange range = current_block(hijackedView, commandCount, '<', '>');
-                    motionBegin = range.location;
-                    motionEnd   = range.location + range.length;
-                }
-                    break;
-                    break;
-                case 't':  /* "at" = a tag block (xml and html) */
-                case '"':  /* "a"" = a double quoted string     */
-                case '\'': /* "a'" = a single quoted string     */
-                case '`':  /* "a`" = a backtick quoted string   */
-                    // TODO: Implement a efficient bracket matching algorithm, and we are all set.
-                    break;
-                    
-                default:
-                    break;
-            }
+            break;
         }
     }
     
-    if (motionBegin != motionEnd)
-    {
-        if (motionBegin == -1) { motionBegin = [hijackedView selectedRange].location; }
-        if (motionEnd   == -1) { motionEnd   = [hijackedView selectedRange].location; }
-        
-        NSString* string = [hijackedView string];
-        
-        BOOL wholeLine = (ch == 'j' || ch == 'k') != (motionChar == 'v');
-        if (wholeLine) {
-            [hijackedView setSelectedRange:NSMakeRange(motionBegin, 0)];
-            motionBegin = mv_0_handler(hijackedView);
-            [hijackedView setSelectedRange:NSMakeRange(motionEnd, 0)];
-            motionEnd   = mv_dollar_inc_handler(hijackedView);
-        }
-        
-        NSRange range = {motionBegin, motionEnd - motionBegin};
-        [controller yank:string withRange:range wholeLine:wholeLine];
-        if (commandChar != 'y') {
-            if (commandChar == 'c') { dontCheckTrailingCR = YES; }
-            [hijackedView insertText:@"" replacementRange:range];
-            if (commandChar == 'c') { [controller switchToMode:InsertMode]; }
-        }
-    }
-
-    return NO;
+    NSUInteger newIdx = mv_caret_handler_h(hijackedView);
+    [hijackedView setSelectedRange:NSMakeRange(oldIdx, 0)];
+    
+    return newIdx == oldIdx ? NSNotFound : newIdx;
 }
 
-// Below are commands that are going to be implemented.
-// #>    Indent
-// #<    Un-Indent
-// fx    Find char x on current line and go to it
-// tx    Similar to fx, but stops one character short before x
-// Fx    Similar to fx, but searches backwards
-// Tx    Similar to tx, but searches backwards
-// #;    Repeat last find motion
-// #,    Repeat last find motion, but in reverse
-// #*    Find next occurance of identifier under caret or currently selected text
-// ##    Similar to * but backwards
-// :#    Jump to line number #.
-// :q, :q!, :w, :wq, :x
 
--(BOOL) processKey:(unichar)ch modifiers:(NSUInteger)flags
-{
-    if (ch == '\t') { return NO; } // Don't interpret tabs.
-    if (ch == XEsc) { [self reset]; return YES; } // Esc will reset everything
-    
-    flags &= XImportantMask;
-        
-    // 1. Deal with key that has modifiers.
-    if (flags == XMaskControl)
-    {
-        if (ch == 'f' || ch =='b' || ch == 'd' || ch == 'u') {
-            [self cmdScroll:ch];
-            return YES;
-        }
-#ifndef U_AS_REDO
-        if (ch == 'r') {
-            if (commandCount == 0) { commandCount = 1; }
-            for (int i = 0; i < commandCount; ++i) { [[hijackedView undoManager] redo]; }
-        }
-#endif
-    }
-        
-    if (flags != 0) { return NO; } // No other supported modifiers.
-    
-    
-    // 2. Deal with number keys.
-    // If the commandCount is not defined, we treat '0' as a command instead of a number.
-    if (ch <= '9' && ((commandCount > 0 && ch >= '0') || (commandCount == 0 && ch > '0')) )
-    {
-        if (commandChar == 0) {
-            commandCount = commandCount * 10 + ch - '0';
-        } else {
-            // We are waiting for another character to complete the command.
-            // And we only accept numbers before the motion is entered.
-            // Otherwise, we consider this is a bad command, and reset everything.
-            BOOL shouldAccept = NO;
-            
-            if (commandChar == 'y' || commandChar == 'd' || commandChar == 'c') {
-                if (motionChar == 0) {
-                    shouldAccept = YES;
-                }
-            }
-            
-            if (shouldAccept) {
-                motionCount = motionCount * 10 + ch - '0';
-            } else {
-                [self reset];
-            }
-        }
-        return YES;
-    }
-    
-    BOOL commandCountSpecified = commandCount > 0; // This is needed only for 'G'
-    if (commandCount == 0) commandCount = 1;
-    
-    // 3. Deal with commands that are double chars.
-    if (commandChar != 0)
-    {
-        if (commandChar == 'z')
-        {
-            [self cmdPlaceLine:ch];
 
-        } else if (commandChar == 'g')
-        {
-            switch (ch) {
-                case 'g': [self cmdGoto:YES]; break;
-                case '_': // Goto last non-blank of the line.
-                    [hijackedView setSelectedRange:NSMakeRange(mv_g__handler(hijackedView), 0)];
-                    break;
-            }
-        } else
-        {
-            // Deal with y/d/c
-            if (commandChar == ch)
-            {
-                // Apply the motion count.
-                if (motionCount != 0) { commandCount *= motionCount; }
-                
-                switch (ch) {
-                    case 'c':
-                    case 'd': [self cmdddcc:ch];  break;
-                    case 'y': [self cmdYDC:'Y'];  break;                    
-                } 
-            } else {
-                // Handle the motions here.
-                // If cmdMotions returns YES, we shouldn't reset.
-                if ([self cmdMotions:ch]) { 
-                    return YES;
-                }
-            }
-        }
-        
-        [self reset];
-        return YES;
-    }
-    
-    // 4. Deal with commands that are one char.
-    motionChar = motionCount = 0;
-    
-    switch (ch) {
-            // NOTE: 'j' and 'k' calls the NSTextView's methods,
-            // Them won't ensure that the caret won't be before the CR
-        case 'j': for (int i = 0; i < commandCount; ++i) { [hijackedView moveDown:nil]; }  break;
-        case 'k': for (int i = 0; i < commandCount; ++i) { [hijackedView moveUp:nil];   } break;
-            
-        case NSDeleteCharacter: // Backspace in normal mode is like 'h'
-        case 'h': 
-        {
-            NSRange range = {mv_h_handler(hijackedView,commandCount),0};
-            [hijackedView setSelectedRange:range];
-            [hijackedView scrollRangeToVisible:range];
-        }
-            break;
-            
-        case XSpace: // Space in normal mode is like 'l'
-        case 'l':
-        {
-            NSRange range = {mv_l_handler(hijackedView,commandCount,YES),0};
-            [hijackedView setSelectedRange:range]; 
-            [hijackedView scrollRangeToVisible:range];
-        }
-            break;
-            
-        case 'r':
-        case 'R': [controller switchToMode:ReplaceMode 
-                                   subMode:(ch == 'r' ? SingleReplaceMode : NoSubMode)];
-            break;
-#ifdef ENABLE_VISUALMODE
-        case 'v':
-        case 'V': [controller switchToMode:VisualMode 
-                                   subMode:(ch == 'V' ? VisualLineMode : NoSubMode)];
-            break;
-#endif
-            
-        case 'u': for (int i = 0; i < commandCount; ++i) { [[hijackedView undoManager] undo]; } break;
-#ifdef U_AS_REDO
-        case 'U': for (int i = 0; i < commandCount; ++i) { [[hijackedView undoManager] redo]; } break;
-#endif
-            
-            
-            // TODO: commandCount for aAiIoOrR is not implemented.
-        case 'a':
-            dontCheckTrailingCR = YES;
-            [hijackedView moveRight:nil];
-            [controller switchToMode:InsertMode];
-            break;
-        case 'i':
-            [controller switchToMode:InsertMode];
-            break;
-        case '$':
-            [hijackedView setSelectedRange:
-             NSMakeRange(mv_dollar_handler(hijackedView), 0)];
-            break;
-        case 'A':
-            dontCheckTrailingCR = YES;
-            [hijackedView moveToEndOfLine:nil];
-            [controller switchToMode:InsertMode];
-            break;
-        case '0':
-#ifndef MAKE_0_AS_CARET
-            [hijackedView setSelectedRange:
-             NSMakeRange(mv_0_handler(hijackedView), 0)];
-            break;
-#endif
-        case '_':
-        case '^':
-        case 'I':
-        {
-            [hijackedView setSelectedRange: NSMakeRange(mv_caret_handler(hijackedView), 0)];
-            if (ch == 'I') { [controller switchToMode:InsertMode]; }
-        }
-            break;
-            
-            // wWbBeE
-        case 'w':
-        case 'W':
-        {
-            NSRange range = {mv_w_handler(hijackedView, commandCount, ch == 'W'), 0};
-            [hijackedView setSelectedRange:range];
-            [hijackedView scrollRangeToVisible:range];
-        }
-            break;
-        case 'b':
-        case 'B':
-        {
-            NSRange range = {mv_b_handler(hijackedView, commandCount, ch == 'B'), 0};
-            [hijackedView setSelectedRange:range];
-            [hijackedView scrollRangeToVisible:range];
-        }
-            break;
-        case 'e':
-        case 'E':
-        {
-            NSRange range = {mv_e_handler(hijackedView, commandCount, ch == 'E'), 0};
-            [hijackedView setSelectedRange:range];
-            [hijackedView scrollRangeToVisible:range];
-        }
-            break;
-            
-        case '|':
-            // Go to column
-            [hijackedView setSelectedRange:NSMakeRange(columnToIndex(hijackedView, commandCount), 0)];
-            break;
-            
-        case '%':
-        {
-            // Matching brace.
-            NSRange range = NSMakeRange(mv_percent_handler(hijackedView), 0);
-            [hijackedView setSelectedRange:range];
-            [hijackedView scrollRangeToVisible:range];
-        }
-            break;
-            
-        case '+': // First non-blank next line.
-        case NSCarriageReturnCharacter:
-        {
-            NSUInteger oldIdx = [hijackedView selectedRange].location;
-            [hijackedView moveDown:nil];
-            if (oldIdx != [hijackedView selectedRange].location) {
-                // We are not at the last line.
-                [hijackedView setSelectedRange:NSMakeRange(mv_caret_handler(hijackedView), 0)];
-            }
-        }
-            break;
-        case '-': // First non-blank prev line.
-        {
-            NSUInteger oldIdx = [hijackedView selectedRange].location;
-            [hijackedView moveUp:nil];
-            if (oldIdx != [hijackedView selectedRange].location) {
-                // We are not at the last line.
-                [hijackedView setSelectedRange:NSMakeRange(mv_caret_handler(hijackedView), 0)];
-            }
-        }
-            break;
-            
-        case 'H':
-        case 'M':
-        case 'L':
-            [self cmdHML:ch];
-            break;
-            
-        case 'G': 
-            [self cmdGoto:commandCountSpecified];
-            break;
-            
-        case 'J': 
-            [self cmdJoin];
-            break;
-            
-        case 'Y':
-        case 'D':
-        case 'C':
-            [self cmdYDC:ch];
-            break;
-            
-        case '~':
-            [self cmdChangeCase];
-            break;
-            
-        case 'X':
-        case 'x':
-            // x deletes the character after the caret.
-            [self cmdDelChar:ch == 'x'];
-            break;
-            
-        case 'O':
-        case 'o':
-            [self cmdOpenNewline:ch == 'o'];
-            break;
-            
-        case 'p':
-        case 'P':
-            [self cmdPaste:ch]; 
-            break;
-            
-            // Below are commands that need a parameter
-        case 'g':
-        case 'z':
-        case 'y':
-        case 'd':
-        case 'c':
-            commandChar = ch;
-            return YES; // Don't reset commandCount.
-        default:
-            break;
-    }
-    
-    // Reset
-    commandChar     = 0;
-    commandCount    = 0;
-    dontCheckTrailingCR = NO;
-    return YES;
-}
+//-(BOOL) cmdMotions:(unichar) ch
+//{        
+//    NSString* awMotion = @"wbeWBE{[(<'\"";
+//    NSString* input = [NSString stringWithCharacters:&ch length:1];
+//    if ([awMotion rangeOfString:input].location != NSNotFound)
+//    {
+//        switch (ch) {
+//            case 'w':
+//            case 'W':
+//                // If we are at whitespace, delete the whitespace, otherwise
+//                // delete the word. If it is aw, delete the trailing whitespace
+//                // Either way, the caret will stay at the same line.
+//            {
+//                NSRange range = motion_word_bound(hijackedView, ch == 'W', motionChar == 'a');
+//                motionBegin = range.location;
+//                motionEnd   = range.location + range.length;
+//            }
+//                break;
+//            case 'B':
+//            case '{':
+//            case '}':
+//            {
+//                NSRange range = current_block(hijackedView, commandCount, '{', '}');
+//                motionBegin = range.location;
+//                motionEnd   = range.location + range.length;
+//            }
+//                break;
+//            case 'b':
+//            case '(':
+//            case ')':
+//            {
+//                NSRange range = current_block(hijackedView, commandCount, '(', ')');
+//                motionBegin = range.location;
+//                motionEnd   = range.location + range.length;
+//            }
+//                break;
+//            case '[':
+//            case ']':
+//            {
+//                NSRange range = current_block(hijackedView, commandCount, '[', ']');
+//                motionBegin = range.location;
+//                motionEnd   = range.location + range.length;
+//            }
+//                break;
+//            case '<':
+//            case '>':
+//            {
+//                NSRange range = current_block(hijackedView, commandCount, '<', '>');
+//                motionBegin = range.location;
+//                motionEnd   = range.location + range.length;
+//            }
+//                break;
+//                break;
+//            case 't':  /* "at" = a tag block (xml and html) */
+//            case '"':  /* "a"" = a double quoted string     */
+//            case '\'': /* "a'" = a single quoted string     */
+//            case '`':  /* "a`" = a backtick quoted string   */
+//                // TODO: Implement a efficient bracket matching algorithm, and we are all set.
+//                break;
+//                
+//            default:
+//                break;
+//        }
+//    }
+//}
 @end
