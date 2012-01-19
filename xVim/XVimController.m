@@ -347,7 +347,7 @@ NSArray* keyStringTokeyArray(NSString* string)
     if ((flag & XMaskCapLock) && ch >= 'a' && ch <= 'z') { ch = ch + 'A' - 'a'; }
     
     NSUInteger keyCode = (flag & XModifierFlagsMaskX) | ch;
-    DLog(@"KeyCode: %lu, Flags: %lu, Char: %C(%i)", keyCode, flag, ch, ch);
+    DLog(@"KeyCode: %lu, Flags: %lu, Char: %C(%i), The Event:%@", keyCode, flag, ch, ch, event);
     
     NSMutableDictionary* dict = keyMapDicts[vi_mode];
     if (dict != nil)

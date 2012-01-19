@@ -68,6 +68,9 @@ typedef enum e_affect_range
 -(NSUInteger) cmdHML;    // H/M/L.
 -(NSUInteger) cmdGoto: (BOOL) cmdCountSpecified; // G
 -(NSUInteger) cmdSOL; // Enter/+/-
+
+-(void) moveCaretDown:(NSUInteger) count;
+-(void) moveCaretUp:(NSUInteger) count;
 @end
 
 @implementation XVimNormalModeHandler
@@ -114,6 +117,44 @@ typedef enum e_affect_range
     }
     
     return newRanges;
+}
+
+-(void) moveCaretDown:(NSUInteger)count
+{
+    unichar   ch = NSDownArrowFunctionKey;
+    NSString* string = [NSString stringWithCharacters:&ch length:1];
+    NSEvent*  event  = [NSEvent keyEventWithType:NSKeyDown 
+                                        location:NSMakePoint(0, 0)
+                                   modifierFlags:NSNumericPadKeyMask | NSFunctionKeyMask
+                                       timestamp:0
+                                    windowNumber:0
+                                         context:nil
+                                      characters:string
+                     charactersIgnoringModifiers:string
+                                       isARepeat:NO 
+                                         keyCode:ch | NSNumericPadKeyMask | NSFunctionKeyMask];
+    for (int i = 0; i < count; ++i) {
+        [bridge handleFakeKeyEvent:event];
+    } 
+}
+
+-(void) moveCaretUp:(NSUInteger)count
+{
+    unichar   ch = NSUpArrowFunctionKey;
+    NSString* string = [NSString stringWithCharacters:&ch length:1];
+    NSEvent*  event  = [NSEvent keyEventWithType:NSKeyDown 
+                                        location:NSMakePoint(0, 0)
+                                   modifierFlags:NSNumericPadKeyMask | NSFunctionKeyMask
+                                       timestamp:0
+                                    windowNumber:0
+                                         context:nil
+                                      characters:string
+                     charactersIgnoringModifiers:string
+                                       isARepeat:NO 
+                                         keyCode:ch | NSNumericPadKeyMask | NSFunctionKeyMask];
+    for (int i = 0; i < count; ++i) {
+        [bridge handleFakeKeyEvent:event];
+    }
 }
 
 typedef enum e_handle_stat
@@ -323,9 +364,7 @@ typedef enum e_handle_stat
             case '_': // Goto last non-blank of the line.
             {
                 NSRange old = [hijackedView selectedRange];
-                for (int i = 1; i < firstCount; ++i) {
-                    [hijackedView moveDown:nil];
-                }
+                [self moveCaretDown:firstCount];
                 range.location = mv_g__handler(hijackedView);
                 [hijackedView setSelectedRange:old];
             }
@@ -465,7 +504,8 @@ typedef enum e_handle_stat
             case 'j': 
             {
                 NSRange old = [hijackedView selectedRange];
-                for (int i = 0; i < firstCount; ++i) { [hijackedView moveDown:nil]; }  
+                [self moveCaretDown:firstCount];
+                // for (int i = 0; i < firstCount; ++i) { [hijackedView moveDown:nil]; }  
                 NSRange n   = [hijackedView selectedRange];
                 if (old.location != n.location) {
                     range.location = n.location;
@@ -477,7 +517,8 @@ typedef enum e_handle_stat
             case 'k': 
             {
                 NSRange old = [hijackedView selectedRange];
-                for (int i = 0; i < firstCount; ++i) { [hijackedView moveUp:nil]; }  
+                [self moveCaretUp:firstCount];
+                // for (int i = 0; i < firstCount; ++i) { [hijackedView moveUp:nil]; }  
                 NSRange n   = [hijackedView selectedRange];
                 if (old.location != n.location) {
                     range.location = n.location;
@@ -851,7 +892,8 @@ typedef enum e_handle_stat
     if (isAfter == NO) {
         NSRange currRange = [hijackedView selectedRange];
         dontCheckTrailingCR = YES;
-        [hijackedView moveUp:nil];
+        [self moveCaretUp:1];
+        // [hijackedView moveUp:nil];
         isAfter = currRange.location == [hijackedView selectedRange].location;
     }
     
@@ -878,7 +920,8 @@ typedef enum e_handle_stat
                 [hijackedView moveToEndOfLine:nil];
             } else {
                 NSRange currRange = [hijackedView selectedRange];
-                [hijackedView moveUp:nil];
+                [self moveCaretUp:1];
+                // [hijackedView moveUp:nil];
                 if (currRange.location == [hijackedView selectedRange].location) {
                     [hijackedView moveToBeginningOfLine:nil];
                 } else {
@@ -1104,16 +1147,7 @@ typedef enum e_handle_stat
     NSUInteger oldIdx = [hijackedView selectedRange].location;
     
     if (cmdChar == '_') { --firstCount; }
-    
-    for (int i = 0; i < firstCount; ++i)
-    {
-        NSUInteger idx = [hijackedView selectedRange].location;
-        cmdChar == '-' ? [hijackedView moveUp:nil] : [hijackedView moveDown:nil];
-        if (idx == [hijackedView selectedRange].location)
-        {
-            break;
-        }
-    }
+    cmdChar == '-' ? [self moveCaretUp:firstCount] : [self moveCaretDown:firstCount];
     
     NSUInteger newIdx = mv_caret_handler_h(hijackedView);
     [hijackedView setSelectedRange:NSMakeRange(oldIdx, 0)];
