@@ -238,10 +238,12 @@ testAscii testForChar(unichar ch)
     return testDelimeter;
 }
 
-NSUInteger mv_w_handler(NSTextView* view, int repeatCount, BOOL bigWord)
+NSUInteger mv_w_handler_h(NSTextView* view, int repeatCount, BOOL bigWord)
 {
-    NSUInteger index    = [view selectedRange].location;
-    NSString*  string   = [view string];
+    return mv_w_handler([view string], [view selectedRange].location, repeatCount, bigWord);
+}
+NSUInteger mv_w_handler(NSString* string, NSUInteger index, int repeatCount, BOOL bigWord)
+{
     NSUInteger maxIndex = [string length] - 1;
     
     if (index == maxIndex) { return maxIndex + 1; }
@@ -289,13 +291,15 @@ NSUInteger mv_w_handler(NSTextView* view, int repeatCount, BOOL bigWord)
     return index;
 }
 
-NSUInteger mv_w_motion_handler(NSTextView* view, int repeatCount, BOOL bigWord)
+NSUInteger mv_w_motion_handler_h(NSTextView* view, int repeatCount, BOOL bigWord)
+{
+    return mv_w_motion_handler([view string], [view selectedRange].location, repeatCount, bigWord);
+}
+NSUInteger mv_w_motion_handler(NSString* string, NSUInteger oldIdx, int repeatCount, BOOL bigWord)
 {
     // Reduce index if we are at the beginning indentation of another line.
-    NSUInteger oldIdx  = [view selectedRange].location;
-    NSUInteger newIdx  = mv_w_handler(view, repeatCount, bigWord);
+    NSUInteger newIdx  = mv_w_handler(string, oldIdx, repeatCount, bigWord);
     NSUInteger testIdx = newIdx - 1;
-    NSString*  string  = [view string];
     
     while (testIdx > oldIdx)
     {
@@ -383,7 +387,11 @@ NSUInteger mv_b_handler(NSTextView* view, int repeatCount, BOOL bigWord)
     return index;
 }
 
-NSUInteger mv_e_handler(NSTextView* view, int repeatCount, BOOL bigWord)
+NSUInteger mv_e_handler_h(NSTextView* view, int repeatCount, BOOL bigWord)
+{
+    return mv_e_handler([view string], [view selectedRange].location, repeatCount, bigWord);
+}
+NSUInteger mv_e_handler(NSString* string, NSUInteger index, int repeatCount, BOOL bigWord)
 {
     // 'e' If we are not at the end of a word, go to the end of it.
     // Otherwise go to the end of the word after it.
@@ -392,8 +400,6 @@ NSUInteger mv_e_handler(NSTextView* view, int repeatCount, BOOL bigWord)
     // the blank line is not consider a word.
     // So whitespace and newline are totally ingored.
     
-    NSUInteger index    = [view selectedRange].location;
-    NSString*  string   = [view string];
     NSUInteger maxIndex = [string length] - 1;
     
     for (int i = 0; i < repeatCount && index < maxIndex; ++i)
@@ -828,10 +834,9 @@ NSRange current_block(NSTextView* view, int count, BOOL inclusive, char what, ch
             if (idx == end_pos)
             {
                 // The '}' is only preceded by indent, skip that indent.
-                end_pos = (int) mv_0_handler(string, end_pos);
+                end_pos = (int) mv_0_handler(string, end_pos) - 1;
             }
         }
-        --end_pos;
     } else {
         ++end_pos;
     }
@@ -840,8 +845,57 @@ NSRange current_block(NSTextView* view, int count, BOOL inclusive, char what, ch
 }
 
 NSRange current_word(NSTextView* view, int repeatCount, BOOL inclusive, BOOL fuzzy)
-{
-    return NSMakeRange(NSNotFound, 0);
+{    
+    NSString*  string   = [view string];
+    NSUInteger index    = [view selectedRange].location;
+    NSUInteger maxIndex = [string length] - 1;
+    
+    if (index > maxIndex) { return NSMakeRange(NSNotFound, 0); }
+    
+    unichar    ch    = [string characterAtIndex:index];
+    testAscii  test  = testWhiteSpace(ch) ? testWhiteSpace : (fuzzy ? testFuzzyWord : testForChar(ch));
+    
+    NSUInteger begin = index;
+    NSUInteger end   = index;
+    
+    while (begin > 0)
+    {
+        if (test([string characterAtIndex:begin - 1]) == NO) { break; }
+        --begin;
+    }
+        
+    //
+    // Word is like (  word  )
+    if (testWhiteSpace(ch) == inclusive)
+    {
+        // If inclusive and at whitespace, whitespace is included: ("  word"  )
+        // If exclusive and not at whitespace, then: (  "word"  )
+        // That means we should find the end of the word.
+        end = mv_e_handler(string, index, repeatCount, fuzzy) + 1;
+    } else {
+        // If inclusive and not at whitespace: (  "word  ")
+        // If exclusive and at whitespace, then: ("  "word  )
+        
+        if (repeatCount > 1) {
+            // Select more words.
+            end = mv_w_handler(string, end, repeatCount - 1, fuzzy);
+        }
+        // If the end index is at beginning indent of next line,
+        // Go back to prev line.
+        end = mv_w_motion_handler(string, end, 1, fuzzy);
+        
+        // If we don't have any trailing whitespace,
+        // Extend begin to include whitespace.
+        if (!testWhiteSpace([string characterAtIndex:end - 1]))
+        {
+            while (begin > 0 && testWhiteSpace([string characterAtIndex:begin - 1]))
+            {
+                --begin;
+            }
+        }
+    }
+    
+    return NSMakeRange(begin, end - begin);
 }
 NSRange current_quote(NSTextView* view, int repeatCount, BOOL inclusive, char what)
 {

@@ -227,6 +227,21 @@ typedef enum e_handle_stat
                 }
                 break;
                 
+            case 'v':
+            case 'V':
+                if (operatorChar == 0) {
+                    // TODO: Switch to visual mode
+                } else {
+                    // Force linewise and characterwise
+                    if (cmdChar != 0) {
+                        state = BadChar;
+                    } else {
+                        affect = ch == 'v' ? CharacterWise : LineWise;
+                        state = Handled;
+                    }
+                }
+                break;
+                
             case 'i': // Insert
             case 'a': // Append
                 if (cmdChar != 0) {
@@ -422,14 +437,14 @@ typedef enum e_handle_stat
             case 'w': 
             case 'W':
                 range.location = operatorChar == 0 ? 
-                mv_w_handler(hijackedView, firstCount, cmdChar == 'W') :
-                mv_w_motion_handler(hijackedView, firstCount, cmdChar == 'W');
+                mv_w_handler_h(hijackedView, firstCount, cmdChar == 'W') :
+                mv_w_motion_handler_h(hijackedView, firstCount, cmdChar == 'W');
                 ensureVisible = YES;
                 break;
                 
             case 'e':
             case 'E':
-                range.location = mv_e_handler(hijackedView, firstCount, cmdChar == 'E');
+                range.location = mv_e_handler_h(hijackedView, firstCount, cmdChar == 'E');
                 if (operatorChar != 0) { ++range.location; }
                 ensureVisible = YES;
                 break;

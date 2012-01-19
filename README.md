@@ -26,7 +26,7 @@
 ## What works so far
 1. Insert Mode
 2. Replace Mode
-3. Normal Mode ([Check out the normal mode command here](https://github.com/WarWithinMe/xVim/wiki/Normal-Mode-Command))
+3. Normal Mode ([Check out the supported mode command here](https://github.com/WarWithinMe/xVim/wiki/Supported-Commands))
 4. Simplified Key-map ([Read the wiki](https://github.com/WarWithinMe/xVim/wiki/Simplified-Key-map))
 
 ## NOTE
@@ -38,8 +38,6 @@
 3. Those things may be different from vim:<br/>
    1). yYdDcCxX will copy the content to internal kill buffer. And pP will only paste something, if that buffer is not empty.
        If you want to use the clipboard, use Ctrl+C (Copy), Ctrl+X (Cut), Ctrl+V (Paste)
-       
-   2). You can force another type by using "v", "V" or CTRL-V just after the motion operator __in vim__. But xVim only supports "v" and it behave differently from vim.
 
 ## Something I don't know how to implement
 <table>
