@@ -37,6 +37,7 @@
 // ====================
 // Hidden API
 @interface NSText(xVim)
+// TODO: This method will include wrapped lines.
 -(NSRange)    accessibilityCharacterRangeForLineNumber:(NSUInteger) lineNumber;
 @end
 // --------------------

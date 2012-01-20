@@ -443,41 +443,6 @@ NSUInteger mv_e_handler(NSString* string, NSUInteger index, int repeatCount, BOO
     return index;
 }
 
-NSRange motion_word_bound(NSTextView* view, BOOL fuzzy, BOOL trailing)
-{
-    NSString*  string   = [view string];
-    NSUInteger index    = [view selectedRange].location;
-    NSUInteger maxIndex = [string length] - 1;
-    
-    if (index > maxIndex) { return NSMakeRange(0, 0); }
-    
-    unichar   ch   = [string characterAtIndex:index];
-    testAscii test = testWhiteSpace(ch) ? testWhiteSpace : (fuzzy ? testFuzzyWord : testForChar(ch));
-    
-    NSUInteger begin = index;
-    
-    while (begin > 0)
-    {
-        if (test([string characterAtIndex:begin - 1]) == NO) { break; }
-        --begin;
-    }
-    
-    NSUInteger end = index;
-    while (end < maxIndex) {
-        if (test([string characterAtIndex:end + 1]) == NO) { break; }
-        ++end;
-    }
-    
-    if (trailing) {
-        while (end < maxIndex) {
-            if (testWhiteSpace([string characterAtIndex:end + 1]) == NO) { break; }
-            ++end;
-        }
-    }
-    
-    return NSMakeRange(begin, end - begin + 1);
-}
-
 NSUInteger columnToIndex(NSTextView* view, NSUInteger column)
 {
     NSUInteger index  = [view selectedRange].location;
@@ -897,9 +862,132 @@ NSRange current_word(NSTextView* view, int repeatCount, BOOL inclusive, BOOL fuz
     
     return NSMakeRange(begin, end - begin);
 }
+
+NSInteger find_next_quote(NSStringHelper* h, NSUInteger start, NSUInteger max, unichar quote, BOOL ignoreEscape);
+NSInteger find_next_quote(NSStringHelper* h, NSUInteger start, NSUInteger max, unichar quote, BOOL ignoreEscape)
+{
+    while (start <= max)
+    {
+        unichar ch = characterAtIndex(h, start);
+        if (ch == quote)     { return start; }
+        if (!ignoreEscape && ch == '\\')
+        {
+            ++start;
+            if (start > max) { return -1; }
+            ch = characterAtIndex(h, start);
+        }
+        if (testNewLine(ch)) { return -1; }
+        ++start;
+    }
+    
+    return -1;
+}
+
+NSInteger find_prev_quote(NSStringHelper* h, NSInteger start, unichar quote, BOOL ignoreEscape);
+NSInteger find_prev_quote(NSStringHelper* h, NSInteger start, unichar quote, BOOL ignoreEscape)
+{
+    while (start > 0)
+    {
+        --start;
+        if (testNewLine(characterAtIndex(h, start))) { break; }
+        
+        int n = 1;
+        if (!ignoreEscape)
+        {
+            while (start - n >= 0)
+            {
+                unichar ch = characterAtIndex(h, start - n);
+                if (ch == '\\') {
+                    ++n;
+                } else if (testNewLine(ch))
+                {
+                    --n;
+                    break;
+                } else {
+                    break;
+                }
+            }
+        }
+        
+        if (n & 1) {
+            // Even escape.
+            if (characterAtIndex(h, start) == quote) { return start; }
+        } else {
+            start -= (n - 1);
+        }
+    }
+        
+    return -1;
+}
+
 NSRange current_quote(NSTextView* view, int repeatCount, BOOL inclusive, char what)
 {
-    return NSMakeRange(NSNotFound, 0);
+    // Rules:
+    // 1. If the quote is escaped, ignore it, unless it's the first quote in the line.
+    // 2. If the char under the caret is a quote, mark it as openning if there are even
+    //    quotes before. Otherwise, mark it as closing.
+    // 3. Find out the closest quotes near the caret.
+    // 4. If repeatCount is greater than 1, it will always include the quote,
+    //    regardless of inclusive.
+    // 5. a" will include the trailing space, if no trailing space, extend to include any
+    //    preceeding space.
+    
+    NSString*  string = [view string];
+    NSUInteger idx    = [view selectedRange].location;
+    NSUInteger maxIdx = [string length] - 1;
+    NSInteger  start  = 0;
+    NSInteger  end    = 0;
+    
+    NSStringHelper helper;
+    NSStringHelper* h = &helper;
+    
+    if ([string characterAtIndex:idx] == what)
+    {
+        initNSStringHelper(h, string, maxIdx + 1);
+        // Find start quote.
+        start = mv_0_handler(string, idx);
+        end   = start;
+        while (YES)
+        {
+            start = find_next_quote(h, start,   maxIdx, what, YES);
+            if (start == -1) { return NSMakeRange(NSNotFound, 0); }
+            end   = find_next_quote(h, start+1, maxIdx, what, YES);
+            if (end   == -1) { return NSMakeRange(NSNotFound, 0); }
+            if (start <= idx && idx <= end) { break; } // Found.
+            start = end + 1;
+        }
+    } else {
+        initNSStringHelperBackward(h, string, maxIdx + 1);
+        start = find_prev_quote(h, idx, what, NO); 
+        
+        initNSStringHelper(h, string, maxIdx + 1);
+        if (start == -1) {
+            // No quote before. Find quote afterward.
+            start = find_next_quote(h, idx, maxIdx, what, YES);
+            if (start == -1) { return NSMakeRange(NSNotFound, 0); }
+        }
+        end   = find_next_quote(h, idx + 1, maxIdx, what, YES);
+        if (end == -1) { return NSMakeRange(NSNotFound, 0); }
+    }
+    
+    if (inclusive)
+    {
+        end = mv_w_handler(string, end, 1, NO);
+        if (end > maxIdx || !testWhiteSpace(characterAtIndex(h, end - 1)))
+        {
+            // Include preceeding whitespace.
+            while (start > 0 && testWhiteSpace([string characterAtIndex:start - 1]))
+                --start;
+        }
+    } else {
+        if (repeatCount > 1) {
+            ++end;
+        } else {
+            ++start;
+        }
+    }
+    
+    return NSMakeRange(start, end - start);
 }
 NSRange current_tagblock(NSTextView* view, int repeatCount, BOOL inclusive)
 {

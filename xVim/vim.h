@@ -42,8 +42,6 @@ NSUInteger mv_w_motion_handler(NSString* string, NSUInteger index, int repeatCou
 // There's no function by now for 'j' and 'k', 
 // since NSTextView has a moveUp: and moveDown: method
 
-NSRange motion_word_bound(NSTextView* view, BOOL fuzzy, BOOL includeTrailing);
-
 // Unlike vim, this function won't ignore indent before the current character
 // even if what is '{'
 NSRange current_block(NSTextView* view, int repeatCount, BOOL inclusive, char what, char other);
