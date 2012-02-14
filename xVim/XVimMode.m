@@ -31,6 +31,7 @@
 -(void) enterWith:(VimMode)submode{}
 -(void) reset{}
 -(BOOL) processKey:(unichar)k modifiers:(NSUInteger)f { return NO; }
+-(BOOL) forceIgnoreKeymap { return NO; }
 -(NSArray*) selectionChangedFrom:(NSArray*)oldRanges to:(NSArray*)newRanges
 {
 #ifdef ENABLE_VISUALMODE

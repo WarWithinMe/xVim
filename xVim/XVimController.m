@@ -350,7 +350,7 @@ NSArray* keyStringTokeyArray(NSString* string)
     DLog(@"KeyCode: %lu, Flags: %lu, Char: %C(%i), The Event:%@", keyCode, flag, ch, ch, event);
     
     NSMutableDictionary* dict = keyMapDicts[vi_mode];
-    if (dict != nil)
+    if (dict != nil && [handlers[vi_mode] forceIgnoreKeymap] == NO)
     {
         // When there's a key input, we do these checking:
         // 1. If the buffer is empty:

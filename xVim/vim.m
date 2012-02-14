@@ -991,5 +991,57 @@ NSRange current_quote(NSTextView* view, int repeatCount, BOOL inclusive, char wh
 }
 NSRange current_tagblock(NSTextView* view, int repeatCount, BOOL inclusive)
 {
+    // TODO: Implement tag block text object.
     return NSMakeRange(NSNotFound, 0);
+}
+
+NSInteger findChar(NSTextView* view, int repeatCount, char command, unichar what, BOOL inclusive)
+{
+    int increment = command <= 'Z' ? -1 : 1; // Capital means backward.
+    
+    NSString*  string   = [view string];
+    NSUInteger maxIdx   = [string length] - 1;
+    NSInteger  idx      = [view selectedRange].location;
+    NSInteger  result   = idx;
+    
+    NSStringHelper  help;
+    NSStringHelper* h   = &help;
+    
+    if (increment == -1) 
+        initNSStringHelperBackward(h, string, maxIdx + 1);
+    else
+        initNSStringHelper(h, string, maxIdx + 1);
+    
+    idx += increment;
+    while (idx >= 0 && idx <= maxIdx) 
+    {
+        unichar ch = characterAtIndex(h, idx);
+        if (ch == what) 
+        {
+            if ((--repeatCount) == 0) {
+                result = idx; // Found
+                break;
+            }
+        } else if (testNewLine(ch))
+        {
+            break; // Only search in current line.
+        }
+        idx += increment;
+    }
+    
+    if (result == idx)
+    {
+        if (command == 't') {
+            --result;
+        } else if (command == 'T') {
+            ++result;
+        }
+        
+        if (inclusive && increment == 1) // Include the position we found.
+        {
+            ++result;
+        }
+    }
+    
+    return result;
 }

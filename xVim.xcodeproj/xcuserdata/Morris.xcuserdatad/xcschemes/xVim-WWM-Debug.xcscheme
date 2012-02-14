@@ -38,7 +38,7 @@
       debugDocumentVersioning = "YES"
       allowLocationSimulation = "YES">
       <PathRunnable
-         FilePath = "/Applications/Chocolat.app">
+         FilePath = "/Applications/Espresso.app">
       </PathRunnable>
       <AdditionalOptions>
       </AdditionalOptions>

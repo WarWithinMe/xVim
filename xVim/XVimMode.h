@@ -27,6 +27,10 @@
 // This method is used to validate the selection, aslo used to switch between
 // visual mode and other modes.
 -(NSArray*) selectionChangedFrom:(NSArray*)oldRanges to:(NSArray*)newRanges;
+// When XVimController receives a key event, it will call this method,
+// if return YES, the key event we be handled directly. Otherwise, the key
+// event will be checked if it's part of a keymap.
+-(BOOL) forceIgnoreKeymap;
 @end
 
 
@@ -40,6 +44,7 @@
 -(id) initWithController:(XVimController*) controller;
 -(BOOL) processKey:(unichar)key modifiers:(NSUInteger)flags;
 -(NSArray*) selectionChangedFrom:(NSArray*)oldRanges to:(NSArray*)newRanges;
+-(BOOL) forceIgnoreKeymap;
 @end
 
 

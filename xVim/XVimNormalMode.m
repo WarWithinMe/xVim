@@ -36,6 +36,9 @@ typedef enum e_affect_range
     
     AffectRange affect;
     
+    unichar lastFindCmd;  // For ';' and ',' command. 
+    unichar lastFindChar; // They are never reset to zero.
+    
     // When dontCheckTrailingCR == YES, we can place the caret
     // right before CR.
     BOOL dontCheckTrailingCR;
@@ -95,6 +98,18 @@ typedef enum e_affect_range
     secondCmdChar = 0;
     affect        = DefaultAffectRange;
     dontCheckTrailingCR = NO;
+}
+
+-(BOOL) forceIgnoreKeymap
+{
+    switch (cmdChar) {
+        case 'f':
+        case 'F':
+        case 't':
+        case 'T':
+            return YES;
+    }
+    return NO;
 }
 
 -(NSArray*) selectionChangedFrom:(NSArray*)oldRanges to:(NSArray*)newRanges
@@ -169,12 +184,6 @@ typedef enum e_handle_stat
 // Below are commands that are going to be implemented.
 // #>    Indent
 // #<    Un-Indent
-// fx    Find char x on current line and go to it
-// tx    Similar to fx, but stops one character short before x
-// Fx    Similar to fx, but searches backwards
-// Tx    Similar to tx, but searches backwards
-// #;    Repeat last find motion
-// #,    Repeat last find motion, but in reverse
 // #*    Find next occurance of identifier under caret or currently selected text
 // ##    Similar to * but backwards
 // :#    Jump to line number #.
@@ -186,10 +195,21 @@ typedef enum e_handle_stat
     
     // In this method, we check what kind of ch is 
     // and assign it to the proper member.
+    HandleState state = NotHandled;
+    
+    // 0. Special check for 'f', 'F', 't', 'T'
+    //    Because everything followed by those commands are
+    //    consider valid input.
+    if (cmdChar == 'f' || cmdChar == 'F' ||
+        cmdChar == 't' || cmdChar == 'T') 
+    {
+        // Note : the modifiers are ignored here.
+        secondCmdChar = c;
+        state = Execute;
+    }
     
     // 1. Check number.
-    HandleState state = NotHandled;
-    if (c >= '0' && c <= '9')
+    if (state == NotHandled && c >= '0' && c <= '9')
     {
         // We only accept number only if cmdChar is 0.
         if (cmdChar != 0) {
@@ -219,17 +239,16 @@ typedef enum e_handle_stat
     if (state == NotHandled)
     {
         state = Execute;
-        switch (ch) {
-                
+        switch (ch)
+        {
                 // Operators
             case 'y':
             case 'd':
             case 'c':
                 if (operatorChar == 0)
                 {
-                    // Wait for the motion.
                     operatorChar = ch;
-                    state = Handled;
+                    state = Handled; // Wait for the motion.
                 } else {
                     cmdChar = ch;
                 }
@@ -299,15 +318,21 @@ typedef enum e_handle_stat
                 }
                 break;
                 
-                // Motion commands.
+                // Motion commands or commands that need second input.
             default:
                 if (cmdChar == 0)
                 {
                     cmdChar = ch;
-                    if (ch == 'z' || ch == 'g')
-                    {
-                        // Wait for another input.
-                        state = Handled;
+                    switch (cmdChar) {
+                        case 'z':
+                        case 'g':
+                        case 'f':
+                        case 'F':
+                        case 't':
+                        case 'T':
+                            // Wait for another input.
+                            state = Handled;
+                            break;
                     }
                 } else {
                     secondCmdChar = ch;
@@ -370,6 +395,16 @@ typedef enum e_handle_stat
             }
                 break;
         }
+        
+    } else if (cmdChar == 'f' || cmdChar == 't' ||
+               cmdChar == 'F' || cmdChar == 'T') // Find char in current line.
+    {
+        // Ensure the return value is not NSNotFound... So that the key input is consider
+        // handled even if the we can't find the char.
+        range.location = findChar(hijackedView, firstCount, cmdChar, secondCmdChar, operatorChar != 0);
+        
+        lastFindCmd  = cmdChar;
+        lastFindChar = secondCmdChar;
         
     } else if (cmdChar == 'i' || cmdChar == 'a') // Text objects.
     {
@@ -526,6 +561,27 @@ typedef enum e_handle_stat
                 }
                 defaultLineWise = YES;
             }
+                break;
+            case ';':
+                if (lastFindCmd != 0) {
+                    range.location = findChar(hijackedView, 
+                                              firstCount, 
+                                              lastFindCmd, 
+                                              lastFindChar, 
+                                              operatorChar != 0);
+                }
+                break;
+            case ',':
+                if (lastFindCmd != 0) {
+                    range.location = findChar(hijackedView, 
+                                              firstCount, 
+                                              lastFindCmd > 'Z' ? 
+                                                lastFindCmd - 'a' + 'A' : 
+                                                lastFindCmd - 'A' + 'a', 
+                                              lastFindChar, 
+                                              operatorChar != 0);
+                }
+                break;
         }
     }
 

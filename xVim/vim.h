@@ -49,6 +49,13 @@ NSRange current_word(NSTextView* view, int repeatCount, BOOL inclusive, BOOL fuz
 NSRange current_quote(NSTextView* view, int repeatCount, BOOL inclusive, char what);
 NSRange current_tagblock(NSTextView* view, int repeatCount, BOOL inclusive);
 
+// Find char in current line.
+// Return the current index if nothing found.
+// If inclusive is YES :
+//   'fx' returns the index after 'x'
+//   'Fx' returns the index before 'x'
+NSInteger findChar(NSTextView* view, int repeatCount, char command, unichar what, BOOL inclusive);
+
 BOOL testDigit(unichar ch);
 BOOL testAlpha(unichar ch);
 BOOL testDelimeter(unichar ch);
