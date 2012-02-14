@@ -2,24 +2,30 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>CFBundleName</key>
-	<string>xVim</string>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleExecutable</key>
+	<string>${EXECUTABLE_NAME}</string>
+	<key>CFBundleIconFile</key>
+	<string></string>
 	<key>CFBundleIdentifier</key>
 	<string>com.warwithinme.xvim</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
-	<key>CFBundleVersion</key>
-	<string>139</string>
-	<key>CFBundleExecutable</key>
-	<string>${EXECUTABLE_NAME}</string>
-	<key>NSPrincipalClass</key>
-	<string>XVimPlugin</string>
+	<key>CFBundleName</key>
+	<string>xVim</string>
 	<key>CFBundlePackageType</key>
 	<string>BNDL</string>
-	<key>CFBundleIconFile</key>
-	<string></string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.15</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>282</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>Copyright © 2011年 http://warwithinme.com . All rights reserved.</string>
+	<key>NSPrincipalClass</key>
+	<string>XVimPlugin</string>
 	<key>SIMBLTargetApplications</key>
 	<array>
 		<dict>
@@ -31,11 +37,5 @@
 			<string>828</string>
 		</dict>
 	</array>
-	<key>CFBundleDevelopmentRegion</key>
-	<string>English</string>
-	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2011年 http://warwithinme.com . All rights reserved.</string>
-	<key>CFBundleShortVersionString</key>
-	<string>0.11</string>
 </dict>
 </plist>
