@@ -7,55 +7,54 @@
  * vim.h defines the common functions that are used to handle vim commands.
  */
 
+// =======================
+// Use xv_set_string() and xv_set_index() to set the information,
+// before calling other xv_xxxxx() functions !!!!!
+void xv_set_string(NSString*);
+void xv_set_index(NSInteger);
+
+
+// =======================
 // Return the location of the start of indentation on current line. '^'
-NSUInteger mv_caret_handler_h(NSTextView* view);
-NSUInteger mv_caret_handler(NSString* string, NSUInteger index);
-
+NSInteger xv_caret(void);
 // Return the beginning of line location. '0'
-NSUInteger mv_0_handler_h(NSTextView* view);
-NSUInteger mv_0_handler(NSString* string, NSUInteger index);
-
+NSInteger xv_0(void);
 // Return the end of the line. '$'
-NSUInteger mv_dollar_handler(NSTextView* view);
+NSInteger xv_dollar(void);
 // This one returns index of the CR
-NSUInteger mv_dollar_inc_handler(NSString* string, NSUInteger index);
+NSInteger xv_dollar_inc(void);
 // Return the last non-blank of the line. 'g_'
-NSUInteger mv_g__handler(NSTextView* view);
-
+NSInteger xv_g_(void);
 // Return the index after procesing %
-NSUInteger mv_percent_handler(NSTextView* view);
-
+NSInteger xv_percent(void);
 // Return the index of the character in the column of current line.
-NSUInteger columnToIndex(NSTextView* view, NSUInteger column);
-
+NSInteger xv_columnToIndex(NSUInteger column);
 // Return the new location of the caret, after handler h,j,w,W,e,E,b,B
-NSUInteger mv_h_handler(NSTextView* view, int repeatCount);
-NSUInteger mv_l_handler(NSTextView* view, int repeatCount, BOOL stepForward);
-NSUInteger mv_b_handler(NSTextView* view, int repeatCount, BOOL bigWord);
-NSUInteger mv_e_handler_h(NSTextView* view, int repeatCount, BOOL bigWord);
-NSUInteger mv_e_handler(NSString* string, NSUInteger index, int repeatCount, BOOL bigWord);
-NSUInteger mv_w_handler_h(NSTextView* view, int repeatCount, BOOL bigWord);
-NSUInteger mv_w_handler(NSString* string, NSUInteger index, int repeatCount, BOOL bigWord);
-// mv_w_motion_handler slightly differs from mv_w_handler.
-NSUInteger mv_w_motion_handler_h(NSTextView* view, int repeatCount, BOOL bigWord);
-NSUInteger mv_w_motion_handler(NSString* string, NSUInteger index, int repeatCount, BOOL bigWord);
+NSInteger xv_h(int repeatCount);
+NSInteger xv_l(int repeatCount, BOOL stepForward);
+NSInteger xv_b(int repeatCount, BOOL bigWord);
+NSInteger xv_e(int repeatCount, BOOL bigWord);
+NSInteger xv_w(int repeatCount, BOOL bigWord);
+// xv_w_motion slightly differs from xv_w.
+NSInteger xv_w_motion(int repeatCount, BOOL bigWord);
 // There's no function by now for 'j' and 'k', 
 // since NSTextView has a moveUp: and moveDown: method
 
 // Unlike vim, this function won't ignore indent before the current character
 // even if what is '{'
-NSRange current_block(NSTextView* view, int repeatCount, BOOL inclusive, char what, char other);
-NSRange current_word(NSTextView* view, int repeatCount, BOOL inclusive, BOOL fuzzy);
-NSRange current_quote(NSTextView* view, int repeatCount, BOOL inclusive, char what);
-NSRange current_tagblock(NSTextView* view, int repeatCount, BOOL inclusive);
+NSRange xv_current_block(int repeatCount, BOOL inclusive, char what, char other);
+NSRange xv_current_word(int repeatCount, BOOL inclusive, BOOL fuzzy);
+NSRange xv_current_quote(int repeatCount, BOOL inclusive, char what);
+NSRange xv_current_tagblock(int repeatCount, BOOL inclusive);
 
 // Find char in current line.
 // Return the current index if nothing found.
 // If inclusive is YES :
 //   'fx' returns the index after 'x'
 //   'Fx' returns the index before 'x'
-NSInteger findChar(NSTextView* view, int repeatCount, char command, unichar what, BOOL inclusive);
+NSInteger xv_findChar(int repeatCount, char command, unichar what, BOOL inclusive);
 
+// =======================
 BOOL testDigit(unichar ch);
 BOOL testAlpha(unichar ch);
 BOOL testDelimeter(unichar ch);

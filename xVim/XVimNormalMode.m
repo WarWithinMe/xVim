@@ -348,6 +348,11 @@ typedef enum e_handle_stat
     if (state != Handled)
     {
         BOOL res = YES;
+        
+        // Set the infomation to make vim.h work.
+        xv_set_string([hijackedView string]);
+        xv_set_index([hijackedView selectedRange].location);
+        
         if (state == Execute)
         {
             res = [self executeCMD];
@@ -390,7 +395,7 @@ typedef enum e_handle_stat
             {
                 NSRange old = [hijackedView selectedRange];
                 [self moveCaretDown:firstCount];
-                range.location = mv_g__handler(hijackedView);
+                range.location = xv_g_();
                 [hijackedView setSelectedRange:old];
             }
                 break;
@@ -401,7 +406,7 @@ typedef enum e_handle_stat
     {
         // Ensure the return value is not NSNotFound... So that the key input is consider
         // handled even if the we can't find the char.
-        range.location = findChar(hijackedView, firstCount, cmdChar, secondCmdChar, operatorChar != 0);
+        range.location = xv_findChar(firstCount, cmdChar, secondCmdChar, operatorChar != 0);
         
         lastFindCmd  = cmdChar;
         lastFindChar = secondCmdChar;
@@ -411,7 +416,7 @@ typedef enum e_handle_stat
         switch (secondCmdChar) {
             case 'w':
             case 'W': // A word
-                range = current_word(hijackedView, firstCount, cmdChar == 'a', secondCmdChar == 'W');
+                range = xv_current_word(firstCount, cmdChar == 'a', secondCmdChar == 'W');
                 break;
             case 'B':
             case '{':
@@ -419,11 +424,11 @@ typedef enum e_handle_stat
             {
                 // If we are at indent, make the caret after the indent.
                 NSUInteger oIdx = [hijackedView selectedRange].location;
-                NSUInteger nIdx = mv_caret_handler_h(hijackedView);
+                NSUInteger nIdx = xv_caret();
                 if (nIdx != oIdx) {
                     [hijackedView setSelectedRange:NSMakeRange(nIdx, 0)];
                 }
-                range = current_block(hijackedView, firstCount, cmdChar == 'a', '{', '}');
+                range = xv_current_block(firstCount, cmdChar == 'a', '{', '}');
                 if (range.location == NSNotFound && nIdx != oIdx) {
                     [hijackedView setSelectedRange:NSMakeRange(oIdx, 0)];
                 }
@@ -432,24 +437,24 @@ typedef enum e_handle_stat
             case 'b':
             case '(':
             case ')': // A () block
-                range = current_block(hijackedView, firstCount, cmdChar == 'a', '(', ')');
+                range = xv_current_block(firstCount, cmdChar == 'a', '(', ')');
                 break;
             case '[':
             case ']': // A [] block
-                range = current_block(hijackedView, firstCount, cmdChar == 'a', '[', ']');
+                range = xv_current_block(firstCount, cmdChar == 'a', '[', ']');
                 break;
             case '<':
             case '>': // A <> block
-                range = current_block(hijackedView, firstCount, cmdChar == 'a', '<', '>');
+                range = xv_current_block(firstCount, cmdChar == 'a', '<', '>');
                 break;
                 
             case 't':  // A xml tag block
-                range = current_tagblock(hijackedView, firstCount, cmdChar == 'a');
+                range = xv_current_tagblock(firstCount, cmdChar == 'a');
                 break;
             case '"':  // A double quoted string
             case '\'': // A single quoted string
             case '`':  // A backtick quoted string
-                range = current_quote(hijackedView, firstCount, cmdChar == 'a', secondCmdChar);
+                range = xv_current_quote(firstCount, cmdChar == 'a', secondCmdChar);
                 break;
                 
             default:
@@ -480,23 +485,23 @@ typedef enum e_handle_stat
                 defaultLineWise = YES;
                 break;
             case '|': // Go to column
-                range.location = columnToIndex(hijackedView, firstCount);
+                range.location = xv_columnToIndex(firstCount);
                 break;
             case '%':
-                range.location = mv_percent_handler(hijackedView);
+                range.location = xv_percent();
                 ensureVisible = YES;
                 break;
             case '$':
-                range.location = mv_dollar_handler(hijackedView);
+                range.location = xv_dollar();
                 break;
             case '0':
 #ifndef MAKE_0_AS_CARET
-                range.location = mv_0_handler_h(hijackedView);
+                range.location = xv_0();
                 break;
 #endif
             case '^':
             case 'I':
-                range.location = mv_caret_handler_h(hijackedView);
+                range.location = xv_caret();
                 break;
                 
             case '_':
@@ -510,30 +515,29 @@ typedef enum e_handle_stat
                 
             case 'w': 
             case 'W':
-                range.location = operatorChar == 0 ? 
-                mv_w_handler_h(hijackedView, firstCount, cmdChar == 'W') :
-                mv_w_motion_handler_h(hijackedView, firstCount, cmdChar == 'W');
+                range.location = operatorChar == 0 ? xv_w(firstCount, cmdChar == 'W') :
+                                                     xv_w_motion(firstCount, cmdChar == 'W');
                 ensureVisible = YES;
                 break;
                 
             case 'e':
             case 'E':
-                range.location = mv_e_handler_h(hijackedView, firstCount, cmdChar == 'E');
+                range.location = xv_e(firstCount, cmdChar == 'E');
                 if (operatorChar != 0) { ++range.location; }
                 ensureVisible = YES;
                 break;
             case 'b':
             case 'B':
-                range.location = mv_b_handler(hijackedView, firstCount, cmdChar == 'B');
+                range.location = xv_b(firstCount, cmdChar == 'B');
                 ensureVisible = YES;
                 break;
                 
             case NSDeleteCharacter:
-            case 'h': range.location = mv_h_handler(hijackedView, firstCount);
+            case 'h': range.location = xv_h(firstCount);
                 break;
                 
             case XSpace:
-            case 'l': range.location = mv_l_handler(hijackedView, firstCount, operatorChar == 0);  
+            case 'l': range.location = xv_l(firstCount, operatorChar == 0);  
                 break;
                 
             case 'j': 
@@ -564,22 +568,20 @@ typedef enum e_handle_stat
                 break;
             case ';':
                 if (lastFindCmd != 0) {
-                    range.location = findChar(hijackedView, 
-                                              firstCount, 
-                                              lastFindCmd, 
-                                              lastFindChar, 
-                                              operatorChar != 0);
+                    range.location = xv_findChar(firstCount, 
+                                                 lastFindCmd, 
+                                                 lastFindChar, 
+                                                 operatorChar != 0);
                 }
                 break;
             case ',':
                 if (lastFindCmd != 0) {
-                    range.location = findChar(hijackedView, 
-                                              firstCount, 
-                                              lastFindCmd > 'Z' ? 
-                                                lastFindCmd - 'a' + 'A' : 
-                                                lastFindCmd - 'A' + 'a', 
-                                              lastFindChar, 
-                                              operatorChar != 0);
+                    range.location = xv_findChar(firstCount, 
+                                                 lastFindCmd > 'Z' ? 
+                                                    lastFindCmd - 'a' + 'A' : 
+                                                    lastFindCmd - 'A' + 'a', 
+                                                 lastFindChar, 
+                                                 operatorChar != 0);
                 }
                 break;
         }
@@ -667,8 +669,10 @@ typedef enum e_handle_stat
     }
     if (defaultLineWise)
     {
-        motionBegin = mv_0_handler(string, motionBegin);
-        motionEnd   = mv_dollar_inc_handler(string, motionEnd);
+        xv_set_index(motionBegin);
+        motionBegin = xv_0();
+        xv_set_index(motionEnd);
+        motionEnd   = xv_dollar_inc();
     }
     
     range.location = motionBegin;
@@ -720,7 +724,7 @@ typedef enum e_handle_stat
             [controller switchToMode:InsertMode];
             break;
         case 'I':
-            [hijackedView setSelectedRange: NSMakeRange(mv_caret_handler_h(hijackedView), 0)];
+            [hijackedView setSelectedRange: NSMakeRange(xv_caret(), 0)];
             [controller switchToMode:InsertMode];
             break;
             
@@ -852,7 +856,7 @@ typedef enum e_handle_stat
         ++lineEnd;
     }
     
-    NSUInteger lineBegin = cmdChar == 'Y' ? mv_0_handler(string, current) : current;
+    NSUInteger lineBegin = cmdChar == 'Y' ? xv_0() : current;
     NSRange    range     = {lineBegin, lineEnd - lineBegin};
     [controller yank:string 
            withRange:range 
@@ -881,7 +885,7 @@ typedef enum e_handle_stat
         NSUInteger length = 1;
         if (firstCount > 1)
         {
-            NSUInteger lineEndIndex = mv_dollar_handler(hijackedView) + 1;
+            NSUInteger lineEndIndex = xv_dollar() + 1;
             length = lineEndIndex - index;
             if (length > firstCount) { length = firstCount; }
         }
@@ -1082,7 +1086,10 @@ typedef enum e_handle_stat
         
         NSUInteger newIdx = [hijackedView characterIndexForInsertionAtPoint:
                              NSMakePoint(0, caretYInScreen + currentRect.origin.y + delta)];
-        newIdx = mv_caret_handler([hijackedView string], newIdx);
+        
+        xv_set_index(newIdx);
+        newIdx = xv_caret();
+        xv_set_index([hijackedView selectedRange].location);
         
         // Scroll
         currentRect.origin.y = scrollToY;
@@ -1124,7 +1131,9 @@ typedef enum e_handle_stat
     
     if (selection.location != NSNotFound)
     {
-        selection.location = mv_caret_handler([hijackedView string], selection.location);
+        xv_set_index(selection.location);
+        selection.location = xv_caret();
+        xv_set_index([hijackedView selectedRange].location);
     }
     
     return selection.location;
@@ -1157,7 +1166,9 @@ typedef enum e_handle_stat
         idx = maxIndex;
     }
     
-    idx = mv_caret_handler(string, idx);
+    xv_set_index(idx);
+    idx = xv_caret();
+    xv_set_index([hijackedView selectedRange].location);
     return idx;
 }
 
@@ -1188,7 +1199,7 @@ typedef enum e_handle_stat
             ++lineEnd;
         }
         
-        NSUInteger lineBegin = mv_0_handler_h(hijackedView);
+        NSUInteger lineBegin = xv_0();
         NSRange    range     = {lineBegin, lineEnd - lineBegin};
         
         [controller yank:string withRange:range wholeLine:YES];
@@ -1205,7 +1216,7 @@ typedef enum e_handle_stat
     if (cmdChar == '_') { --firstCount; }
     cmdChar == '-' ? [self moveCaretUp:firstCount] : [self moveCaretDown:firstCount];
     
-    NSUInteger newIdx = mv_caret_handler_h(hijackedView);
+    NSUInteger newIdx = xv_caret();
     [hijackedView setSelectedRange:NSMakeRange(oldIdx, 0)];
     
     return newIdx == oldIdx ? NSNotFound : newIdx;

@@ -46,7 +46,9 @@
             case 'w':
             {
                 NSTextView* view   = [[controller bridge] targetView];
-                NSUInteger  delIdx = key == 'u' ? mv_0_handler_h(view) : mv_b_handler(view, 1, NO);
+                xv_set_index([view selectedRange].location);
+                xv_set_string([view string]);
+                NSUInteger  delIdx = key == 'u' ? xv_0() : xv_b(1, NO);
                 [view insertText:@"" 
                 replacementRange:NSMakeRange(delIdx, [view selectedRange].location - delIdx)];
             }
