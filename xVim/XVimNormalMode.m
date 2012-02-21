@@ -120,7 +120,7 @@ typedef enum e_affect_range
     NSRange selected = [[newRanges objectAtIndex:0] rangeValue];
     if (selected.length > 0 || selected.location == 0) { return newRanges; }
     
-    NSString* string = [hijackedView string];
+    NSString* string = [[hijackedView textStorage] string];
     
     if (!testNewLine([string characterAtIndex:selected.location - 1]))
     {
@@ -350,7 +350,7 @@ typedef enum e_handle_stat
         BOOL res = YES;
         
         // Set the infomation to make vim.h work.
-        xv_set_string([hijackedView string]);
+        xv_set_string([[hijackedView textStorage] string]);
         xv_set_index([hijackedView selectedRange].location);
         
         if (state == Execute)
@@ -659,7 +659,7 @@ typedef enum e_handle_stat
         motionEnd   = range.location + range.length;
     }
     
-    NSString* string = [hijackedView string];
+    NSString* string = [[hijackedView textStorage] string];
     
     // Check linewise and characterwise (We don't support block wise)
     if (affect == LineWise) {
@@ -730,7 +730,7 @@ typedef enum e_handle_stat
             
         case 'a':
         {
-            NSString*  string = [hijackedView string];
+            NSString*  string = [[hijackedView textStorage] string];
             NSUInteger idx    = [hijackedView selectedRange].location;
             NSUInteger max    = [string length];
             if (idx < max && !testNewLine([string characterAtIndex:idx]))
@@ -773,7 +773,7 @@ typedef enum e_handle_stat
 {
     // Vim seems a real complex, so I don't want to follow it.
     // Two lines are join together and seperate with a whitespace.
-    NSString*       string      = [hijackedView string];
+    NSString*       string      = [[hijackedView textStorage] string];
     NSUInteger      index       = [hijackedView selectedRange].location;
     NSUndoManager*  undoManager = [hijackedView undoManager];
     NSStringHelper  helper;
@@ -837,7 +837,7 @@ typedef enum e_handle_stat
 -(void) cmdYDC
 {
     // All these 3 command does not include trailing CR
-    NSString*  string   = [hijackedView string];
+    NSString*  string   = [[hijackedView textStorage] string];
     NSUInteger current  = [hijackedView selectedRange].location;
     NSUInteger lineEnd  = current;
     NSUInteger maxIndex = [string length];
@@ -876,7 +876,7 @@ typedef enum e_handle_stat
 -(void) cmdChangeCase
 {
     // ~ will only work on the character in current line.
-    NSString*  string   = [hijackedView string];
+    NSString*  string   = [[hijackedView textStorage] string];
     NSUInteger maxIndex = [string length] - 1;
     NSUInteger index    = [hijackedView selectedRange].location;
     
@@ -915,7 +915,7 @@ typedef enum e_handle_stat
 
 -(void) cmdDelChar
 {
-    NSString* string = [hijackedView string];
+    NSString* string = [[hijackedView textStorage] string];
     NSInteger index  = [hijackedView selectedRange].location;
     NSRange   range  = {0, 0};
     
@@ -1155,7 +1155,7 @@ typedef enum e_handle_stat
         }
     }
     
-    NSString* string = [hijackedView string];
+    NSString* string = [[hijackedView textStorage] string];
     
     if (lineNumber == -1)
     {
@@ -1175,7 +1175,7 @@ typedef enum e_handle_stat
 -(void) cmdddcc
 {
     // Delete whole lines except last new line character. And enter insert mode.
-    NSString*  string   = [hijackedView string];
+    NSString*  string   = [[hijackedView textStorage] string];
     NSUInteger lineEnd  = [hijackedView selectedRange].location;
     NSUInteger strLen   = [string length];
     
