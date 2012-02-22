@@ -72,12 +72,16 @@ typedef void  (*O_KeyDown)                   (void*, SEL, NSEvent*);
 typedef void  (*O__DrawInsertionPointInRect) (NSTextView*, SEL, NSRect, NSColor*); // This one is for private api.
 typedef void  (*O_DrawInsertionPointInRect)  (NSTextView*, SEL, NSRect, NSColor*, BOOL);
 typedef void* (*O_WillChangeSelection)       (void*, SEL, NSTextView*, NSArray* oldRanges, NSArray* newRanges);
+typedef void  (*O_TextViewDidChangeSelection)(void*, SEL, NSNotification*);
+typedef void* (*O_SelRangeForProposedRange)  (NSTextView*, SEL, NSRange, NSSelectionGranularity);
 static O_Finalize                  orig_finalize            = 0;
 static O_Dealloc                   orig_dealloc             = 0;
 static O_KeyDown                   orig_keyDown             = 0;
 static O__DrawInsertionPointInRect orig_DIPIR_private       = 0;
 static O_DrawInsertionPointInRect  orig_DIPIR               = 0;
 static O_WillChangeSelection       orig_willChangeSelection = 0;
+static O_TextViewDidChangeSelection orig_didChangeSelection = 0;
+static O_SelRangeForProposedRange  orig_selRangeForProposedRange = 0;
 // Hijackers:
 static void  configureInsertionPointRect(NSTextView* view, NSRect*);
 static void  hj_finalize(void*, SEL);
@@ -86,6 +90,8 @@ static void  hj_keyDown(void*, SEL, NSEvent*);
 static void  hj_DIPIR_private(NSTextView*, SEL, NSRect, NSColor*);
 static void  hj_DIPIR(NSTextView*, SEL, NSRect, NSColor*, BOOL);
 static void* hj_willChangeSelection(void*, SEL, NSTextView*, NSArray* oldRanges, NSArray* newRanges);
+static void  hj_didChangeSelection(void*, SEL, NSNotification*);
+static void* hj_selRangeForProposedRange(NSTextView*, SEL, NSRange, NSSelectionGranularity);
 
 // Special init methods:
 static void* orig_init = 0;
@@ -199,6 +205,9 @@ static HijackInfo s_hijackInfo_map[SUPPORTED_APP_COUNT] =
             orig_DIPIR_private = methodSwizzle(tvSubClass, 
                                                @selector(_drawInsertionPointInRect:color:), 
                                                hj_DIPIR_private);
+            orig_selRangeForProposedRange = methodSwizzle(tvSubClass,
+                                                          @selector(selectionRangeForProposedRange:granularity:),
+                                                          hj_selRangeForProposedRange);
             
             if (info->delegateClassName == nil)
             {
@@ -209,6 +218,9 @@ static HijackInfo s_hijackInfo_map[SUPPORTED_APP_COUNT] =
                 orig_willChangeSelection = methodSwizzle(delegateClass, 
                                                          @selector(textView:willChangeSelectionFromCharacterRanges:toCharacterRanges:), 
                                                          hj_willChangeSelection);
+                orig_didChangeSelection = methodSwizzle(delegateClass, 
+                                                        @selector(textViewDidChangeSelection:), 
+                                                        hj_didChangeSelection);
             }
             
             break;
@@ -257,6 +269,10 @@ static HijackInfo s_hijackInfo_map[SUPPORTED_APP_COUNT] =
 -(NSArray*) textView:(NSTextView*) view willChangeSelectionFromCharacterRanges:(NSArray*) old toCharacterRanges:(NSArray*) new
 {
     return hj_willChangeSelection(nil, nil, view, old, new);
+}
+-(void) textViewDidChangeSelection:(NSNotification*) aNotification
+{
+    hj_didChangeSelection(nil, nil, aNotification);
 }
 @end
 
@@ -338,6 +354,21 @@ void* hj_willChangeSelection(void* self, SEL sel, NSTextView* view, NSArray* old
     }
     if (orig_willChangeSelection) { return orig_willChangeSelection(self, sel, view, oldRanges, newRanges); }
     return newRanges;
+}
+
+void hj_didChangeSelection(void* self, SEL sel, NSNotification* n)
+{
+    XTextViewBridge* bridge = getBridgeForView([n object]);
+    if (bridge != nil) {
+        [[bridge vimController] didChangedSelection];
+    }
+    if (orig_didChangeSelection) { orig_didChangeSelection(self, sel, n); }
+}
+
+void* hj_selRangeForProposedRange(NSTextView* self, SEL sel, NSRange proposed, NSSelectionGranularity g)
+{
+    [[getBridgeForView(self) vimController] selRangeForProposed:proposed];
+    return orig_selRangeForProposedRange(self, sel, proposed, g);
 }
 
 

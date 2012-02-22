@@ -38,4 +38,5 @@
  */
 @interface XTextViewDelegate : NSObject <NSTextViewDelegate>
 - (NSArray*) textView:(NSTextView*) view willChangeSelectionFromCharacterRanges:(NSArray*) old toCharacterRanges:(NSArray*) new;
+- (void)textViewDidChangeSelection:(NSNotification*) aNotification;
 @end

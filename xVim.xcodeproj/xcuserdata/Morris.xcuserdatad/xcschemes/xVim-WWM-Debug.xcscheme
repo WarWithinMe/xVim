@@ -38,7 +38,7 @@
       debugDocumentVersioning = "YES"
       allowLocationSimulation = "YES">
       <PathRunnable
-         FilePath = "/Applications/Espresso.app">
+         FilePath = "/Developer/Applications/Xcode.app">
       </PathRunnable>
       <AdditionalOptions>
       </AdditionalOptions>

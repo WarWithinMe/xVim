@@ -29,14 +29,25 @@ BOOL testFuzzyWord(unichar ch) {
     return (!testWhiteSpace(ch)) && (!testNewLine(ch));
 }
 
-NSUInteger mv_dollar_handler(NSTextView* view)
+
+struct XVBuffer {
+    NSString* string;
+    NSInteger index;
+};
+
+static struct XVBuffer xv_buffer = {};
+
+void xv_set_string(NSString* s) { xv_buffer.string = s; }
+void xv_set_index (NSInteger i) { xv_buffer.index = i;  }
+
+
+NSInteger xv_dollar()
 {
-    NSString*  string = [view string];
-    NSUInteger strLen = [string length];
-    NSUInteger index  = [view selectedRange].location;
+    NSInteger strLen = [xv_buffer.string length];
+    NSInteger index  = xv_buffer.index;
     
     NSStringHelper helper;
-    initNSStringHelper(&helper, string, strLen);
+    initNSStringHelper(&helper, xv_buffer.string, strLen);
     
     while (index < strLen)
     {
@@ -46,15 +57,16 @@ NSUInteger mv_dollar_handler(NSTextView* view)
         }
         ++index;
     }
-    return index;
+    return index; 
 }
 
-NSUInteger mv_dollar_inc_handler(NSString* string, NSUInteger index)
+NSInteger xv_dollar_inc()
 {
-    NSUInteger strLen = [string length];
+    NSInteger index  = xv_buffer.index;
+    NSInteger strLen = [xv_buffer.string length];
     
     NSStringHelper helper;
-    initNSStringHelper(&helper, string, strLen);
+    initNSStringHelper(&helper, xv_buffer.string, strLen);
     
     while (index < strLen)
     {
@@ -68,10 +80,10 @@ NSUInteger mv_dollar_inc_handler(NSString* string, NSUInteger index)
     return index;
 }
 
-NSUInteger mv_g__handler(NSTextView* view)
+NSInteger xv_g_()
 {
-    NSUInteger index  = mv_dollar_handler(view);
-    NSString*  string = [view string];
+    NSInteger index  = xv_dollar();
+    NSString* string = xv_buffer.string;
     while (index > 0)
     {
         --index;
@@ -81,14 +93,12 @@ NSUInteger mv_g__handler(NSTextView* view)
     return index;
 }
 
-NSUInteger mv_caret_handler_h(NSTextView* view)
+NSInteger xv_caret()
 {
-    return mv_caret_handler([view string], [view selectedRange].location);
-}
-NSUInteger mv_caret_handler(NSString* string, NSUInteger index)
-{
-    NSUInteger resultIndex  = index;
-    NSUInteger seekingIndex = index;
+    NSInteger index        = xv_buffer.index;
+    NSInteger resultIndex  = index;
+    NSInteger seekingIndex = index;
+    NSString* string       = xv_buffer.string;
     
     while (seekingIndex > 0) {
         unichar ch = [string characterAtIndex:seekingIndex-1];
@@ -101,7 +111,7 @@ NSUInteger mv_caret_handler(NSString* string, NSUInteger index)
     }
     
     if (resultIndex == index) {
-        NSUInteger maxIndex = [string length] - 1;
+        NSInteger maxIndex = [string length] - 1;
         while (resultIndex < maxIndex) {
             unichar ch = [string characterAtIndex:resultIndex];
             if (testNewLine(ch) || testWhiteSpace(ch) == NO) {
@@ -114,15 +124,15 @@ NSUInteger mv_caret_handler(NSString* string, NSUInteger index)
     return resultIndex;
 }
 
-NSUInteger mv_percent_handler(NSTextView* view)
+NSInteger xv_percent()
 {
-    NSString*  string    = [view string];
-    NSUInteger idxBefore = [view selectedRange].location;
+    NSString* string    = xv_buffer.string;
+    NSInteger idxBefore = xv_buffer.index;
 
     // Find the first brace in this line that is after the caret.
     NSCharacterSet* set  = [NSCharacterSet characterSetWithCharactersInString:@"([{)]}"];
-    NSRange    range     = NSMakeRange(idxBefore, mv_dollar_handler(view)-idxBefore);
-    NSUInteger idxNew    = [string rangeOfCharacterFromSet:set 
+    NSRange    range     = NSMakeRange(idxBefore, xv_dollar() - idxBefore);
+    NSInteger  idxNew    = [string rangeOfCharacterFromSet:set 
                                                    options:0 
                                                      range:range].location;
     if (idxNew != NSNotFound)
@@ -140,7 +150,7 @@ NSUInteger mv_percent_handler(NSTextView* view)
             case '}': correspondingCh = '{'; dir = -1; break;
         }
         
-        NSUInteger maxIdx = [string length] - 1;
+        NSInteger maxIdx = [string length] - 1;
         int nOpen  = 0;
         int nClose = 0;
         
@@ -167,23 +177,21 @@ NSUInteger mv_percent_handler(NSTextView* view)
     return idxBefore;
 }
 
-NSUInteger mv_0_handler_h(NSTextView* view) {
-    return mv_0_handler([view string], [view selectedRange].location);
-}
-NSUInteger mv_0_handler(NSString* string, NSUInteger index)
+NSInteger xv_0()
 {    
+    NSInteger index = xv_buffer.index;
     while (index > 0)
     {
-        if (testNewLine([string characterAtIndex:index-1])) { break; }
+        if (testNewLine([xv_buffer.string characterAtIndex:index-1])) { break; }
         --index;
     }
     return index;
 }
 
-NSUInteger mv_h_handler(NSTextView* view, int repeatCount)
+NSInteger xv_h(int repeatCount)
 {
-    NSUInteger index  = [view selectedRange].location;
-    NSString*  string = [view string];
+    NSInteger  index  = xv_buffer.index;
+    NSString*  string = xv_buffer.string;
     
     for (int i = 0; i < repeatCount; ++i)
     {
@@ -207,11 +215,11 @@ NSUInteger mv_h_handler(NSTextView* view, int repeatCount)
     return index;
 }
 
-NSUInteger mv_l_handler(NSTextView* view, int repeatCount, BOOL stepForward)
+NSInteger xv_l(int repeatCount, BOOL stepForward)
 {
-    NSString*  string   = [view string];
-    NSUInteger index    = [view selectedRange].location;
-    NSUInteger maxIndex = [string length] - 1;
+    NSString* string   = xv_buffer.string;
+    NSInteger index    = xv_buffer.index;
+    NSInteger maxIndex = [string length] - 1;
     
     for (int i = 0; i < repeatCount; ++i) {
         if (index >= maxIndex) {
@@ -238,13 +246,11 @@ testAscii testForChar(unichar ch)
     return testDelimeter;
 }
 
-NSUInteger mv_w_handler_h(NSTextView* view, int repeatCount, BOOL bigWord)
+NSInteger xv_w(int repeatCount, BOOL bigWord)
 {
-    return mv_w_handler([view string], [view selectedRange].location, repeatCount, bigWord);
-}
-NSUInteger mv_w_handler(NSString* string, NSUInteger index, int repeatCount, BOOL bigWord)
-{
-    NSUInteger maxIndex = [string length] - 1;
+    NSString* string = xv_buffer.string;
+    NSInteger index  = xv_buffer.index;
+    NSInteger maxIndex = [string length] - 1;
     
     if (index == maxIndex) { return maxIndex + 1; }
     
@@ -291,15 +297,13 @@ NSUInteger mv_w_handler(NSString* string, NSUInteger index, int repeatCount, BOO
     return index;
 }
 
-NSUInteger mv_w_motion_handler_h(NSTextView* view, int repeatCount, BOOL bigWord)
+NSInteger xv_w_motion(int repeatCount, BOOL bigWord)
 {
-    return mv_w_motion_handler([view string], [view selectedRange].location, repeatCount, bigWord);
-}
-NSUInteger mv_w_motion_handler(NSString* string, NSUInteger oldIdx, int repeatCount, BOOL bigWord)
-{
+    NSString* string  = xv_buffer.string;
+    NSInteger oldIdx  = xv_buffer.index;
     // Reduce index if we are at the beginning indentation of another line.
-    NSUInteger newIdx  = mv_w_handler(string, oldIdx, repeatCount, bigWord);
-    NSUInteger testIdx = newIdx - 1;
+    NSInteger newIdx  = xv_w(repeatCount, bigWord);
+    NSInteger testIdx = newIdx - 1;
     
     while (testIdx > oldIdx)
     {
@@ -318,13 +322,13 @@ NSUInteger mv_w_motion_handler(NSString* string, NSUInteger oldIdx, int repeatCo
     return oldIdx == testIdx ? newIdx : testIdx;
 }
 
-NSUInteger mv_b_handler(NSTextView* view, int repeatCount, BOOL bigWord)
+NSInteger xv_b(int repeatCount, BOOL bigWord)
 {
     // 'b' If we are not at the beginning of a word, go to the beginning of it.
     // Otherwise go to the beginning of the word before it.
-    NSUInteger index  = [view selectedRange].location;
-    NSString*  string = [view string];
-    NSUInteger maxI   = [string length] - 1;
+    NSInteger index  = xv_buffer.index;
+    NSString* string = xv_buffer.string;
+    NSInteger maxI   = [string length] - 1;
     if (index >= maxI) { index = maxI; }
     
     for (int i = 0; i < repeatCount && index > 0; ++i)
@@ -387,11 +391,7 @@ NSUInteger mv_b_handler(NSTextView* view, int repeatCount, BOOL bigWord)
     return index;
 }
 
-NSUInteger mv_e_handler_h(NSTextView* view, int repeatCount, BOOL bigWord)
-{
-    return mv_e_handler([view string], [view selectedRange].location, repeatCount, bigWord);
-}
-NSUInteger mv_e_handler(NSString* string, NSUInteger index, int repeatCount, BOOL bigWord)
+NSInteger xv_e(int repeatCount, BOOL bigWord)
 {
     // 'e' If we are not at the end of a word, go to the end of it.
     // Otherwise go to the end of the word after it.
@@ -400,7 +400,9 @@ NSUInteger mv_e_handler(NSString* string, NSUInteger index, int repeatCount, BOO
     // the blank line is not consider a word.
     // So whitespace and newline are totally ingored.
     
-    NSUInteger maxIndex = [string length] - 1;
+    NSString* string   = xv_buffer.string;
+    NSInteger index    = xv_buffer.index;
+    NSInteger maxIndex = [string length] - 1;
     
     for (int i = 0; i < repeatCount && index < maxIndex; ++i)
     {
@@ -443,11 +445,11 @@ NSUInteger mv_e_handler(NSString* string, NSUInteger index, int repeatCount, BOO
     return index;
 }
 
-NSUInteger columnToIndex(NSTextView* view, NSUInteger column)
+NSInteger xv_columnToIndex(NSUInteger column)
 {
-    NSUInteger index  = [view selectedRange].location;
-    NSString*  string = [view string];
-    NSUInteger strLen = [string length];
+    NSInteger index  = xv_buffer.index;
+    NSString* string = xv_buffer.string;
+    NSInteger strLen = [string length];
     
     if (index >= strLen) { return index; }
     
@@ -482,8 +484,8 @@ NSUInteger columnToIndex(NSTextView* view, NSUInteger column)
 #define MAYBE     2
 #define FORWARD   1
 #define BACKWARD -1
-int findmatchlimit(NSString* string, NSUInteger pos, unichar initc, BOOL cpo_match);
-int findmatchlimit(NSString* string, NSUInteger pos, unichar initc, BOOL cpo_match)
+int findmatchlimit(NSString* string, NSInteger pos, unichar initc, BOOL cpo_match);
+int findmatchlimit(NSString* string, NSInteger pos, unichar initc, BOOL cpo_match)
 { 
     // ----------
     unichar    findc           = 0; // The char to find.
@@ -496,8 +498,8 @@ int findmatchlimit(NSString* string, NSUInteger pos, unichar initc, BOOL cpo_mat
     BOOL       inquote         = NO;     // YES when inside quotes
     int        match_escaped   = 0;      // Search for escaped match.
     
-    // NSUInteger pos             = cursor; // Current search position
-    // BOOL       cpo_match       = YES;    // cpo_match = (vim_strchr(p_cpo, CPO_MATCH) != NULL);
+    // NSInteger pos             = cursor; // Current search position
+    // BOOL      cpo_match       = YES;    // cpo_match = (vim_strchr(p_cpo, CPO_MATCH) != NULL);
     BOOL       cpo_bsl         = NO;     // cpo_bsl = (vim_strchr(p_cpo, CPO_MATCHBSL) != NULL);
     
     // ----------
@@ -530,7 +532,7 @@ int findmatchlimit(NSString* string, NSUInteger pos, unichar initc, BOOL cpo_mat
     // ----------
     NSStringHelper  help;
     NSStringHelper* h        = &help;
-    NSUInteger      maxIndex = [string length] - 1; 
+    NSInteger       maxIndex = [string length] - 1; 
     backwards ? initNSStringHelperBackward(h, string, maxIndex+1) : initNSStringHelper(h, string, maxIndex+1);
     
     // ----------
@@ -571,9 +573,9 @@ int findmatchlimit(NSString* string, NSUInteger pos, unichar initc, BOOL cpo_mat
              */
             at_start = do_quotes;
             
-            NSUInteger ptr = pos;
+            NSInteger ptr = pos;
             while (ptr > 0 && !testNewLine([string characterAtIndex:ptr-1])) { --ptr; }
-            NSUInteger sta = ptr;
+            NSInteger sta = ptr;
             
             while (ptr < maxIndex && 
                    !testNewLine(characterAtIndex(h, ptr)))
@@ -641,7 +643,7 @@ int findmatchlimit(NSString* string, NSUInteger pos, unichar initc, BOOL cpo_mat
                  * ignored */
                 if (do_quotes)
                 {
-                    NSUInteger col = pos;
+                    NSInteger col = pos;
                     int qcnt = 0;
                     unichar c2;
                     while (col > 0) {
@@ -664,7 +666,7 @@ int findmatchlimit(NSString* string, NSUInteger pos, unichar initc, BOOL cpo_mat
                 {
                     if (backwards)
                     {
-                        NSUInteger p1 = pos;
+                        NSInteger p1 = pos;
                         int col = 0;
                         while (p1 > 0 && col < 3) {
                             --p1;
@@ -720,7 +722,7 @@ int findmatchlimit(NSString* string, NSUInteger pos, unichar initc, BOOL cpo_mat
                     
                     if (!cpo_bsl)
                     {
-                        NSUInteger col = pos;
+                        NSInteger col = pos;
                         unichar c2;
                         while (col > 0) {
                             --col;
@@ -752,10 +754,10 @@ int findmatchlimit(NSString* string, NSUInteger pos, unichar initc, BOOL cpo_mat
     return -1;
 }
 
-NSRange current_block(NSTextView* view, int count, BOOL inclusive, char what, char other)
+NSRange xv_current_block(int count, BOOL inclusive, char what, char other)
 {
-    NSString* string = [view string];
-    NSUInteger idx   = [view selectedRange].location;
+    NSString* string = xv_buffer.string;
+    NSInteger idx    = xv_buffer.index;
     
     if ([string characterAtIndex:idx] == what)
     {
@@ -795,12 +797,16 @@ NSRange current_block(NSTextView* view, int count, BOOL inclusive, char what, ch
         ++start_pos;
         if (what == '{')
         {
-            NSUInteger idx = mv_caret_handler(string, end_pos);
+            NSInteger oldIdx = xv_buffer.index;
+            xv_buffer.index = end_pos;
+            NSInteger idx = xv_caret();
+            
             if (idx == end_pos)
             {
                 // The '}' is only preceded by indent, skip that indent.
-                end_pos = (int) mv_0_handler(string, end_pos) - 1;
+                end_pos = (int) xv_0() - 1;
             }
+            xv_buffer.index = oldIdx;
         }
     } else {
         ++end_pos;
@@ -809,45 +815,54 @@ NSRange current_block(NSTextView* view, int count, BOOL inclusive, char what, ch
     return NSMakeRange(start_pos, end_pos - start_pos);
 }
 
-NSRange current_word(NSTextView* view, int repeatCount, BOOL inclusive, BOOL fuzzy)
+NSRange xv_current_word(int repeatCount, BOOL inclusive, BOOL fuzzy)
 {    
-    NSString*  string   = [view string];
-    NSUInteger index    = [view selectedRange].location;
-    NSUInteger maxIndex = [string length] - 1;
+    NSString* string   = xv_buffer.string;
+    NSInteger index    = xv_buffer.index;
+    NSInteger maxIndex = [string length] - 1;
     
     if (index > maxIndex) { return NSMakeRange(NSNotFound, 0); }
     
     unichar    ch    = [string characterAtIndex:index];
     testAscii  test  = testWhiteSpace(ch) ? testWhiteSpace : (fuzzy ? testFuzzyWord : testForChar(ch));
     
-    NSUInteger begin = index;
-    NSUInteger end   = index;
+    NSInteger begin = index;
+    NSInteger end   = index;
     
     while (begin > 0)
     {
         if (test([string characterAtIndex:begin - 1]) == NO) { break; }
         --begin;
     }
+    
+    NSInteger oldIdx = xv_buffer.index;
         
     //
     // Word is like (  word  )
     if (testWhiteSpace(ch) == inclusive)
     {
+        xv_buffer.index = index;
+        
         // If inclusive and at whitespace, whitespace is included: ("  word"  )
         // If exclusive and not at whitespace, then: (  "word"  )
         // That means we should find the end of the word.
-        end = mv_e_handler(string, index, repeatCount, fuzzy) + 1;
+        end = xv_e(repeatCount, fuzzy) + 1;
+        xv_buffer.index = oldIdx;
     } else {
+        xv_buffer.index = end;
+        
         // If inclusive and not at whitespace: (  "word  ")
         // If exclusive and at whitespace, then: ("  "word  )
-        
+
         if (repeatCount > 1) {
             // Select more words.
-            end = mv_w_handler(string, end, repeatCount - 1, fuzzy);
+            xv_buffer.index = xv_w(repeatCount - 1, fuzzy);
         }
         // If the end index is at beginning indent of next line,
         // Go back to prev line.
-        end = mv_w_motion_handler(string, end, 1, fuzzy);
+        end = xv_w_motion(1, fuzzy);
+        
+        xv_buffer.index = oldIdx;
         
         // If we don't have any trailing whitespace,
         // Extend begin to include whitespace.
@@ -863,8 +878,8 @@ NSRange current_word(NSTextView* view, int repeatCount, BOOL inclusive, BOOL fuz
     return NSMakeRange(begin, end - begin);
 }
 
-NSInteger find_next_quote(NSStringHelper* h, NSUInteger start, NSUInteger max, unichar quote, BOOL ignoreEscape);
-NSInteger find_next_quote(NSStringHelper* h, NSUInteger start, NSUInteger max, unichar quote, BOOL ignoreEscape)
+NSInteger find_next_quote(NSStringHelper* h, NSInteger start, NSInteger max, unichar quote, BOOL ignoreEscape);
+NSInteger find_next_quote(NSStringHelper* h, NSInteger start, NSInteger max, unichar quote, BOOL ignoreEscape)
 {
     while (start <= max)
     {
@@ -920,7 +935,7 @@ NSInteger find_prev_quote(NSStringHelper* h, NSInteger start, unichar quote, BOO
     return -1;
 }
 
-NSRange current_quote(NSTextView* view, int repeatCount, BOOL inclusive, char what)
+NSRange xv_current_quote(int repeatCount, BOOL inclusive, char what)
 {
     // Rules:
     // 1. If the quote is escaped, ignore it, unless it's the first quote in the line.
@@ -932,20 +947,25 @@ NSRange current_quote(NSTextView* view, int repeatCount, BOOL inclusive, char wh
     // 5. a" will include the trailing space, if no trailing space, extend to include any
     //    preceeding space.
     
-    NSString*  string = [view string];
-    NSUInteger idx    = [view selectedRange].location;
-    NSUInteger maxIdx = [string length] - 1;
-    NSInteger  start  = 0;
-    NSInteger  end    = 0;
+    NSString* string = xv_buffer.string;
+    NSInteger idx    = xv_buffer.index;
+    NSInteger maxIdx = [string length] - 1;
+    NSInteger start  = 0;
+    NSInteger end    = 0;
     
     NSStringHelper helper;
     NSStringHelper* h = &helper;
+    
+    NSInteger oldIdx = xv_buffer.index;
     
     if ([string characterAtIndex:idx] == what)
     {
         initNSStringHelper(h, string, maxIdx + 1);
         // Find start quote.
-        start = mv_0_handler(string, idx);
+        xv_buffer.index = idx;
+        start = xv_0();
+        xv_buffer.index = oldIdx;
+        
         end   = start;
         while (YES)
         {
@@ -972,7 +992,10 @@ NSRange current_quote(NSTextView* view, int repeatCount, BOOL inclusive, char wh
     
     if (inclusive)
     {
-        end = mv_w_handler(string, end, 1, NO);
+        xv_buffer.index = end;
+        end = xv_w(1, NO);
+        xv_buffer.index = oldIdx;
+        
         if (end > maxIdx || !testWhiteSpace(characterAtIndex(h, end - 1)))
         {
             // Include preceeding whitespace.
@@ -989,20 +1012,20 @@ NSRange current_quote(NSTextView* view, int repeatCount, BOOL inclusive, char wh
     
     return NSMakeRange(start, end - start);
 }
-NSRange current_tagblock(NSTextView* view, int repeatCount, BOOL inclusive)
+NSRange xv_current_tagblock(int repeatCount, BOOL inclusive)
 {
     // TODO: Implement tag block text object.
     return NSMakeRange(NSNotFound, 0);
 }
 
-NSInteger findChar(NSTextView* view, int repeatCount, char command, unichar what, BOOL inclusive)
+NSInteger xv_findChar(int repeatCount, char command, unichar what, BOOL inclusive)
 {
     int increment = command <= 'Z' ? -1 : 1; // Capital means backward.
     
-    NSString*  string   = [view string];
-    NSUInteger maxIdx   = [string length] - 1;
-    NSInteger  idx      = [view selectedRange].location;
-    NSInteger  result   = idx;
+    NSString* string = xv_buffer.string;
+    NSInteger maxIdx = [string length] - 1;
+    NSInteger idx    = xv_buffer.index;
+    NSInteger result = idx;
     
     NSStringHelper  help;
     NSStringHelper* h   = &help;
