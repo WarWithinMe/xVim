@@ -71,10 +71,6 @@ typedef enum e_affect_range
 -(NSUInteger) cmdHML;    // H/M/L.
 -(NSUInteger) cmdGoto: (BOOL) cmdCountSpecified; // G
 -(NSUInteger) cmdSOL; // Enter/+/-
-
--(void) moveCaretDown:(NSUInteger) count;
--(void) moveCaretUp:(NSUInteger) count;
--(void) sendKeyEvent:(unichar) ch modifiers:(NSUInteger) flag count:(NSUInteger) c;
 @end
 
 @implementation XVimNormalModeHandler
@@ -133,42 +129,6 @@ typedef enum e_affect_range
     }
     
     return newRanges;
-}
-
--(void) moveCaretDown:(NSUInteger)count
-{
-    [self sendKeyEvent:NSDownArrowFunctionKey 
-             modifiers:NSNumericPadKeyMask | NSFunctionKeyMask 
-                 count:count];
-}
-
--(void) moveCaretUp:(NSUInteger)count
-{
-    [self sendKeyEvent:NSUpArrowFunctionKey 
-             modifiers:NSNumericPadKeyMask | NSFunctionKeyMask 
-                 count:count];
-}
-
-// Sometimes, it's better to send a key event to the editor, rather than
-// using the NSTextView's API directly
--(void) sendKeyEvent:(unichar) ch modifiers:(NSUInteger) flag count:(NSUInteger) c
-{
-    NSString* string = [NSString stringWithCharacters:&ch length:1];
-    NSEvent*  event  = [NSEvent keyEventWithType:NSKeyDown 
-                                        location:NSMakePoint(0, 0)
-                                   modifierFlags:flag
-                                       timestamp:0
-                                    windowNumber:0
-                                         context:nil
-                                      characters:string
-                     charactersIgnoringModifiers:string
-                                       isARepeat:NO 
-                                         keyCode:ch | flag];
-    if (c == 1) {
-        [bridge handleFakeKeyEvent:event];
-        return;
-    }
-    for (int i = 0; i < c; ++i) { [bridge handleFakeKeyEvent:event]; }
 }
 
 typedef enum e_handle_stat
@@ -398,7 +358,7 @@ typedef enum e_handle_stat
             case '_': // Goto last non-blank of the line.
             {
                 NSRange old = [hijackedView selectedRange];
-                [self moveCaretDown:firstCount];
+                [controller moveCaretDown:firstCount];
                 range.location = xv_g_();
                 [hijackedView setSelectedRange:old];
             }
@@ -547,8 +507,7 @@ typedef enum e_handle_stat
             case 'j': 
             {
                 NSRange old = [hijackedView selectedRange];
-                [self moveCaretDown:firstCount];
-                // for (int i = 0; i < firstCount; ++i) { [hijackedView moveDown:nil]; }  
+                [controller moveCaretDown:firstCount];
                 NSRange n   = [hijackedView selectedRange];
                 if (old.location != n.location) {
                     range.location = n.location;
@@ -560,8 +519,7 @@ typedef enum e_handle_stat
             case 'k': 
             {
                 NSRange old = [hijackedView selectedRange];
-                [self moveCaretUp:firstCount];
-                // for (int i = 0; i < firstCount; ++i) { [hijackedView moveUp:nil]; }  
+                [controller moveCaretUp:firstCount];
                 NSRange n   = [hijackedView selectedRange];
                 if (old.location != n.location) {
                     range.location = n.location;
@@ -1229,7 +1187,7 @@ typedef enum e_handle_stat
     NSUInteger oldIdx = [hijackedView selectedRange].location;
     
     if (cmdChar == '_') { --firstCount; }
-    cmdChar == '-' ? [self moveCaretUp:firstCount] : [self moveCaretDown:firstCount];
+    cmdChar == '-' ? [controller moveCaretUp:firstCount] : [controller moveCaretDown:firstCount];
     
     xv_set_index([hijackedView selectedRange].location);
     NSUInteger newIdx = xv_caret();

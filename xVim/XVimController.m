@@ -486,12 +486,7 @@ NSArray* keyStringTokeyArray(NSString* string)
         if (vi_mode != VisualMode) {
             [self switchToMode:VisualMode subMode:NoSubMode];
         }
-    } else {
-        // No selection, make sure it's not visual mode.
-        if (vi_mode == VisualMode) {
-            [self switchToMode:NormalMode subMode:NoSubMode];
-        }
-    }
+    } 
 }
 
 -(void) selRangeForProposed:(NSRange)range
@@ -505,5 +500,44 @@ NSArray* keyStringTokeyArray(NSString* string)
         trackingSelStart = range.location;
     }
 }
--(NSInteger) getTrackingSel { return trackingSelStart; }
+
+-(NSInteger) getTrackingSel 
+{ 
+    return trackingSelStart;
+}
+
+-(void) moveCaretDown:(NSUInteger)count
+{
+    [self sendKeyEvent:NSDownArrowFunctionKey 
+             modifiers:NSNumericPadKeyMask | NSFunctionKeyMask 
+                 count:count];
+}
+
+-(void) moveCaretUp:(NSUInteger)count
+{
+    [self sendKeyEvent:NSUpArrowFunctionKey 
+             modifiers:NSNumericPadKeyMask | NSFunctionKeyMask 
+                 count:count];
+}
+// Sometimes, it's better to send a key event to the editor, rather than
+// using the NSTextView's API directly
+-(void) sendKeyEvent:(unichar) ch modifiers:(NSUInteger) flag count:(NSUInteger) c
+{
+    NSString* string = [NSString stringWithCharacters:&ch length:1];
+    NSEvent*  event  = [NSEvent keyEventWithType:NSKeyDown 
+                                        location:NSMakePoint(0, 0)
+                                   modifierFlags:flag
+                                       timestamp:0
+                                    windowNumber:0
+                                         context:nil
+                                      characters:string
+                     charactersIgnoringModifiers:string
+                                       isARepeat:NO 
+                                         keyCode:ch | flag];
+    if (c == 1) {
+        [bridge handleFakeKeyEvent:event];
+        return;
+    }
+    for (int i = 0; i < c; ++i) { [bridge handleFakeKeyEvent:event]; }
+}
 @end

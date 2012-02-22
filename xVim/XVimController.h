@@ -61,6 +61,8 @@ typedef enum e_ModifierFlags
 @property (readonly) XTextViewBridge* bridge;
 @property (readonly) VimMode          mode;
 
+
+
 -(void) switchToMode:(VimMode) mode;
 -(void) switchToMode:(VimMode) mode subMode:(VimMode) sub;
 
@@ -70,6 +72,11 @@ typedef enum e_ModifierFlags
 -(NSString*) yankContent:(BOOL*) isWholeLine;
 
 -(NSInteger) getTrackingSel;
+-(void) moveCaretDown:(NSUInteger) count;
+-(void) moveCaretUp:(NSUInteger) count;
+-(void) sendKeyEvent:(unichar) ch modifiers:(NSUInteger) flag count:(NSUInteger) c;
+
+
 
 // These methods should only be called by XTextViewBridge.
 -(XVimController*) initWithBridge:(XTextViewBridge*) bridge;
