@@ -69,11 +69,15 @@ typedef enum e_ModifierFlags
 // Return the content currently in the noname register.
 -(NSString*) yankContent:(BOOL*) isWholeLine;
 
+-(NSInteger) getTrackingSel;
+
 // These methods should only be called by XTextViewBridge.
 -(XVimController*) initWithBridge:(XTextViewBridge*) bridge;
 -(void) dealloc;
 -(void) processKeyEvent:(NSEvent*) event;
 -(NSArray*) selectionChangedFrom:(NSArray*)oldRanges to:(NSArray*)newRanges;
+-(void) didChangedSelection;
+-(void) selRangeForProposed:(NSRange) range;
 
 +(void) load;
 -(void) finalize;

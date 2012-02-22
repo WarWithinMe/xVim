@@ -131,6 +131,8 @@ NSArray* keyStringTokeyArray(NSString* string)
         NSUInteger       currentKey;
     
         BOOL             timerStarted;
+    
+        NSInteger trackingSelStart;
 }
 
 -(void) processBuffer;
@@ -233,6 +235,8 @@ NSArray* keyStringTokeyArray(NSString* string)
         handlers[InsertMode] = [[XVimInsertModeHandler alloc] initWithController:self];
         handlers[ExMode]     = [[XVimExModeHandler alloc] initWithController:self];
         handlers[ReplaceMode] = [[XVimReplaceModeHandler alloc] initWithController:self];
+        
+        trackingSelStart = -1;
     }
     return self;
 }
@@ -277,6 +281,12 @@ NSArray* keyStringTokeyArray(NSString* string)
     BOOL needToRedrawCaret = (0 == (mode & vi_mode) || // Either mode is InsertMode
                               (vi_mode < ReplaceMode && mode >= ReplaceMode) ||
                               (vi_mode >= ReplaceMode && mode < ReplaceMode));
+    
+    if (vi_mode == VisualMode)
+    {
+        trackingSelStart = -1;
+    }
+    
     vi_mode = mode;
     if (needToRedrawCaret) {
         [[bridge targetView] updateInsertionPointStateAndRestartTimer:YES];
@@ -460,6 +470,40 @@ NSArray* keyStringTokeyArray(NSString* string)
 
 -(NSArray*) selectionChangedFrom:(NSArray*)oldRanges to:(NSArray*)newRanges
 {
+    if (trackingSelStart == -1) {
+        trackingSelStart = [[oldRanges objectAtIndex:0] rangeValue].location;
+    }
     return [handlers[vi_mode] selectionChangedFrom:oldRanges to:newRanges];
 }
+
+-(void) didChangedSelection
+{
+    // The selection has changed. If it's length is not 0, switch to Visual mode.
+    NSTextView* view = [bridge targetView];
+    if ([view selectedRange].length > 0 && [view selectedRanges].count == 1)
+    {
+        // Note that multiple selection will not enter visual mode
+        if (vi_mode != VisualMode) {
+            [self switchToMode:VisualMode subMode:NoSubMode];
+        }
+    } else {
+        // No selection, make sure it's not visual mode.
+        if (vi_mode == VisualMode) {
+            [self switchToMode:NormalMode subMode:NoSubMode];
+        }
+    }
+}
+
+-(void) selRangeForProposed:(NSRange)range
+{
+    // This method is called when the user select text.
+    // 1. The range will be {x, 0} whenever the mouse is down and 
+    //    change to {y, z} while the mouse is dragged.
+    // 2. This method is called when "shift + left/right" is pressed
+    // 3. When this method is called, the selection of the textview remains unchange.
+    if (range.length == 0) {
+        trackingSelStart = range.location;
+    }
+}
+-(NSInteger) getTrackingSel { return trackingSelStart; }
 @end

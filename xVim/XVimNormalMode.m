@@ -1231,7 +1231,10 @@ typedef enum e_handle_stat
     if (cmdChar == '_') { --firstCount; }
     cmdChar == '-' ? [self moveCaretUp:firstCount] : [self moveCaretDown:firstCount];
     
+    xv_set_index([hijackedView selectedRange].location);
     NSUInteger newIdx = xv_caret();
+    xv_set_index(oldIdx);
+    
     [hijackedView setSelectedRange:NSMakeRange(oldIdx, 0)];
     
     return newIdx == oldIdx ? NSNotFound : newIdx;

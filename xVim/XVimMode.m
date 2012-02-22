@@ -32,19 +32,7 @@
 -(void) reset{}
 -(BOOL) processKey:(unichar)k modifiers:(NSUInteger)f { return NO; }
 -(BOOL) forceIgnoreKeymap { return NO; }
--(NSArray*) selectionChangedFrom:(NSArray*)oldRanges to:(NSArray*)newRanges
-{
-#ifdef ENABLE_VISUALMODE
-    // We may need to switch between Visual mode and other modes here.
-    if ([controller mode] != VisualMode && 
-        [[newRanges objectAtIndex:0] rangeValue].length > 0)
-    {
-        [controller switchToMode:VisualMode subMode:NoSubMode];
-    }
-#endif
-    
-    return newRanges;
-}
+-(NSArray*) selectionChangedFrom:(NSArray*)oldRanges to:(NSArray*)newRanges { return newRanges; }
 
 -(void) scrollViewRectToVisible:(NSRect)visibleRect
 {
