@@ -74,6 +74,7 @@ typedef enum e_affect_range
 
 -(void) moveCaretDown:(NSUInteger) count;
 -(void) moveCaretUp:(NSUInteger) count;
+-(void) sendKeyEvent:(unichar) ch modifiers:(NSUInteger) flag count:(NSUInteger) c;
 @end
 
 @implementation XVimNormalModeHandler
@@ -136,40 +137,38 @@ typedef enum e_affect_range
 
 -(void) moveCaretDown:(NSUInteger)count
 {
-    unichar   ch = NSDownArrowFunctionKey;
-    NSString* string = [NSString stringWithCharacters:&ch length:1];
-    NSEvent*  event  = [NSEvent keyEventWithType:NSKeyDown 
-                                        location:NSMakePoint(0, 0)
-                                   modifierFlags:NSNumericPadKeyMask | NSFunctionKeyMask
-                                       timestamp:0
-                                    windowNumber:0
-                                         context:nil
-                                      characters:string
-                     charactersIgnoringModifiers:string
-                                       isARepeat:NO 
-                                         keyCode:ch | NSNumericPadKeyMask | NSFunctionKeyMask];
-    for (int i = 0; i < count; ++i) {
-        [bridge handleFakeKeyEvent:event];
-    } 
+    [self sendKeyEvent:NSDownArrowFunctionKey 
+             modifiers:NSNumericPadKeyMask | NSFunctionKeyMask 
+                 count:count];
 }
 
 -(void) moveCaretUp:(NSUInteger)count
 {
-    unichar   ch = NSUpArrowFunctionKey;
+    [self sendKeyEvent:NSUpArrowFunctionKey 
+             modifiers:NSNumericPadKeyMask | NSFunctionKeyMask 
+                 count:count];
+}
+
+// Sometimes, it's better to send a key event to the editor, rather than
+// using the NSTextView's API directly
+-(void) sendKeyEvent:(unichar) ch modifiers:(NSUInteger) flag count:(NSUInteger) c
+{
     NSString* string = [NSString stringWithCharacters:&ch length:1];
     NSEvent*  event  = [NSEvent keyEventWithType:NSKeyDown 
                                         location:NSMakePoint(0, 0)
-                                   modifierFlags:NSNumericPadKeyMask | NSFunctionKeyMask
+                                   modifierFlags:flag
                                        timestamp:0
                                     windowNumber:0
                                          context:nil
                                       characters:string
                      charactersIgnoringModifiers:string
                                        isARepeat:NO 
-                                         keyCode:ch | NSNumericPadKeyMask | NSFunctionKeyMask];
-    for (int i = 0; i < count; ++i) {
+                                         keyCode:ch | flag];
+    if (c == 1) {
         [bridge handleFakeKeyEvent:event];
+        return;
     }
+    for (int i = 0; i < c; ++i) { [bridge handleFakeKeyEvent:event]; }
 }
 
 typedef enum e_handle_stat
@@ -289,8 +288,13 @@ typedef enum e_handle_stat
                 
             case 'v':
             case 'V':
-                if (operatorChar == 0) {
-                    // TODO: Switch to visual mode
+                if (operatorChar == 0)
+                {
+                    if ([[hijackedView textStorage] length] != 0)
+                    {
+                        [controller switchToMode:VisualMode 
+                                         subMode:ch == 'v' ? VisualMode : VisualLineMode];
+                    }
                 } else {
                     // Force linewise and characterwise
                     if (cmdChar != 0) {
@@ -720,7 +724,7 @@ typedef enum e_handle_stat
             
         case 'A':
             dontCheckTrailingCR = YES;
-            [hijackedView moveToEndOfLine:nil];
+            [hijackedView setSelectedRange:NSMakeRange(xv_dollar(), 0)];
             [controller switchToMode:InsertMode];
             break;
         case 'I':
@@ -946,24 +950,21 @@ typedef enum e_handle_stat
 
 -(void) cmdOpenNewline
 {
-    BOOL isAfter = cmdChar == 'o';
     dontCheckTrailingCR = YES;
+    NSInteger idx = [hijackedView selectedRange].location;
     
-    if (isAfter == NO) {
-        NSRange currRange = [hijackedView selectedRange];
-        dontCheckTrailingCR = YES;
-        [self moveCaretUp:1];
-        // [hijackedView moveUp:nil];
-        isAfter = currRange.location == [hijackedView selectedRange].location;
-    }
-    
-    if (isAfter) {
-        [hijackedView moveToEndOfLine:nil];
-    } else {
-        [hijackedView moveToBeginningOfLine:nil];
+    if (cmdChar == 'o')
+    {
+        [hijackedView setSelectedRange:NSMakeRange(xv_dollar(), 0)];
+    } else if (idx != 0)
+    {
+        idx = xv_0();
+        if (idx != 0) { --idx; }
+        [hijackedView setSelectedRange:NSMakeRange(idx, 0)];
     }
     
     [hijackedView insertNewline:nil];
+    if (idx == 0) { [hijackedView setSelectedRange:NSMakeRange(0, 0)]; }
     [controller switchToMode:InsertMode];
 }
 
@@ -971,31 +972,45 @@ typedef enum e_handle_stat
 {
     BOOL wholeLine = NO;
     NSString* yankContent = [controller yankContent:&wholeLine];
+    NSInteger idx = [hijackedView selectedRange].location;
+    
+    
     if (yankContent != nil)
     {
         dontCheckTrailingCR = YES;
         if (wholeLine)
         {
-            if (cmdChar == 'p') {
-                [hijackedView moveToEndOfLine:nil];
-            } else {
-                NSRange currRange = [hijackedView selectedRange];
-                [self moveCaretUp:1];
-                // [hijackedView moveUp:nil];
-                if (currRange.location == [hijackedView selectedRange].location) {
-                    [hijackedView moveToBeginningOfLine:nil];
+            if (cmdChar == 'p')
+            {
+                NSString* str = [[hijackedView textStorage] string];
+                NSInteger len = [str length];
+                idx = xv_dollar();
+                if (idx >= len)
+                {
+                    if (!testNewLine([str characterAtIndex:idx - 1]))
+                    {
+                        // Insert a new line.
+                        [hijackedView insertText:@"\n" replacementRange:NSMakeRange(len, 0)];
+                        ++idx;
+                    }
                 } else {
-                    [hijackedView moveToEndOfLine:nil];
+                    ++idx;
                 }
+            } else if (idx != 0)
+            {
+                idx = xv_0();
             }
-            [hijackedView moveRight:nil];
+            
+            [hijackedView setSelectedRange:NSMakeRange(idx, 0)];
+            
         } else if (cmdChar == 'p') { 
             [hijackedView moveRight:nil];
         }
         
         NSRange currentIndex = [hijackedView selectedRange];
         
-        for (int i = 0; i < firstCount; ++i) {
+        for (int i = 0; i < firstCount; ++i)
+        {
             [hijackedView insertText:yankContent];
             if (wholeLine) {
                 [hijackedView setSelectedRange:currentIndex];
