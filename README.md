@@ -8,7 +8,7 @@
 
 ## How to use it
 
-1. Install __SIMBL__. (Google is always your best friend if you have no idea what SIMBL is.)
+1. Install [__SIMBL__](http://www.culater.net/software/SIMBL/SIMBL.php). 
 
 1. Download xVim (You should use the __master__ branch)
 
@@ -26,8 +26,9 @@
 ## What works so far
 1. Insert Mode
 2. Replace Mode
-3. Normal Mode ([Check out the supported mode command here](https://github.com/WarWithinMe/xVim/wiki/Supported-Commands))
-4. Simplified Key-map ([Read the wiki](https://github.com/WarWithinMe/xVim/wiki/Simplified-Key-map))
+3. Visual Mode [since v0.2]
+4. Normal Mode ([Check out the supported mode command here](https://github.com/WarWithinMe/xVim/wiki/Supported-Commands))
+5. Simplified Key-map ([Read the wiki](https://github.com/WarWithinMe/xVim/wiki/Simplified-Key-map))
 
 ## NOTE
 1. This plugin possibly won't work well with Dos line ending(CR/LF).
@@ -35,22 +36,8 @@
 2. If you have some code block folded in Xcode, xVim will not work fine.
    The bug is unreproducable so far, so I have no idea how to fix it.
    
-3. Those things may be different from vim:<br/>
-   1). yYdDcCxX will copy the content to internal kill buffer. And pP will only paste something, if that buffer is not empty.
-       If you want to use the clipboard, use Ctrl+C (Copy), Ctrl+X (Cut), Ctrl+V (Paste)
-
-## Something I don't know how to implement
-<table>
-<tbody>
-<tr>
-	<td align="center"><code>#.</code></td>
-	<td align="left">Repeat last change/insert command (doesn't repeat motions or other things).</td>
-</tr>
-</tbody>
-</table>
+3. yYdDcCxX will copy the content to internal kill buffer. And pP will only paste something, if that buffer is not empty.  If you want to use the clipboard, use Ctrl+C (Copy), Ctrl+X (Cut), Ctrl+V (Paste)
 
 ## TODO
 * Handle __replace mode__ properly.
-* Implement __motion commands__
-* Implement __visual mode__
 * Add a text control to show command line.
