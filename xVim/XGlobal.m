@@ -258,7 +258,13 @@ static HijackInfo s_hijackInfo_map[SUPPORTED_APP_COUNT] =
 -(NSRange) visibleParagraphRange { return NSMakeRange(0, 0); }
 
 -(void) handleFakeKeyEvent:(NSEvent*) fakeEvent {
-    if (orig_keyDown) {
+    
+    // Give them a chance to cooperate with us
+    if ([self->textView respondsToSelector:@selector(handleVimKeyEvent:)]) {
+        [self->textView handleVimKeyEvent:fakeEvent];
+    }
+    // Pleading the 5th? Hit 'em with the swizzle stick. 
+    else if (orig_keyDown) {
         orig_keyDown(self->targetView, @selector(keyDown:), fakeEvent);
     }
 }

@@ -12,8 +12,9 @@
 
 - (id)initWithTextView:(NSTextView*)tv;
 
-// Returns the new event to use. If it returns nil, then the event should be blocked
-- (NSEvent*)keyDown:(NSEvent*)event;
+// Returns YES if the event if the caller should continue processing the event
+// Returns NO if the event should be blocked
+- (BOOL)keyDown:(NSEvent*)event;
 
 - (NSRect)drawInsertionPointInRect:(NSRect)rect color:(NSColor *)color turnedOn:(BOOL)turnedOn;
 - (NSRect)_drawInsertionPointInRect:(NSRect)rect color:(NSColor *)color;
@@ -22,5 +23,12 @@
 
 - (NSArray *)textView:(NSTextView *)tv willChangeSelectionFromCharacterRanges:(NSArray *)oldSelectedCharRanges toCharacterRanges:(NSArray *)newSelectedCharRanges;
 - (void)textViewDidChangeSelection:(NSNotification *)notif;
+
+@end
+
+
+@protocol XClientTextView <NSObject>
+
+- (void)handleVimKeyEvent:(NSEvent*)event;
 
 @end
