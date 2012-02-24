@@ -5,9 +5,11 @@
 @class XTextViewBridge;
 
 @interface XClient : NSObject {
+    BOOL isActive;
 	XTextViewBridge* bridge;
 }
 
+@property (assign) BOOL isActive;
 @property (readonly) XTextViewBridge* bridge;
 
 - (id)initWithTextView:(NSTextView*)tv;

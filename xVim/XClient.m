@@ -7,6 +7,7 @@
 
 @implementation XClient
 
+@synthesize isActive;
 @synthesize bridge;
 
 - (id)initWithTextView:(NSTextView*)tv {
@@ -21,30 +22,38 @@
 
 // Returns the new event to use. If it returns nil, then the event should be blocked
 - (BOOL)keyDown:(NSEvent*)event {
+    if (!isActive)
+        return YES;
     [bridge processKeyEvent:event];
     return NO;
 }
 
 - (NSRect)drawInsertionPointInRect:(NSRect)rect color:(NSColor *)color turnedOn:(BOOL)turnedOn {
-    configureInsertionPointRect([bridge targetView], &rect);
+    if (isActive)
+        configureInsertionPointRect([bridge targetView], &rect);
     return rect;
 }
 - (NSRect)_drawInsertionPointInRect:(NSRect)rect color:(NSColor *)color {
-    configureInsertionPointRect([bridge targetView], &rect);
+    if (isActive)
+        configureInsertionPointRect([bridge targetView], &rect);
     return rect;
 }
 
 - (void)selectionRangeForProposedRange:(NSRange)proposed granularity:(NSSelectionGranularity)granularity {
-    [[bridge vimController] selRangeForProposed:proposed];
+    if (isActive)
+        [[bridge vimController] selRangeForProposed:proposed];
 }
 
 - (NSArray *)textView:(NSTextView *)tv willChangeSelectionFromCharacterRanges:(NSArray *)oldRanges toCharacterRanges:(NSArray *)newRanges {
     
+    if (!isActive)
+        return newRanges;
     return [[bridge vimController] selectionChangedFrom:oldRanges to:newRanges];
 }
 
 - (void)textViewDidChangeSelection:(NSNotification *)notif {
-    [[bridge vimController] didChangedSelection];
+    if (isActive)
+        [[bridge vimController] didChangedSelection];
 }
 
 @end
