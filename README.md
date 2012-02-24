@@ -12,7 +12,7 @@
 
 1. Download xVim (You should use the __master__ branch)
 
-1. __Build__ xVim (you may want to build it with __Release  mode__). After that, the bundle may have already been copied to ~/Library/Application Support/SIMBL/Plugins/
+1. __Build__ xVim (you should build it with __xVim-Release Scheme__). After that, the bundle may have already been copied to ~/Library/Application Support/SIMBL/Plugins/
 
 1. __Relaunch the app__, if you saw a block caret in your text editor. It probably means xVim is working fine.
 
@@ -32,11 +32,8 @@
 
 ## NOTE
 1. This plugin possibly won't work well with Dos line ending(CR/LF).
-
-2. If you have some code block folded in Xcode, xVim will not work fine.
-   The bug is unreproducable so far, so I have no idea how to fix it.
    
-3. yYdDcCxX will copy the content to internal kill buffer. And pP will only paste something, if that buffer is not empty.  If you want to use the clipboard, use Ctrl+C (Copy), Ctrl+X (Cut), Ctrl+V (Paste)
+2. yYdDcCxX will copy the content to internal kill buffer. And pP will only paste something, if that buffer is not empty.  If you want to use the clipboard, use Ctrl+C (Copy), Ctrl+X (Cut), Ctrl+V (Paste)
 
 ## TODO
 * Handle __replace mode__ properly.
