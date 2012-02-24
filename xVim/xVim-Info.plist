@@ -31,10 +31,6 @@
 		<dict>
 			<key>BundleIdentifier</key>
 			<string>com.apple.dt.Xcode</string>
-			<key>MaxBundleVersion</key>
-			<string>828</string>
-			<key>MinBundleVersion</key>
-			<string>828</string>
 		</dict>
 	</array>
 </dict>

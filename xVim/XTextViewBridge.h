@@ -28,6 +28,11 @@
 // Ask the textview to close any popup(e.g. a code-complete popup).
 // Return YES if a popup is closed.
 -(BOOL) closePopup;
+
+// When the editor enters a template code, the user can 'tab' to select some
+// text. In this situation, this method should return YES, and we don't enter 
+// visual mode, since the user just want to type in something.
+-(BOOL) ignoreString:(NSString*) string selection:(NSRange) range;
 // --------------------
 @end
 
@@ -39,4 +44,8 @@
 @interface XTextViewDelegate : NSObject <NSTextViewDelegate>
 - (NSArray*) textView:(NSTextView*) view willChangeSelectionFromCharacterRanges:(NSArray*) old toCharacterRanges:(NSArray*) new;
 - (void)textViewDidChangeSelection:(NSNotification*) aNotification;
+@end
+
+@interface XChocolatBridge : XTextViewBridge
+-(BOOL) ignoreString:(NSString*) string selection:(NSRange) range;
 @end

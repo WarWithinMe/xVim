@@ -12,7 +12,7 @@
 
 1. Download xVim (You should use the __master__ branch)
 
-1. __Build__ xVim (you may want to build it with __Release  mode__). After that, the bundle may have already been copied to ~/Library/Application Support/SIMBL/Plugins/
+1. __Build__ xVim (you may want to build it with __xVim-Release Scheme__). After that, the bundle may have already been copied to ~/Library/Application Support/SIMBL/Plugins/
 
 1. __Relaunch the app__, if you saw a block caret in your text editor. It probably means xVim is working fine.
 

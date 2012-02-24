@@ -149,7 +149,7 @@ typedef enum e_handle_stat
 // :q, :q!, :w, :wq, :x
 -(BOOL) processKey:(unichar)c modifiers:(NSUInteger)flags
 {
-    if (c == '\t') { return NO; } // Don't interpret tabs.
+    if (c == '\t' || c == 25) { return NO; } // Don't interpret tabs. Shift-Tab produce a char 25.
     if (c == XEsc) { [self reset]; return YES; } // Esc will reset everything
     
     // In this method, we check what kind of ch is 
@@ -715,7 +715,14 @@ typedef enum e_handle_stat
             for (int i = 0; i < firstCount; ++i) { [[hijackedView undoManager] redo]; } 
             break;
         case 'u': // Undo
-            for (int i = 0; i < firstCount; ++i) { [[hijackedView undoManager] undo]; } 
+        {
+            for (int i = 0; i < firstCount; ++i) { [[hijackedView undoManager] undo]; }
+            
+            // According to Issue #2, undoing should never select text.
+            NSRange selection = [hijackedView selectedRange];
+            selection.length = 0;
+            [hijackedView setSelectedRange:selection];
+        }
             break;
             
         case 'r':
