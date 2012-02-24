@@ -167,6 +167,8 @@ static HijackInfo s_hijackInfo_map[SUPPORTED_APP_COUNT] =
 // The entry point of our plugin
 +(void) load
 {
+// Disable this code if this is being loaded into a cooperative editor
+#ifndef VIM_COOPERATIVE
     // [XVimController load];
     bridgeDict = [[NSMutableDictionary alloc] init];
     
@@ -229,6 +231,7 @@ static HijackInfo s_hijackInfo_map[SUPPORTED_APP_COUNT] =
             break;
         }
     }
+#endif
 }
 @end
 

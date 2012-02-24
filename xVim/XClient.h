@@ -18,8 +18,8 @@
 // Returns NO if the event should be blocked
 - (BOOL)keyDown:(NSEvent*)event;
 
-- (NSRect)drawInsertionPointInRect:(NSRect)rect color:(NSColor *)color turnedOn:(BOOL)turnedOn;
-- (NSRect)_drawInsertionPointInRect:(NSRect)rect color:(NSColor *)color;
+- (void)drawInsertionPointInRect:(NSRect)rect color:(NSColor *)color turnedOn:(BOOL)turnedOn;
+- (void)_drawInsertionPointInRect:(NSRect)rect color:(NSColor *)color;
 
 - (void)selectionRangeForProposedRange:(NSRange)proposed granularity:(NSSelectionGranularity)granularity;
 

@@ -29,15 +29,13 @@
     return NO;
 }
 
-- (NSRect)drawInsertionPointInRect:(NSRect)rect color:(NSColor *)color turnedOn:(BOOL)turnedOn {
+- (void)drawInsertionPointInRect:(NSRect)rect color:(NSColor *)color turnedOn:(BOOL)turnedOn {
     if (isActive)
         configureInsertionPointRect([bridge targetView], &rect);
-    return rect;
 }
-- (NSRect)_drawInsertionPointInRect:(NSRect)rect color:(NSColor *)color {
+- (void)_drawInsertionPointInRect:(NSRect)rect color:(NSColor *)color {
     if (isActive)
         configureInsertionPointRect([bridge targetView], &rect);
-    return rect;
 }
 
 - (void)selectionRangeForProposedRange:(NSRange)proposed granularity:(NSSelectionGranularity)granularity {
