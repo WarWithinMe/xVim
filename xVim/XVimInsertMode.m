@@ -3,6 +3,8 @@
 //  Copyright (c) 2012年 http://warwithime.com . All rights reserved.
 //
 
+#ifdef __LP64__
+
 #import "XVimMode.h"
 #import "XTextViewBridge.h"
 #import "vim.h"
@@ -113,3 +115,4 @@
 }
 @end
 
+#endif

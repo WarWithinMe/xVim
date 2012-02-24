@@ -3,6 +3,9 @@
 //  Copyright (c) 2011年 http://warwithinme.com . All rights reserved.
 //
 
+// xVim uses 64-bit runtime features, which doesn't agree with Chocolat's 32-bit build
+#ifdef __LP64__
+
 #import "XGlobal.h"
 #import "XTextViewBridge.h"
 #import "XVimController.h"
@@ -478,3 +481,5 @@ static void* hj_initWithFM(void* self, SEL sel, NSRect p1, BOOL makeFieldEditor)
     
     return r;
 }
+
+#endif

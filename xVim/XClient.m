@@ -1,5 +1,6 @@
 // Created by Alex Gordon on stardate -311147.99
 // This is an alternative to XGlobal that cooperative editors can use
+#ifdef __LP64__
 #import "XClient.h"
 #import "XGlobal.h"
 #import "XTextViewBridge.h"
@@ -57,3 +58,5 @@
 }
 
 @end
+
+#endif

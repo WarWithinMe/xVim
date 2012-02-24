@@ -3,6 +3,8 @@
 //  Copyright (c) 2011年 http://warwithinme.com . All rights reserved.
 //
 
+#ifdef __LP64__
+
 #import "XGlobal.h"
 #import "XVimController.h"
 #import "XVimMode.h"
@@ -541,3 +543,5 @@ NSArray* keyStringTokeyArray(NSString* string)
     for (int i = 0; i < c; ++i) { [bridge handleFakeKeyEvent:event]; }
 }
 @end
+
+#endif

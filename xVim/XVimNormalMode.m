@@ -3,6 +3,8 @@
 //  Copyright (c) 2011年 http://warwithinme.com . All rights reserved.
 //
 
+#ifdef __LP64__
+
 #import "XGlobal.h"
 #import "XVimMode.h"
 #import "XVimController.h"
@@ -1198,3 +1200,5 @@ typedef enum e_handle_stat
     return newIdx == oldIdx ? NSNotFound : newIdx;
 }
 @end
+
+#endif

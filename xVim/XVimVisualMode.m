@@ -3,6 +3,8 @@
 //  Copyright (c) 2011年 http://warwithinme.com . All rights reserved.
 //
 
+#ifdef __LP64__
+
 #import "XVimMode.h"
 #import "XGlobal.h"
 #import "XTextViewBridge.h"
@@ -406,3 +408,5 @@
     return YES;
 }
 @end
+
+#endif
