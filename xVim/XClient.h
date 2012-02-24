@@ -19,7 +19,7 @@
 - (NSRect)drawInsertionPointInRect:(NSRect)rect color:(NSColor *)color turnedOn:(BOOL)turnedOn;
 - (NSRect)_drawInsertionPointInRect:(NSRect)rect color:(NSColor *)color;
 
-- (void)selectionRangeForProposedRange:(NSRange)proposed granularity:(NSSelectionGranularity)granularity
+- (void)selectionRangeForProposedRange:(NSRange)proposed granularity:(NSSelectionGranularity)granularity;
 
 - (NSArray *)textView:(NSTextView *)tv willChangeSelectionFromCharacterRanges:(NSArray *)oldSelectedCharRanges toCharacterRanges:(NSArray *)newSelectedCharRanges;
 - (void)textViewDidChangeSelection:(NSNotification *)notif;

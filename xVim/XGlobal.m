@@ -83,7 +83,7 @@ static O_WillChangeSelection       orig_willChangeSelection = 0;
 static O_TextViewDidChangeSelection orig_didChangeSelection = 0;
 static O_SelRangeForProposedRange  orig_selRangeForProposedRange = 0;
 // Hijackers:
-static void  configureInsertionPointRect(NSTextView* view, NSRect*);
+// void  configureInsertionPointRect(NSTextView* view, NSRect*);
 static void  hj_finalize(void*, SEL);
 static void  hj_dealloc(void*, SEL);
 static void  hj_keyDown(void*, SEL, NSEvent*);
@@ -260,8 +260,8 @@ static HijackInfo s_hijackInfo_map[SUPPORTED_APP_COUNT] =
 -(void) handleFakeKeyEvent:(NSEvent*) fakeEvent {
     
     // Give them a chance to cooperate with us
-    if ([self->textView respondsToSelector:@selector(handleVimKeyEvent:)]) {
-        [self->textView handleVimKeyEvent:fakeEvent];
+    if ([self->targetView respondsToSelector:@selector(handleVimKeyEvent:)]) {
+        [self->targetView performSelector:@selector(handleVimKeyEvent:) withObject:fakeEvent];
     }
     // Pleading the 5th? Hit 'em with the swizzle stick. 
     else if (orig_keyDown) {

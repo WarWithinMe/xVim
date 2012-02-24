@@ -2,6 +2,8 @@
 // This is an alternative to XGlobal that cooperative editors can use
 #import "XClient.h"
 #import "XGlobal.h"
+#import "XTextViewBridge.h"
+#import "XVimController.h"
 
 @implementation XClient
 
@@ -18,17 +20,17 @@
 }
 
 // Returns the new event to use. If it returns nil, then the event should be blocked
-- (NSEvent*)keyDown:(NSEvent*)event {
+- (BOOL)keyDown:(NSEvent*)event {
     [bridge processKeyEvent:event];
-    return nil;
+    return NO;
 }
 
 - (NSRect)drawInsertionPointInRect:(NSRect)rect color:(NSColor *)color turnedOn:(BOOL)turnedOn {
-    configureInsertionPointRect(self, &rect);
+    configureInsertionPointRect([bridge targetView], &rect);
     return rect;
 }
 - (NSRect)_drawInsertionPointInRect:(NSRect)rect color:(NSColor *)color {
-    configureInsertionPointRect(self, &rect);
+    configureInsertionPointRect([bridge targetView], &rect);
     return rect;
 }
 
@@ -36,7 +38,7 @@
     [[bridge vimController] selRangeForProposed:proposed];
 }
 
-- (NSArray *)textView:(NSTextView *)tv willChangeSelectionFromCharacterRanges:(NSArray *)oldSelectedCharRanges toCharacterRanges:(NSArray *)newSelectedCharRanges {
+- (NSArray *)textView:(NSTextView *)tv willChangeSelectionFromCharacterRanges:(NSArray *)oldRanges toCharacterRanges:(NSArray *)newRanges {
     
     return [[bridge vimController] selectionChangedFrom:oldRanges to:newRanges];
 }
