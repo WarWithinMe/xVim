@@ -129,26 +129,26 @@ static XInsertionPoint XInsertionPointForTextView(XTextViewBridge* bridge, NSTex
     
     VimMode mode = [[bridge vimController] mode];
     XInsertionPoint ip = XInsertionPointForTextView(bridge, [bridge targetView], mode, r);
-    if (ip.useStandard)
-        return;
-    
-    [[bridge targetView] setNeedsDisplayInRect:ip.rect avoidAdditionalLayout:YES];
+    if (!NSEqualRects(lastDrawnRect, NSZeroRect))
+        [[bridge targetView] setNeedsDisplayInRect:NSIntegralRect(lastDrawnRect) avoidAdditionalLayout:YES];
+
+//    if (ip.useStandard)
+//        return;
 }
 - (BOOL)drawCursor:(NSRect)r {
     
     VimMode mode = [[bridge vimController] mode];
     XInsertionPoint ip = XInsertionPointForTextView(bridge, [bridge targetView], mode, r);
-    if (ip.useStandard)
+    if (ip.useStandard) {
+        lastDrawnRect = NSZeroRect;
         return YES;
-    
-//    CHDebug(@"r = %@", NSStringFromRect(r));
+    }
     
     NSColor* cursorForeground = [(id<XClientTextView>)[bridge targetView] cursorColor];
     NSColor* cursorBackground = [(id<XClientTextView>)[bridge targetView] cursorBackgroundColor];
     
     NSColor* color = cursorForeground;
     CGFloat alpha = [color alphaComponent] * ip.alpha;
-//    color = [color colorWithAlphaComponent:alpha];
     color = [color colorWithAlphaComponent:1.0];
     color = [cursorBackground blendedColorWithFraction:alpha ofColor:color];
     [color set];
@@ -157,6 +157,7 @@ static XInsertionPoint XInsertionPointForTextView(XTextViewBridge* bridge, NSTex
         NSFrameRectWithWidthUsingOperation(ip.rect, 1, NSCompositeSourceOver);
     else
         NSRectFillUsingOperation(ip.rect, NSCompositeSourceOver);
+    lastDrawnRect = ip.rect;
     return NO;
 }
 - (void)drawInsertionPointInRect:(NSRect)rect color:(NSColor *)color turnedOn:(BOOL)turnedOn shouldUseStandard:(BOOL*)shouldUseStandard {

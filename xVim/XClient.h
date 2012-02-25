@@ -7,6 +7,7 @@
 @interface XClient : NSObject {
     BOOL isActive;
 	XTextViewBridge* bridge;
+    NSRect lastDrawnRect;
 }
 
 @property (readonly) BOOL isActive;
