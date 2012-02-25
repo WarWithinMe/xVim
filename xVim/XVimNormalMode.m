@@ -929,7 +929,8 @@ typedef enum e_handle_stat
     }
     
     [hijackedView insertNewline:nil];
-    if (idx == 0) { [hijackedView setSelectedRange:NSMakeRange(0, 0)]; }
+    // Quick-fix for Issue#5
+    if (idx == 0 && cmdChar != 'o') { [hijackedView setSelectedRange:NSMakeRange(0, 0)]; }
     [controller switchToMode:InsertMode];
 }
 
@@ -1174,18 +1175,37 @@ typedef enum e_handle_stat
             ++lineEnd;
         }
         
+        NSUInteger lineBegin = xv_0();
+        
         // We need to include a new line character if there's any.
-        if (cmdChar == 'd' && testNewLine(characterAtIndex(h, lineEnd))) {
-            ++lineEnd;
+        if (cmdChar == 'd')
+        {
+            if (testNewLine(characterAtIndex(h, lineEnd)))
+            {
+                ++lineEnd;
+            } else {
+                // This line is the last line.
+                // Delete the \n before this line.
+                if (lineBegin > 0) {
+                    --lineBegin;
+                }
+            }
         }
         
-        NSUInteger lineBegin = xv_0();
-        NSRange    range     = {lineBegin, lineEnd - lineBegin};
+        NSRange range = {lineBegin, lineEnd - lineBegin};
         
         [controller yank:string withRange:range wholeLine:YES];
         
         [hijackedView insertText:@"" replacementRange:range];
         if (cmdChar == 'c') { [controller switchToMode:InsertMode]; }
+    } else {
+        // We are at the very ending of the file. According to Issue#5,
+        // we need to delete the preceeding new line if possible.
+        if (testNewLine(characterAtIndex(h, strLen - 1)))
+        {
+            [controller moveCaretUp:1];
+            [hijackedView insertText:@"" replacementRange:NSMakeRange(strLen - 1, 1)];
+        }
     }
 }
 
