@@ -151,7 +151,7 @@ typedef enum e_handle_stat
 // :q, :q!, :w, :wq, :x
 -(BOOL) processKey:(unichar)c modifiers:(NSUInteger)flags
 {
-    if (c == '\t') { return NO; } // Don't interpret tabs.
+    if (c == '\t' || c == 25) { return NO; } // Don't interpret tabs. Shift-Tab produce a char 25.
     if (c == XEsc) { [self reset]; return YES; } // Esc will reset everything
     
     // In this method, we check what kind of ch is 
@@ -722,7 +722,14 @@ typedef enum e_handle_stat
             for (int i = 0; i < firstCount; ++i) { [[hijackedView undoManager] redo]; } 
             break;
         case 'u': // Undo
-            for (int i = 0; i < firstCount; ++i) { [[hijackedView undoManager] undo]; } 
+        {
+            for (int i = 0; i < firstCount; ++i) { [[hijackedView undoManager] undo]; }
+            
+            // According to Issue #2, undoing should never select text.
+            NSRange selection = [hijackedView selectedRange];
+            selection.length = 0;
+            [hijackedView setSelectedRange:selection];
+        }
             break;
             
         case 'r':
@@ -929,7 +936,8 @@ typedef enum e_handle_stat
     }
     
     [hijackedView insertNewline:nil];
-    if (idx == 0) { [hijackedView setSelectedRange:NSMakeRange(0, 0)]; }
+    // Quick-fix for Issue#5
+    if (idx == 0 && cmdChar != 'o') { [hijackedView setSelectedRange:NSMakeRange(0, 0)]; }
     [controller switchToMode:InsertMode];
 }
 
@@ -1174,18 +1182,37 @@ typedef enum e_handle_stat
             ++lineEnd;
         }
         
+        NSUInteger lineBegin = xv_0();
+        
         // We need to include a new line character if there's any.
-        if (cmdChar == 'd' && testNewLine(characterAtIndex(h, lineEnd))) {
-            ++lineEnd;
+        if (cmdChar == 'd')
+        {
+            if (testNewLine(characterAtIndex(h, lineEnd)))
+            {
+                ++lineEnd;
+            } else {
+                // This line is the last line.
+                // Delete the \n before this line.
+                if (lineBegin > 0) {
+                    --lineBegin;
+                }
+            }
         }
         
-        NSUInteger lineBegin = xv_0();
-        NSRange    range     = {lineBegin, lineEnd - lineBegin};
+        NSRange range = {lineBegin, lineEnd - lineBegin};
         
         [controller yank:string withRange:range wholeLine:YES];
         
         [hijackedView insertText:@"" replacementRange:range];
         if (cmdChar == 'c') { [controller switchToMode:InsertMode]; }
+    } else {
+        // We are at the very ending of the file. According to Issue#5,
+        // we need to delete the preceeding new line if possible.
+        if (testNewLine(characterAtIndex(h, strLen - 1)))
+        {
+            [controller moveCaretUp:1];
+            [hijackedView insertText:@"" replacementRange:NSMakeRange(strLen - 1, 1)];
+        }
     }
 }
 
