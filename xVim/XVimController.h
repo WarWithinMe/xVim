@@ -82,6 +82,7 @@ typedef enum e_ModifierFlags
 -(XVimController*) initWithBridge:(XTextViewBridge*) bridge;
 -(void) dealloc;
 -(void) processKeyEvent:(NSEvent*) event;
+-(BOOL) isWaitingForMotion;
 -(NSArray*) selectionChangedFrom:(NSArray*)oldRanges to:(NSArray*)newRanges;
 -(void) didChangedSelection;
 -(void) selRangeForProposed:(NSRange) range;

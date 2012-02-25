@@ -43,6 +43,7 @@
 -(void) reset;
 -(id) initWithController:(XVimController*) controller;
 -(BOOL) processKey:(unichar)key modifiers:(NSUInteger)flags;
+-(BOOL) isWaitingForMotion;
 -(NSArray*) selectionChangedFrom:(NSArray*)oldRanges to:(NSArray*)newRanges;
 -(BOOL) forceIgnoreKeymap;
 @end

@@ -18,19 +18,22 @@
 // Returns NO if the event should be blocked
 - (BOOL)keyDown:(NSEvent*)event;
 
-- (void)drawInsertionPointInRect:(NSRect)rect color:(NSColor *)color turnedOn:(BOOL)turnedOn;
-- (void)_drawInsertionPointInRect:(NSRect)rect color:(NSColor *)color;
+- (void)drawInsertionPointInRect:(NSRect)rect color:(NSColor *)color turnedOn:(BOOL)turnedOn shouldUseStandard:(BOOL*)shouldUseStandard;
+- (void)_drawInsertionPointInRect:(NSRect)rect color:(NSColor *)color shouldUseStandard:(BOOL*)shouldUseStandard;
 
 - (void)selectionRangeForProposedRange:(NSRange)proposed granularity:(NSSelectionGranularity)granularity;
 
 - (NSArray *)textView:(NSTextView *)tv willChangeSelectionFromCharacterRanges:(NSArray *)oldSelectedCharRanges toCharacterRanges:(NSArray *)newSelectedCharRanges;
 - (void)textViewDidChangeSelection:(NSNotification *)notif;
+- (BOOL)drawCursor:(NSRect)r;
 
 @end
 
 
 @protocol XClientTextView <NSObject>
 
+- (NSColor*)cursorColor;
+- (NSColor*)cursorBackgroundColor;
 - (void)handleVimKeyEvent:(NSEvent*)event;
 
 @end

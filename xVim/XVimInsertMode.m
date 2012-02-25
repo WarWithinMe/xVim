@@ -93,8 +93,8 @@
     {
         NSTextView* view     = [[controller bridge] targetView];
         NSString*   string   = [[view textStorage] string];
-        NSUInteger  index    = [view selectedRange].location;
-        NSUInteger  maxIndex = [string length] - 1;
+        NSInteger  index    = [view selectedRange].location;
+        NSInteger  maxIndex = (NSInteger)[string length] - 1;
         if (key == NSLeftArrowFunctionKey)
         {
             if (index > 0 && testNewLine([string characterAtIndex:index - 1]) == NO) {

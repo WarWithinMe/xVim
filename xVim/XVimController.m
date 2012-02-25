@@ -430,6 +430,12 @@ NSArray* keyStringTokeyArray(NSString* string)
     }
 }
 
+-(BOOL) isWaitingForMotion {
+    if (vi_mode != NormalMode)
+        return NO;
+    return [handlers[NormalMode] isWaitingForMotion];
+}
+
 -(void) stopKeymapTimer
 {
     [NSObject cancelPreviousPerformRequestsWithTarget:self];

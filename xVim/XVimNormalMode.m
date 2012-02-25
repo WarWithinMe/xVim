@@ -338,6 +338,11 @@ typedef enum e_handle_stat
     return handledKey;
 }
 
+-(BOOL) isWaitingForMotion
+{
+    return operatorChar != 0;
+}
+
 -(NSRange) generateRange:(BOOL*) visible defaultLinewise:(BOOL*) linewise
 {
     NSRange range             = {NSNotFound, 0};

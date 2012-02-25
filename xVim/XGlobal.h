@@ -41,4 +41,5 @@
 @end
 // --------------------
 
-void  configureInsertionPointRect(NSTextView* view, NSRect*);
+@class XTextViewBridge;
+void configureInsertionPointRect(XTextViewBridge* bridge, NSTextView* view, NSRect* rect);

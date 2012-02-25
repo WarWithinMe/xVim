@@ -289,9 +289,8 @@ static HijackInfo s_hijackInfo_map[SUPPORTED_APP_COUNT] =
 @end
 
 // ========== General Hijack Functions ==========
-void configureInsertionPointRect(NSTextView* view, NSRect* rect)
+void configureInsertionPointRect(XTextViewBridge* bridge, NSTextView* view, NSRect* rect)
 {
-    XTextViewBridge* bridge = getBridgeForView(view);
     XVimController* controller = [bridge vimController];
     
     VimMode mode = [controller mode];
@@ -328,13 +327,15 @@ void configureInsertionPointRect(NSTextView* view, NSRect* rect)
 
 void hj_DIPIR_private(NSTextView* self, SEL sel, NSRect rect, NSColor* color)
 {
-    configureInsertionPointRect(self, &rect);
+    XTextViewBridge* bridge = getBridgeForView(self);
+    configureInsertionPointRect(bridge, self, &rect);
     orig_DIPIR_private(self, sel, rect, color);
 }
 
 void hj_DIPIR(NSTextView* self, SEL sel, NSRect rect, NSColor* color, BOOL turnedOn)
 {
-    configureInsertionPointRect(self, &rect);
+    XTextViewBridge* bridge = getBridgeForView(self);
+    configureInsertionPointRect(bridge, self, &rect);
     orig_DIPIR(self, sel, rect, color, turnedOn);
 }
 
