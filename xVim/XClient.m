@@ -100,7 +100,6 @@ static XInsertionPoint XInsertionPointForTextView(XTextViewBridge* bridge, NSTex
 
 @implementation XClient
 
-@synthesize isActive;
 @synthesize bridge;
 
 - (id)initWithTextView:(NSTextView*)tv {
@@ -113,10 +112,16 @@ static XInsertionPoint XInsertionPointForTextView(XTextViewBridge* bridge, NSTex
     return self;
 }
 
+- (BOOL)isActive {
+    return [(id<XClientTextView>)[bridge targetView] isVimModeActive];
+}
+
 - (BOOL)keyDown:(NSEvent*)event {
-    if (!isActive)
+    if (!self.isActive)
         return YES;
+    
     [bridge processKeyEvent:event];
+    
     return NO;
 }
 
@@ -156,7 +161,7 @@ static XInsertionPoint XInsertionPointForTextView(XTextViewBridge* bridge, NSTex
 }
 - (void)drawInsertionPointInRect:(NSRect)rect color:(NSColor *)color turnedOn:(BOOL)turnedOn shouldUseStandard:(BOOL*)shouldUseStandard {
     if (shouldUseStandard) *shouldUseStandard = YES;
-    if (isActive) {
+    if (self.isActive) {
         configureInsertionPointRect(bridge, [bridge targetView], &rect);
         if (turnedOn) {
             if (![self drawCursor:rect] && shouldUseStandard)
@@ -170,7 +175,7 @@ static XInsertionPoint XInsertionPointForTextView(XTextViewBridge* bridge, NSTex
 }
 - (void)_drawInsertionPointInRect:(NSRect)rect color:(NSColor *)color shouldUseStandard:(BOOL*)shouldUseStandard {
     if (shouldUseStandard) *shouldUseStandard = YES;
-    if (isActive) {
+    if (self.isActive) {
         configureInsertionPointRect(bridge, [bridge targetView], &rect);
         if (![self drawCursor:rect] && shouldUseStandard)
             *shouldUseStandard = NO;
@@ -178,19 +183,19 @@ static XInsertionPoint XInsertionPointForTextView(XTextViewBridge* bridge, NSTex
 }
 
 - (void)selectionRangeForProposedRange:(NSRange)proposed granularity:(NSSelectionGranularity)granularity {
-    if (isActive)
+    if (self.isActive)
         [[bridge vimController] selRangeForProposed:proposed];
 }
 
 - (NSArray *)textView:(NSTextView *)tv willChangeSelectionFromCharacterRanges:(NSArray *)oldRanges toCharacterRanges:(NSArray *)newRanges {
     
-    if (!isActive)
+    if (!self.isActive)
         return newRanges;
     return [[bridge vimController] selectionChangedFrom:oldRanges to:newRanges];
 }
 
 - (void)textViewDidChangeSelection:(NSNotification *)notif {
-    if (isActive)
+    if (self.isActive)
         [[bridge vimController] didChangedSelection];
 }
 

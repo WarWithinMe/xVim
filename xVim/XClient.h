@@ -9,7 +9,7 @@
 	XTextViewBridge* bridge;
 }
 
-@property (assign) BOOL isActive;
+@property (readonly) BOOL isActive;
 @property (readonly) XTextViewBridge* bridge;
 
 - (id)initWithTextView:(NSTextView*)tv;
@@ -35,5 +35,6 @@
 - (NSColor*)cursorColor;
 - (NSColor*)cursorBackgroundColor;
 - (void)handleVimKeyEvent:(NSEvent*)event;
+- (BOOL)isVimModeActive;
 
 @end

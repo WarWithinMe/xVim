@@ -1140,8 +1140,8 @@ typedef enum e_handle_stat
     if (lineNumber == -1)
     {
         // Goto last line
-        NSUInteger maxIndex = [string length];
-        if (testNewLine([string characterAtIndex:maxIndex - 1]) == NO)
+        NSInteger maxIndex = (NSInteger)[string length];
+        if (maxIndex > 0 && testNewLine([string characterAtIndex:maxIndex - 1]) == NO)
             --maxIndex;
         idx = maxIndex;
     }
