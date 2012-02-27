@@ -40,3 +40,6 @@
 -(NSRange)    accessibilityCharacterRangeForLineNumber:(NSUInteger) lineNumber;
 @end
 // --------------------
+
+@class XTextViewBridge;
+void configureInsertionPointRect(XTextViewBridge* bridge, NSTextView* view, NSRect* rect);

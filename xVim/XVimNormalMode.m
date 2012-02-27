@@ -3,6 +3,8 @@
 //  Copyright (c) 2011年 http://warwithinme.com . All rights reserved.
 //
 
+#ifdef __LP64__
+
 #import "XGlobal.h"
 #import "XVimMode.h"
 #import "XVimController.h"
@@ -151,6 +153,12 @@ typedef enum e_handle_stat
 {
     if (c == '\t' || c == 25) { return NO; } // Don't interpret tabs. Shift-Tab produce a char 25.
     if (c == XEsc) { [self reset]; return YES; } // Esc will reset everything
+    if (c == ':') { [controller switchToMode:ExMode subMode:NoSubMode]; }
+    if (c == '/') { [controller switchToMode:ExMode subMode:SearchSubMode]; }
+    if (c == '?') { [controller switchToMode:ExMode subMode:BackwardsSearchSubMode]; }
+    if (c == 'N') { [(XVimExModeHandler*)[controller handlerForMode:ExMode] repeatSearch:YES]; }
+    if (c == 'n') { [(XVimExModeHandler*)[controller handlerForMode:ExMode] repeatSearch:NO]; }
+    if (c == '&') { [(XVimExModeHandler*)[controller handlerForMode:ExMode] repeatCommand]; }
     
     // In this method, we check what kind of ch is 
     // and assign it to the proper member.
@@ -334,6 +342,11 @@ typedef enum e_handle_stat
     }
     
     return handledKey;
+}
+
+-(BOOL) isWaitingForMotion
+{
+    return operatorChar != 0;
 }
 
 -(NSRange) generateRange:(BOOL*) visible defaultLinewise:(BOOL*) linewise
@@ -890,7 +903,7 @@ typedef enum e_handle_stat
     
     if (cmdChar == 'x')
     {
-        NSUInteger maxIndex = [string length] - 1;
+        NSInteger maxIndex = [string length] - 1;
         
         if (index <= maxIndex)
         {
@@ -899,7 +912,7 @@ typedef enum e_handle_stat
         } 
     } else {
         
-        NSUInteger rIndex = index > firstCount ? index - firstCount : 0;
+        NSInteger rIndex = index > firstCount ? index - firstCount : 0;
         if (index > rIndex)
         {
             range.location = rIndex;
@@ -1141,8 +1154,8 @@ typedef enum e_handle_stat
     if (lineNumber == -1)
     {
         // Goto last line
-        NSUInteger maxIndex = [string length];
-        if (testNewLine([string characterAtIndex:maxIndex - 1]) == NO)
+        NSInteger maxIndex = (NSInteger)[string length];
+        if (maxIndex > 0 && testNewLine([string characterAtIndex:maxIndex - 1]) == NO)
             --maxIndex;
         idx = maxIndex;
     }
@@ -1225,3 +1238,5 @@ typedef enum e_handle_stat
     return newIdx == oldIdx ? NSNotFound : newIdx;
 }
 @end
+
+#endif

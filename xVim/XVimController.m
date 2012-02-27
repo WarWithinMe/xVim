@@ -3,10 +3,13 @@
 //  Copyright (c) 2011年 http://warwithinme.com . All rights reserved.
 //
 
+#ifdef __LP64__
+
 #import "XGlobal.h"
 #import "XVimController.h"
 #import "XVimMode.h"
 #import "XTextViewBridge.h"
+#import "XClient.h"
 #import "vim.h"
 
 // Kill buffer
@@ -274,6 +277,12 @@ NSArray* keyStringTokeyArray(NSString* string)
     NSAssert(mode < VimModeCount, @"The vim mode is wrong");
     if (vi_mode == mode) { return; }
     
+    if (mode == ExMode) {
+        // ExMode is not a proper mode as such, since the current mode remains active
+        [handlers[mode] enterWith:sub];
+        return;
+    }
+    
     [handlers[vi_mode] reset];
     
     // Check to see if we should notify the textview that it should
@@ -293,6 +302,9 @@ NSArray* keyStringTokeyArray(NSString* string)
     }
     
     [handlers[vi_mode] enterWith:sub];
+    
+    if ([(id<XClientTextView>)[bridge targetView] respondsToSelector:@selector(vimModeDidChange)])
+        [(id<XClientTextView>)[bridge targetView] vimModeDidChange];
 }
 
 -(void) processBuffer
@@ -428,6 +440,18 @@ NSArray* keyStringTokeyArray(NSString* string)
     }
 }
 
+-(BOOL) isWaitingForMotion {
+    if (vi_mode != NormalMode)
+        return NO;
+    return [(XVimNormalModeHandler*)(handlers[NormalMode]) isWaitingForMotion];
+}
+-(XVimModeHandler*) currentHandler {
+    return handlers[vi_mode];
+}
+-(XVimModeHandler*) handlerForMode:(VimMode)m {
+    return handlers[m];
+}
+
 -(void) stopKeymapTimer
 {
     [NSObject cancelPreviousPerformRequestsWithTarget:self];
@@ -541,3 +565,5 @@ NSArray* keyStringTokeyArray(NSString* string)
     for (int i = 0; i < c; ++i) { [bridge handleFakeKeyEvent:event]; }
 }
 @end
+
+#endif

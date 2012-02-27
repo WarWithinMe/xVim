@@ -3,6 +3,8 @@
 //  Copyright (c) 2011年 http://warwithinme.com . All rights reserved.
 //
 
+#import <Cocoa/Cocoa.h>
+
 #include "XVimController.h"
 #include "XGlobal.h"
 
@@ -43,6 +45,7 @@
 -(void) reset;
 -(id) initWithController:(XVimController*) controller;
 -(BOOL) processKey:(unichar)key modifiers:(NSUInteger)flags;
+-(BOOL) isWaitingForMotion;
 -(NSArray*) selectionChangedFrom:(NSArray*)oldRanges to:(NSArray*)newRanges;
 -(BOOL) forceIgnoreKeymap;
 @end
@@ -65,7 +68,16 @@
 -(void) enterWith:(VimMode) submode;
 -(BOOL) processKey:(unichar)key modifiers:(NSUInteger)flags;
 #endif
+-(BOOL) isLineMode;
+-(NSInteger)selectionEnd;
+-(void) setNewSelectionEnd:(NSInteger)end;
 @end
 
 @interface XVimExModeHandler : XVimModeHandler
+@property (retain) NSString* lastSearch;
+@property (retain) NSString* lastCommand;
+@property (assign) BOOL lastSearchWasForwards;
+
+- (void)repeatSearch:(BOOL)reverse;
+- (void)repeatCommand;
 @end
