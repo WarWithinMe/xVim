@@ -3,6 +3,8 @@
 //  Copyright (c) 2011年 http://warwithinme.com . All rights reserved.
 //
 
+#ifdef __LP64__
+
 #import "XVimMode.h"
 #import "XGlobal.h"
 #import "XTextViewBridge.h"
@@ -56,6 +58,9 @@
     } else {
         return NSMakeRange(selectionEnd, selectionStart + 1 - selectionEnd);
     }
+}
+-(NSInteger)selectionEnd {
+    return selectionEnd;
 }
 -(void) setNewSelectionEnd:(NSInteger)end
 {
@@ -150,12 +155,22 @@
     [hijackedView scrollRangeToVisible:idx];
 }
 
+-(BOOL) isLineMode {
+    return isLineMode;
+}
+
 -(BOOL) processKey:(unichar)c modifiers:(NSUInteger)flags
 {
     // Don't interpret tabs.
     // Note : In my machine, Shift-Tab produce a character 25. 
     //        Don't know if it's the same in the other's machine.
     if (c == '\t' || c == 25) { return NO; } 
+    if (c == ':') { [controller switchToMode:ExMode subMode:NoSubMode]; }
+    if (c == '/') { [controller switchToMode:ExMode subMode:SearchSubMode]; }
+    if (c == '?') { [controller switchToMode:ExMode subMode:BackwardsSearchSubMode]; }
+    if (c == 'N') { [(XVimExModeHandler*)[controller handlerForMode:ExMode] repeatSearch:YES]; }
+    if (c == 'n') { [(XVimExModeHandler*)[controller handlerForMode:ExMode] repeatSearch:NO]; }
+    if (c == '&') { [(XVimExModeHandler*)[controller handlerForMode:ExMode] repeatCommand]; }
     
     dontCheckSel = YES;
     
@@ -407,3 +422,5 @@
     return YES;
 }
 @end
+
+#endif

@@ -3,6 +3,9 @@
 //  Copyright (c) 2011年 http://warwithinme.com . All rights reserved.
 //
 
+// xVim uses 64-bit runtime features, which doesn't agree with Chocolat's 32-bit build
+#ifdef __LP64__
+
 #import "XGlobal.h"
 #import "XTextViewBridge.h"
 #import "XVimController.h"
@@ -83,7 +86,7 @@ static O_WillChangeSelection       orig_willChangeSelection = 0;
 static O_TextViewDidChangeSelection orig_didChangeSelection = 0;
 static O_SelRangeForProposedRange  orig_selRangeForProposedRange = 0;
 // Hijackers:
-static void  configureInsertionPointRect(NSTextView* view, NSRect*);
+// void  configureInsertionPointRect(NSTextView* view, NSRect*);
 static void  hj_finalize(void*, SEL);
 static void  hj_dealloc(void*, SEL);
 static void  hj_keyDown(void*, SEL, NSEvent*);
@@ -164,6 +167,8 @@ static HijackInfo s_hijackInfo_map[SUPPORTED_APP_COUNT] =
 // The entry point of our plugin
 +(void) load
 {
+// Disable this code if this is being loaded into a cooperative editor
+#ifndef VIM_COOPERATIVE
     // [XVimController load];
     bridgeDict = [[NSMutableDictionary alloc] init];
     
@@ -226,6 +231,7 @@ static HijackInfo s_hijackInfo_map[SUPPORTED_APP_COUNT] =
             break;
         }
     }
+#endif
 }
 @end
 
@@ -257,7 +263,13 @@ static HijackInfo s_hijackInfo_map[SUPPORTED_APP_COUNT] =
 -(BOOL)    closePopup { return NO; }
 
 -(void) handleFakeKeyEvent:(NSEvent*) fakeEvent {
-    if (orig_keyDown) {
+    
+    // Give them a chance to cooperate with us
+    if ([self->targetView respondsToSelector:@selector(handleVimKeyEvent:)]) {
+        [self->targetView performSelector:@selector(handleVimKeyEvent:) withObject:fakeEvent];
+    }
+    // Pleading the 5th? Hit 'em with the swizzle stick. 
+    else if (orig_keyDown) {
         orig_keyDown(self->targetView, @selector(keyDown:), fakeEvent);
     }
 }
@@ -286,6 +298,8 @@ static HijackInfo s_hijackInfo_map[SUPPORTED_APP_COUNT] =
 
 -(BOOL) ignoreString:(NSString*) string selection:(NSRange) range
 {
+    return NO;
+    
     NSError* error;
     NSRegularExpression* regex = 
             [NSRegularExpression regularExpressionWithPattern:@"^/\\*.+\\*/$"
@@ -300,9 +314,8 @@ static HijackInfo s_hijackInfo_map[SUPPORTED_APP_COUNT] =
 @end
 
 // ========== General Hijack Functions ==========
-void configureInsertionPointRect(NSTextView* view, NSRect* rect)
+void configureInsertionPointRect(XTextViewBridge* bridge, NSTextView* view, NSRect* rect)
 {
-    XTextViewBridge* bridge = getBridgeForView(view);
     XVimController* controller = [bridge vimController];
     
     VimMode mode = [controller mode];
@@ -339,13 +352,15 @@ void configureInsertionPointRect(NSTextView* view, NSRect* rect)
 
 void hj_DIPIR_private(NSTextView* self, SEL sel, NSRect rect, NSColor* color)
 {
-    configureInsertionPointRect(self, &rect);
+    XTextViewBridge* bridge = getBridgeForView(self);
+    configureInsertionPointRect(bridge, self, &rect);
     orig_DIPIR_private(self, sel, rect, color);
 }
 
 void hj_DIPIR(NSTextView* self, SEL sel, NSRect rect, NSColor* color, BOOL turnedOn)
 {
-    configureInsertionPointRect(self, &rect);
+    XTextViewBridge* bridge = getBridgeForView(self);
+    configureInsertionPointRect(bridge, self, &rect);
     orig_DIPIR(self, sel, rect, color, turnedOn);
 }
 
@@ -495,3 +510,5 @@ static void* hj_initWithFM(void* self, SEL sel, NSRect p1, BOOL makeFieldEditor)
     
     return r;
 }
+
+#endif

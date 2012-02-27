@@ -3,6 +3,8 @@
 //  Copyright (c) 2011年 http://warwithinme.com . All rights reserved.
 //
 
+#ifdef __LP64__
+
 #import "XGlobal.h"
 #import "vim.h"
 #import "NSStringHelper.h"
@@ -1068,3 +1070,5 @@ NSInteger xv_findChar(int repeatCount, char command, unichar what, BOOL inclusiv
     
     return result;
 }
+
+#endif

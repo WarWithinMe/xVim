@@ -3,6 +3,8 @@
 //  Copyright (c) 2011年 http://warwithinme.com . All rights reserved.
 //
 
+#ifdef __LP64__
+
 #import "XGlobal.h"
 #import "XVimMode.h"
 #import "XVimController.h"
@@ -75,10 +77,6 @@
     }
 }
 @end
-
-@implementation XVimExModeHandler
-@end
-
 
 
 
@@ -171,3 +169,5 @@
     }
 }
 @end
+
+#endif
