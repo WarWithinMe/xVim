@@ -156,9 +156,9 @@ typedef enum e_handle_stat
     if (c == ':') { [controller switchToMode:ExMode subMode:NoSubMode]; }
     if (c == '/') { [controller switchToMode:ExMode subMode:SearchSubMode]; }
     if (c == '?') { [controller switchToMode:ExMode subMode:BackwardsSearchSubMode]; }
-    if (c == 'N') { [[controller handlerForMode:ExMode] repeatSearch:YES]; }
-    if (c == 'n') { [[controller handlerForMode:ExMode] repeatSearch:NO]; }
-    if (c == '&') { [[controller handlerForMode:ExMode] repeatCommand]; }
+    if (c == 'N') { [(XVimExModeHandler*)[controller handlerForMode:ExMode] repeatSearch:YES]; }
+    if (c == 'n') { [(XVimExModeHandler*)[controller handlerForMode:ExMode] repeatSearch:NO]; }
+    if (c == '&') { [(XVimExModeHandler*)[controller handlerForMode:ExMode] repeatCommand]; }
     
     // In this method, we check what kind of ch is 
     // and assign it to the proper member.

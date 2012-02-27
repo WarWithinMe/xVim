@@ -67,8 +67,8 @@
 -(void) reset;
 -(void) enterWith:(VimMode) submode;
 -(BOOL) processKey:(unichar)key modifiers:(NSUInteger)flags;
--(BOOL) isLineMode;
 #endif
+-(BOOL) isLineMode;
 -(NSInteger)selectionEnd;
 -(void) setNewSelectionEnd:(NSInteger)end;
 @end

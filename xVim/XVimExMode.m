@@ -102,14 +102,16 @@
     NSInteger len = [[[tv textStorage] string] length];
     
     NSRegularExpressionOptions opts = 0;
-    if ([options rangeOfString:@"i"].length != 0)
-        opts |= NSRegularExpressionCaseInsensitive;
-    if ([options rangeOfString:@"x"].length != 0)
-        opts |= NSRegularExpressionAllowCommentsAndWhitespace;
-    if ([options rangeOfString:@"m"].length != 0)
-        opts |= NSRegularExpressionAnchorsMatchLines;
-    if ([options rangeOfString:@"s"].length != 0)
-        opts |= NSRegularExpressionDotMatchesLineSeparators;
+    if (options) {
+        if ([options rangeOfString:@"i"].length != 0)
+            opts |= NSRegularExpressionCaseInsensitive;
+        if ([options rangeOfString:@"x"].length != 0)
+            opts |= NSRegularExpressionAllowCommentsAndWhitespace;
+        if ([options rangeOfString:@"m"].length != 0)
+            opts |= NSRegularExpressionAnchorsMatchLines;
+        if ([options rangeOfString:@"s"].length != 0)
+            opts |= NSRegularExpressionDotMatchesLineSeparators;
+    }
     
     regex = [NSRegularExpression regularExpressionWithPattern:search options:opts error:&error];
     

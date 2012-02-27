@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		75DFE68414FBC86300FE9E1E /* XVimExMode.m in Sources */ = {isa = PBXBuildFile; fileRef = 75DFE68314FBC86300FE9E1E /* XVimExMode.m */; };
 		75E7988414F7503700D94865 /* XClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 75E7988214F74F8100D94865 /* XClient.m */; };
 		A504238114C5B4AF009399E4 /* XVimInsertMode.m in Sources */ = {isa = PBXBuildFile; fileRef = A504238014C5B4AF009399E4 /* XVimInsertMode.m */; };
 		A504238314C5B6AE009399E4 /* XVimInsertMode.m in Sources */ = {isa = PBXBuildFile; fileRef = A504238014C5B4AF009399E4 /* XVimInsertMode.m */; };
@@ -61,6 +62,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		75DFE68314FBC86300FE9E1E /* XVimExMode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XVimExMode.m; sourceTree = "<group>"; };
 		75E7988114F74F8100D94865 /* XClient.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XClient.h; sourceTree = "<group>"; };
 		75E7988214F74F8100D94865 /* XClient.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XClient.m; sourceTree = "<group>"; };
 		A504238014C5B4AF009399E4 /* XVimInsertMode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XVimInsertMode.m; sourceTree = "<group>"; };
@@ -198,6 +200,7 @@
 				A5DD1A95149DD112000AAE3D /* XVimMode.m */,
 				A58D5A7D149F491F00921622 /* XVimNormalMode.m */,
 				A520764E14B0AB44005B8077 /* XVimVisualMode.m */,
+				75DFE68314FBC86300FE9E1E /* XVimExMode.m */,
 				75E7988214F74F8100D94865 /* XClient.m */,
 			);
 			name = Source;
@@ -365,6 +368,7 @@
 				A520764F14B0AB44005B8077 /* XVimVisualMode.m in Sources */,
 				A504238114C5B4AF009399E4 /* XVimInsertMode.m in Sources */,
 				75E7988414F7503700D94865 /* XClient.m in Sources */,
+				75DFE68414FBC86300FE9E1E /* XVimExMode.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

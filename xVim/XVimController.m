@@ -9,6 +9,7 @@
 #import "XVimController.h"
 #import "XVimMode.h"
 #import "XTextViewBridge.h"
+#import "XClient.h"
 #import "vim.h"
 
 // Kill buffer
@@ -302,8 +303,8 @@ NSArray* keyStringTokeyArray(NSString* string)
     
     [handlers[vi_mode] enterWith:sub];
     
-    if ([[bridge targetView] respondsToSelector:@selector(vimModeDidChange)])
-        [[bridge targetView] vimModeDidChange];
+    if ([(id<XClientTextView>)[bridge targetView] respondsToSelector:@selector(vimModeDidChange)])
+        [(id<XClientTextView>)[bridge targetView] vimModeDidChange];
 }
 
 -(void) processBuffer

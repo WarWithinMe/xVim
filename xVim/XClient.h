@@ -34,9 +34,17 @@
 
 @protocol XClientTextView <NSObject>
 
+// Let the text view customize the cursor color
 - (NSColor*)cursorColor;
 - (NSColor*)cursorBackgroundColor;
+
+// Send a key event back to the text view
 - (void)handleVimKeyEvent:(NSEvent*)event;
+
+// Give the text view a chance to override VIM mode, i.e. if the user turns it off
 - (BOOL)isVimModeActive;
+
+// Notify the text view that the mode has changed, so it can
+- (void)vimModeDidChange;
 
 @end

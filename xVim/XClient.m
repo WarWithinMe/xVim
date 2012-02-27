@@ -175,7 +175,6 @@ static XInsertionPoint XInsertionPointForTextView(XTextViewBridge* bridge, NSTex
 
 - (void)blankCursor:(NSRect)r {
     
-    VimMode mode = [[bridge vimController] mode];
     if (!NSEqualRects(lastDrawnRect, NSZeroRect))
         [[bridge targetView] setNeedsDisplayInRect:NSIntegralRect(lastDrawnRect) avoidAdditionalLayout:YES];
 }
