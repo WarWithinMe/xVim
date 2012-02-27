@@ -276,6 +276,12 @@ NSArray* keyStringTokeyArray(NSString* string)
     NSAssert(mode < VimModeCount, @"The vim mode is wrong");
     if (vi_mode == mode) { return; }
     
+    if (mode == ExMode) {
+        // ExMode is not a proper mode as such, since the current mode remains active
+        [handlers[mode] enterWith:sub];
+        return;
+    }
+    
     [handlers[vi_mode] reset];
     
     // Check to see if we should notify the textview that it should
@@ -295,6 +301,9 @@ NSArray* keyStringTokeyArray(NSString* string)
     }
     
     [handlers[vi_mode] enterWith:sub];
+    
+    if ([[bridge targetView] respondsToSelector:@selector(vimModeDidChange)])
+        [[bridge targetView] vimModeDidChange];
 }
 
 -(void) processBuffer
@@ -433,7 +442,13 @@ NSArray* keyStringTokeyArray(NSString* string)
 -(BOOL) isWaitingForMotion {
     if (vi_mode != NormalMode)
         return NO;
-    return [handlers[NormalMode] isWaitingForMotion];
+    return [(XVimNormalModeHandler*)(handlers[NormalMode]) isWaitingForMotion];
+}
+-(XVimModeHandler*) currentHandler {
+    return handlers[vi_mode];
+}
+-(XVimModeHandler*) handlerForMode:(VimMode)m {
+    return handlers[m];
 }
 
 -(void) stopKeymapTimer

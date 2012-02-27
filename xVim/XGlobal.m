@@ -298,6 +298,8 @@ static HijackInfo s_hijackInfo_map[SUPPORTED_APP_COUNT] =
 
 -(BOOL) ignoreString:(NSString*) string selection:(NSRange) range
 {
+    return NO;
+    
     NSError* error;
     NSRegularExpression* regex = 
             [NSRegularExpression regularExpressionWithPattern:@"^/\\*.+\\*/$"

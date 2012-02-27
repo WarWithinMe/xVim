@@ -11,6 +11,7 @@
  */
 
 @class XTextViewBridge;
+@class XVimModeHandler;
 
 typedef enum e_VimMode
 {
@@ -24,7 +25,12 @@ typedef enum e_VimMode
     // Submode
     NoSubMode,
     VisualLineMode,
-    SingleReplaceMode
+    SingleReplaceMode,
+    
+    // Ex mode submodes
+    SearchSubMode,
+    BackwardsSearchSubMode
+    
 } VimMode;
 
 typedef enum e_SpecialKeys
@@ -83,6 +89,8 @@ typedef enum e_ModifierFlags
 -(void) dealloc;
 -(void) processKeyEvent:(NSEvent*) event;
 -(BOOL) isWaitingForMotion;
+-(XVimModeHandler*) currentHandler;
+-(XVimModeHandler*) handlerForMode:(VimMode)m;
 -(NSArray*) selectionChangedFrom:(NSArray*)oldRanges to:(NSArray*)newRanges;
 -(void) didChangedSelection;
 -(void) selRangeForProposed:(NSRange) range;

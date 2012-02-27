@@ -5,9 +5,10 @@
 @class XTextViewBridge;
 
 @interface XClient : NSObject {
-    BOOL isActive;
 	XTextViewBridge* bridge;
+    
     NSRect lastDrawnRect;
+    BOOL lastWasInactive;
 }
 
 @property (readonly) BOOL isActive;

@@ -153,6 +153,12 @@ typedef enum e_handle_stat
 {
     if (c == '\t' || c == 25) { return NO; } // Don't interpret tabs. Shift-Tab produce a char 25.
     if (c == XEsc) { [self reset]; return YES; } // Esc will reset everything
+    if (c == ':') { [controller switchToMode:ExMode subMode:NoSubMode]; }
+    if (c == '/') { [controller switchToMode:ExMode subMode:SearchSubMode]; }
+    if (c == '?') { [controller switchToMode:ExMode subMode:BackwardsSearchSubMode]; }
+    if (c == 'N') { [[controller handlerForMode:ExMode] repeatSearch:YES]; }
+    if (c == 'n') { [[controller handlerForMode:ExMode] repeatSearch:NO]; }
+    if (c == '&') { [[controller handlerForMode:ExMode] repeatCommand]; }
     
     // In this method, we check what kind of ch is 
     // and assign it to the proper member.
@@ -897,7 +903,7 @@ typedef enum e_handle_stat
     
     if (cmdChar == 'x')
     {
-        NSUInteger maxIndex = [string length] - 1;
+        NSInteger maxIndex = [string length] - 1;
         
         if (index <= maxIndex)
         {
@@ -906,7 +912,7 @@ typedef enum e_handle_stat
         } 
     } else {
         
-        NSUInteger rIndex = index > firstCount ? index - firstCount : 0;
+        NSInteger rIndex = index > firstCount ? index - firstCount : 0;
         if (index > rIndex)
         {
             range.location = rIndex;

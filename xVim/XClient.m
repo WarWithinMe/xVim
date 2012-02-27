@@ -5,8 +5,7 @@
 #import "XGlobal.h"
 #import "XTextViewBridge.h"
 #import "XVimController.h"
-
-
+#import "XVimMode.h"
 
 typedef struct {
     BOOL useStandard;
@@ -108,12 +107,61 @@ static XInsertionPoint XInsertionPointForTextView(XTextViewBridge* bridge, NSTex
         return nil;
     
     bridge = [[XTextViewBridge alloc] initWithTextView:tv];
+    lastWasInactive = YES;
     
     return self;
 }
 
 - (BOOL)isActive {
-    return [(id<XClientTextView>)[bridge targetView] isVimModeActive];
+//    // Only supported on 10.7
+//    if (!NSClassFromString(@"NSLinguisticTagger"))
+//        return NO;
+    
+    BOOL isActive = [(id<XClientTextView>)[bridge targetView] isVimModeActive];
+    
+    if (isActive && lastWasInactive) {
+        // Switch to normal/visual mode, whichever is more appropriate
+        NSRange sel = [[bridge targetView] selectedRange];
+        if (sel.location > 0 && sel.location == [[[[bridge targetView] textStorage] string] length])
+            [[bridge vimController] switchToMode:InsertMode];
+        else if (sel.length > 0)
+            [[bridge vimController] switchToMode:VisualMode];
+        else
+            [[bridge vimController] switchToMode:NormalMode];
+        lastWasInactive = NO;
+    }
+    else if (!isActive) {
+        lastWasInactive = YES;
+    }
+    
+    return isActive;
+}
+- (NSString*)vimModeName {
+    VimMode mode = [[bridge vimController] mode];
+    XVimModeHandler* handler = [[bridge vimController] currentHandler];
+    switch (mode) {
+        case NormalMode:
+            return @"Normal";
+        
+        case VisualMode:
+            if ([(XVimVisualModeHandler*)handler isLineMode])
+                return @"Visual Line";
+            return @"Visual";
+        
+        case InsertMode:
+            return @"Insert";
+        
+        case ExMode:
+            return @"Ex";
+        
+        case ReplaceMode:
+            if ([[bridge vimController] isWaitingForMotion])
+                return [NSString stringWithFormat:@"Replace%C", 0x2026]; 
+            return @"Replace";
+        default:
+            return nil;
+    }
+    return nil;
 }
 
 - (BOOL)keyDown:(NSEvent*)event {
@@ -128,12 +176,8 @@ static XInsertionPoint XInsertionPointForTextView(XTextViewBridge* bridge, NSTex
 - (void)blankCursor:(NSRect)r {
     
     VimMode mode = [[bridge vimController] mode];
-    XInsertionPoint ip = XInsertionPointForTextView(bridge, [bridge targetView], mode, r);
     if (!NSEqualRects(lastDrawnRect, NSZeroRect))
         [[bridge targetView] setNeedsDisplayInRect:NSIntegralRect(lastDrawnRect) avoidAdditionalLayout:YES];
-
-//    if (ip.useStandard)
-//        return;
 }
 - (BOOL)drawCursor:(NSRect)r {
     
