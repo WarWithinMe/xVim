@@ -18,9 +18,6 @@
 
 - (void) restoreSelection;
 - (void) setSelection:(NSRange)searchResult isFinal:(BOOL)flag;
-
-- (void)controlTextDidChange:(NSNotification*)obj;
-- (BOOL)control:(NSControl *)control textView:(NSTextView *)textView doCommandBySelector:(SEL)command;
 @end
 
 
@@ -233,6 +230,21 @@
 }
 
 - (void)showPrompt:(VimMode)submode {
+    
+    XTextViewBridge* bridge = [controller bridge];
+    NSString* submodeString = @":";
+    if (submode == SearchSubMode)
+        submodeString = @"/";
+    if (submode == BackwardsSearchSubMode)
+        submodeString = @"?";
+    
+    if ([bridge cmdlineTextField]) {
+        // We have a real cmdline textfield, no need to use popover.
+        [bridge setCmdString:submodeString];
+        [bridge setFocusToCmdline];
+        return;
+    }
+    
     self.popover = [[[NSPopover alloc] init] autorelease];
     popover.behavior = NSPopoverBehaviorSemitransient;
     popover.animates = NO;
@@ -247,20 +259,16 @@
     NSTextField* textField = [[[NSTextField alloc] initWithFrame:NSMakeRect(margin, margin, width, height)] autorelease];
     [textField setFont:[NSFont fontWithName:@"Monaco" size:11]];
     [textField setFocusRingType:NSFocusRingTypeNone];
-    [textField setDelegate:self];
     
-    NSString* submodeString = @":";
-    if (submode == SearchSubMode)
-        submodeString = @"/";
-    if (submode == BackwardsSearchSubMode)
-        submodeString = @"?";
+    [textField setDelegate:bridge]; // We can now use XTextViewBridge as delegate
+    
     [textField setStringValue:submodeString];
     
     [contentView addSubview:textField];
     [vc setView:contentView];
     popover.contentViewController = vc;
     
-    NSTextView* tv = [[controller bridge] targetView];    
+    NSTextView* tv = [bridge targetView];    
     NSString* string = [[tv textStorage] string];
     NSInteger start = [tv selectedRange].location;
 
@@ -287,36 +295,51 @@
     [[textField currentEditor] moveRight:nil];
 }
 
-- (void)controlTextDidChange:(NSNotification*) aNotification
+-(void) cmdlineTextChanged:(NSString*) string
 {
-    // Seach as we type.
-    NSTextView* field  = [[aNotification userInfo] objectForKey:@"NSFieldEditor"];
-    NSString*   string = [field string];
-    
-    if ([string length] == 0) { return; }
+    if ([string length] == 0) {
+        [self cmdlineCanceled];
+        return;
+    }
     DLog(@"Popup text has changed : %@", string);
     
+    // Seach as we type.
     unichar firstCh = [string characterAtIndex:0];
     if (firstCh == '/' || firstCh == '?')
     {
         NSString* sstr   = [string substringWithRange:NSMakeRange(1, [string length] - 1)];
         NSRange   result = [self searchResult:sstr backwards:firstCh == '?'];
         [self setSelection:result isFinal:NO];
+    } 
+}
+
+-(void) cmdlineCanceled
+{
+    [self restoreSelection];
+    // Quit ex mode whenever the cmdline is empty.
+    [controller switchToMode:self.originalMode];
+    
+    if (self.popover) {
+        [self.popover close];
+        self.popover = nil;
+    } else {
+        NSTextView* tv = [[controller bridge] targetView];
+        [[tv window] makeFirstResponder:tv];
     }
 }
 
-- (BOOL)control:(NSControl *)control textView:(NSTextView *)textView doCommandBySelector:(SEL)command 
+-(void) cmdlineAccepted:(NSTextView*) textView
 {
-    if (command == @selector(cancelOperation:))
-    {
-        [self restoreSelection];
-    } else if (command == @selector(insertNewline:))
-    {
-        [self runCommand:[textView string]];
+    [self runCommand:[textView string]];
+    [controller switchToMode:self.originalMode];
+    
+    if (self.popover) {
         [self.popover close];
         self.popover = nil;
+    } else {
+        NSTextView* tv = [[controller bridge] targetView];
+        [[tv window] makeFirstResponder:tv];
     }
-    return NO;
 }
 
 - (void) restoreSelection

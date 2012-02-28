@@ -25,6 +25,8 @@
 #   define DLog(...)
 #endif
 
+#define XVimTag 1990
+
 
 // How xVim works:
 // 1.In the entry point of this bundle (defined as XVimPlugin in XGlobal.m),
@@ -42,5 +44,11 @@
 @end
 // --------------------
 
+// ====================
+// Internal for XVim
 @class XTextViewBridge;
 void configureInsertionPointRect(XTextViewBridge* bridge, NSTextView* view, NSRect* rect);
+// This is really really bad, but I don't know where to place them.
+typedef void (*O_KeyDown) (void*, SEL, NSEvent*);
+O_KeyDown orig_keyDown;
+// --------------------

@@ -22,7 +22,7 @@
     
     int count;
     unichar cmd;
-    NSTextView* hijackedView;
+    __weak NSTextView* hijackedView;
 }
 -(void) switchToMode:(VimMode) mode;
 -(NSRange) linewiseRange;

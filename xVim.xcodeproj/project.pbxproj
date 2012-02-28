@@ -12,6 +12,8 @@
 		A504238114C5B4AF009399E4 /* XVimInsertMode.m in Sources */ = {isa = PBXBuildFile; fileRef = A504238014C5B4AF009399E4 /* XVimInsertMode.m */; };
 		A504238314C5B6AE009399E4 /* XVimInsertMode.m in Sources */ = {isa = PBXBuildFile; fileRef = A504238014C5B4AF009399E4 /* XVimInsertMode.m */; };
 		A504A452149DF9F40084C754 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = A504A451149DF9F40084C754 /* README.md */; };
+		A516505E14FCC1D7004E804D /* XTextViewBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = A516505D14FCC1D6004E804D /* XTextViewBridge.m */; };
+		A516505F14FCC1D7004E804D /* XTextViewBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = A516505D14FCC1D6004E804D /* XTextViewBridge.m */; };
 		A520764F14B0AB44005B8077 /* XVimVisualMode.m in Sources */ = {isa = PBXBuildFile; fileRef = A520764E14B0AB44005B8077 /* XVimVisualMode.m */; };
 		A520765014B0AB44005B8077 /* XVimVisualMode.m in Sources */ = {isa = PBXBuildFile; fileRef = A520764E14B0AB44005B8077 /* XVimVisualMode.m */; };
 		A52E943B1499A95F00FA6045 /* keymap-example in Resources */ = {isa = PBXBuildFile; fileRef = A52E943A1499A95F00FA6045 /* keymap-example */; };
@@ -69,6 +71,7 @@
 		75E7988214F74F8100D94865 /* XClient.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XClient.m; sourceTree = "<group>"; };
 		A504238014C5B4AF009399E4 /* XVimInsertMode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XVimInsertMode.m; sourceTree = "<group>"; };
 		A504A451149DF9F40084C754 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = README.md; path = ../README.md; sourceTree = "<group>"; };
+		A516505D14FCC1D6004E804D /* XTextViewBridge.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XTextViewBridge.m; sourceTree = "<group>"; };
 		A520764E14B0AB44005B8077 /* XVimVisualMode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XVimVisualMode.m; sourceTree = "<group>"; };
 		A52E943A1499A95F00FA6045 /* keymap-example */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "keymap-example"; path = "Resources/keymap-example"; sourceTree = "<group>"; };
 		A543C398148FBBB10070E986 /* XVimController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XVimController.h; sourceTree = "<group>"; };
@@ -197,6 +200,7 @@
 				A56B36D9149F2A0A00AE44CC /* NSStringHelper.m */,
 				A5BD0F33149C598F0089BF5E /* vim.m */,
 				A5A905CB149C41C000810962 /* XGlobal.m */,
+				A516505D14FCC1D6004E804D /* XTextViewBridge.m */,
 				A543C399148FBBB10070E986 /* XVimController.m */,
 				A504238014C5B4AF009399E4 /* XVimInsertMode.m */,
 				A5DD1A95149DD112000AAE3D /* XVimMode.m */,
@@ -371,6 +375,7 @@
 				A504238114C5B4AF009399E4 /* XVimInsertMode.m in Sources */,
 				75E7988414F7503700D94865 /* XClient.m in Sources */,
 				75DFE68414FBC86300FE9E1E /* XVimExMode.m in Sources */,
+				A516505E14FCC1D7004E804D /* XTextViewBridge.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -388,6 +393,7 @@
 				A5929E4414A428C0009AFACA /* NSStringHelper.m in Sources */,
 				A5929E4514A428C0009AFACA /* XVimNormalMode.m in Sources */,
 				A520765014B0AB44005B8077 /* XVimVisualMode.m in Sources */,
+				A516505F14FCC1D7004E804D /* XTextViewBridge.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -420,7 +426,7 @@
 					"$(inherited)",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_VERSION = "";
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
@@ -440,7 +446,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_VERSION = "";
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;

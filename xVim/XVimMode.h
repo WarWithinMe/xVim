@@ -26,13 +26,16 @@
 // Return YES if the key is processed, otherwise, return NO.
 // The variable key is not the keycode of the keyboard.
 -(BOOL) processKey:(unichar)key modifiers:(NSUInteger)flags;
-// This method is used to validate the selection, aslo used to switch between
-// visual mode and other modes.
+// This method is used to validate the selection
 -(NSArray*) selectionChangedFrom:(NSArray*)oldRanges to:(NSArray*)newRanges;
 // When XVimController receives a key event, it will call this method,
-// if return YES, the key event we be handled directly. Otherwise, the key
+// if return YES, the key event will be handled directly. Otherwise, the key
 // event will be checked if it's part of a keymap.
 -(BOOL) forceIgnoreKeymap;
+
+-(void) cmdlineTextChanged:(NSString*) newText;
+-(void) cmdlineCanceled;
+-(void) cmdlineAccepted:(NSTextView*) textView;
 @end
 
 
@@ -71,11 +74,15 @@
 -(void) setNewSelectionEnd:(NSInteger)end;
 @end
 
-@interface XVimExModeHandler : XVimModeHandler<NSTextFieldDelegate>
+@interface XVimExModeHandler : XVimModeHandler
 @property (retain) NSString* lastSearch;
 @property (retain) NSString* lastCommand;
 @property (assign) BOOL lastSearchWasForwards;
 
 - (void)repeatSearch:(BOOL)reverse;
 - (void)repeatCommand;
+
+-(void) cmdlineTextChanged:(NSString*) newText;
+-(void) cmdlineCanceled;
+-(void) cmdlineAccepted:(NSTextView*) textView;
 @end

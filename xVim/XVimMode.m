@@ -35,6 +35,9 @@
 -(BOOL) processKey:(unichar)k modifiers:(NSUInteger)f { return NO; }
 -(BOOL) forceIgnoreKeymap { return NO; }
 -(NSArray*) selectionChangedFrom:(NSArray*)oldRanges to:(NSArray*)newRanges { return newRanges; }
+-(void) cmdlineTextChanged:(NSString*) newText{}
+-(void) cmdlineCanceled:(NSTextView*) textView{}
+-(void) cmdlineAccepted:(NSTextView*) textView{}
 
 -(void) scrollViewRectToVisible:(NSRect)visibleRect
 {

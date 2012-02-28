@@ -45,8 +45,8 @@ typedef enum e_affect_range
     // right before CR.
     BOOL dontCheckTrailingCR;
     
-    XTextViewBridge* bridge;
-    NSTextView*      hijackedView;
+    XTextViewBridge*   bridge;
+    __weak NSTextView* hijackedView;
 }
 
 // Generate the range for cmdChar and secondCmdChar

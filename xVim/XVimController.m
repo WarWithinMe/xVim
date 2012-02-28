@@ -151,6 +151,7 @@ NSArray* keyStringTokeyArray(NSString* string)
 @implementation XVimController
 
 -(void) finalize { 
+    DLog(@"Finalizing XVimController");
     if (timerStarted) { [self stopKeymapTimer]; }
     [super finalize];
 }
@@ -280,6 +281,12 @@ NSArray* keyStringTokeyArray(NSString* string)
     if (mode == ExMode) {
         // ExMode is not a proper mode as such, since the current mode remains active
         [handlers[mode] enterWith:sub];
+        
+        // Special handle for ExMode, ExMode will return to whatever mode before,
+        // after it exit. In the meantime, ExMode will only exit when the cmdline
+        // finished / Canceled / Lost Focus. 
+        // Switching to ExMode must not reset any other mode since they're active.
+        vi_mode = ExMode;
         return;
     }
     
@@ -502,6 +509,9 @@ NSArray* keyStringTokeyArray(NSString* string)
 
 -(void) didChangedSelection
 {
+    // Ignore selection change when we are in Ex-mode.
+    if (vi_mode == ExMode) { return; }
+    
     // The selection has changed. If it's length is not 0, switch to Visual mode.
     NSTextView* view = [bridge targetView];
     if ([view selectedRange].length > 0 && [view selectedRanges].count == 1)
