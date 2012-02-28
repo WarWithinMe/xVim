@@ -35,8 +35,10 @@ typedef enum e_VimMode
 
 typedef enum e_SpecialKeys
 {
-    XSpace = ' ',
-    XEsc   = 27
+    XSpace    = ' ',
+    XTab      = '\t',
+    XShiftTab = 25,
+    XEsc      = 27
 } SpecialKeys;
 
 // Whenever we need store the key input, we store it in a unsigned int.

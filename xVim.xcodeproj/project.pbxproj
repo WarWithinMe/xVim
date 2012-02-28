@@ -35,6 +35,8 @@
 		A5A905CC149C41C000810962 /* XGlobal.m in Sources */ = {isa = PBXBuildFile; fileRef = A5A905CB149C41C000810962 /* XGlobal.m */; };
 		A5BD0F34149C598F0089BF5E /* vim.m in Sources */ = {isa = PBXBuildFile; fileRef = A5BD0F33149C598F0089BF5E /* vim.m */; };
 		A5C7757014A42A4D006A23BB /* xVim-WWM.bundle in CopyFiles */ = {isa = PBXBuildFile; fileRef = A5929E5414A428C0009AFACA /* xVim-WWM.bundle */; };
+		A5C799F714FBDC2A008C1B8A /* XVimExMode.m in Sources */ = {isa = PBXBuildFile; fileRef = 75DFE68314FBC86300FE9E1E /* XVimExMode.m */; };
+		A5C799F814FBDC2A008C1B8A /* XClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 75E7988214F74F8100D94865 /* XClient.m */; };
 		A5DD1A96149DD112000AAE3D /* XVimMode.m in Sources */ = {isa = PBXBuildFile; fileRef = A5DD1A95149DD112000AAE3D /* XVimMode.m */; };
 /* End PBXBuildFile section */
 
@@ -376,6 +378,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A5C799F714FBDC2A008C1B8A /* XVimExMode.m in Sources */,
+				A5C799F814FBDC2A008C1B8A /* XClient.m in Sources */,
 				A504238314C5B6AE009399E4 /* XVimInsertMode.m in Sources */,
 				A5929E4014A428C0009AFACA /* XVimController.m in Sources */,
 				A5929E4114A428C0009AFACA /* XGlobal.m in Sources */,

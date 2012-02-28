@@ -939,6 +939,8 @@ NSInteger find_prev_quote(NSStringHelper* h, NSInteger start, unichar quote, BOO
 
 NSRange xv_current_quote(int repeatCount, BOOL inclusive, char what)
 {
+    return NSMakeRange(NSNotFound, 0);
+    
     // Rules:
     // 1. If the quote is escaped, ignore it, unless it's the first quote in the line.
     // 2. If the char under the caret is a quote, mark it as openning if there are even

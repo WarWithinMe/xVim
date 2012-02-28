@@ -151,7 +151,7 @@ typedef enum e_handle_stat
 // :q, :q!, :w, :wq, :x
 -(BOOL) processKey:(unichar)c modifiers:(NSUInteger)flags
 {
-    if (c == '\t' || c == 25) { return NO; } // Don't interpret tabs. Shift-Tab produce a char 25.
+    if (c == XTab || c == XShiftTab) { return NO; } // Don't interpret tabs. Shift-Tab produce a char 25.
     if (c == XEsc) { [self reset]; return YES; } // Esc will reset everything
     if (c == ':') { [controller switchToMode:ExMode subMode:NoSubMode]; }
     if (c == '/') { [controller switchToMode:ExMode subMode:SearchSubMode]; }

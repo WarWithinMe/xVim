@@ -9,6 +9,8 @@
  * application specific implementations for to controller.
  *
  * XTextViewBridge is implemented in XGlobal.m
+ *
+ * Default implemtation of XTextViewBridge is for XCode only.
  */
 @class XVimController;
 
@@ -44,8 +46,4 @@
 @interface XTextViewDelegate : NSObject <NSTextViewDelegate>
 - (NSArray*) textView:(NSTextView*) view willChangeSelectionFromCharacterRanges:(NSArray*) old toCharacterRanges:(NSArray*) new;
 - (void)textViewDidChangeSelection:(NSNotification*) aNotification;
-@end
-
-@interface XChocolatBridge : XTextViewBridge
--(BOOL) ignoreString:(NSString*) string selection:(NSRange) range;
 @end

@@ -86,7 +86,6 @@ static O_WillChangeSelection       orig_willChangeSelection = 0;
 static O_TextViewDidChangeSelection orig_didChangeSelection = 0;
 static O_SelRangeForProposedRange  orig_selRangeForProposedRange = 0;
 // Hijackers:
-// void  configureInsertionPointRect(NSTextView* view, NSRect*);
 static void  hj_finalize(void*, SEL);
 static void  hj_dealloc(void*, SEL);
 static void  hj_keyDown(void*, SEL, NSEvent*);
@@ -145,7 +144,7 @@ static HijackInfo s_hijackInfo_map[SUPPORTED_APP_COUNT] =
         @"initWithFrame:makeFieldEditor:",
         @"com.macrabbit.Espresso"}, // Espresso
     
-    {@"XChocolatBridge",
+    {nil,
         @"CHFullTextView",
         @"CHTextViewController",
         nil,
@@ -155,8 +154,7 @@ static HijackInfo s_hijackInfo_map[SUPPORTED_APP_COUNT] =
 
 
 // The entry point of this plugin.
-// In the load method, we call XXXBridge's(subclass of XTextViewBridge) hijack class method
-// to inject our code to init/dealloc/finalize/keydown method.
+// In the load method, we inject our code to init/dealloc/finalize/keydown method.
 // Basically:
 // In init, we alloc a new XXXBridge and associate it with the hijacked textview.
 // In dealloc and finalize, we free that XXXBridge.
@@ -169,7 +167,7 @@ static HijackInfo s_hijackInfo_map[SUPPORTED_APP_COUNT] =
 {
 // Disable this code if this is being loaded into a cooperative editor
 #ifndef VIM_COOPERATIVE
-    // [XVimController load];
+    
     bridgeDict = [[NSMutableDictionary alloc] init];
     
     // Warning: When hijacking, we must not hijack NSTextView
@@ -292,25 +290,6 @@ static HijackInfo s_hijackInfo_map[SUPPORTED_APP_COUNT] =
 {
     hj_didChangeSelection(nil, nil, aNotification);
 }
-@end
-
-@implementation XChocolatBridge
-
--(BOOL) ignoreString:(NSString*) string selection:(NSRange) range
-{
-    return NO;
-    
-    NSError* error;
-    NSRegularExpression* regex = 
-            [NSRegularExpression regularExpressionWithPattern:@"^/\\*.+\\*/$"
-                                                      options:NSRegularExpressionAnchorsMatchLines
-                                                        error:&error];
-    // In chocolat, tokens are like /* token */
-    return [regex numberOfMatchesInString:string
-                                  options:0
-                                    range:range] > 0;
-}
-
 @end
 
 // ========== General Hijack Functions ==========

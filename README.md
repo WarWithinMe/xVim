@@ -17,7 +17,6 @@
 1. __Relaunch the app__, if you saw a block caret in your text editor. It probably means xVim is working fine.
 
 ## What I'm not going to implement
-1. __Search and Replace__ (I think it's easier to use the built-in support of the editor, but if I have spare time, maybe I will think of implementing it.)
 1. __Marker__
 1. __Marco__
 1. __Register__ (So you can't yank different text to different register)
@@ -29,6 +28,7 @@
 3. Visual Mode [since v0.2]
 4. Normal Mode ([Check out the supported mode command here](https://github.com/WarWithinMe/xVim/wiki/Supported-Commands))
 5. Simplified Key-map ([Read the wiki](https://github.com/WarWithinMe/xVim/wiki/Simplified-Key-map))
+6. Big thanks to [fileability](https://github.com/fileability), [3 Ex commands](https://github.com/WarWithinMe/xVim/wiki/Supported-Commands) and search with `/?` works !!!
 
 ## NOTE
 1. This plugin possibly won't work well with Dos line ending(CR/LF).

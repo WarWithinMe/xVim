@@ -15,6 +15,7 @@
 #define U_AS_REDO               // If defined, bind 'U' to redo, otherwise
                                 // bind 'ctrl + r' to redo.
 // #define MAKE_0_AS_CARET      // If defined, 0 acts as ^
+// #define VIM_COOPERATIVE      // Define this if someone dont want to compile it as SIMBL plugin.
 // --------------------
 
 

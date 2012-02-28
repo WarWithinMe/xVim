@@ -63,17 +63,15 @@
 
 
 @interface XVimVisualModeHandler : XVimModeHandler
-#ifdef ENABLE_VISUALMODE
 -(void) reset;
 -(void) enterWith:(VimMode) submode;
 -(BOOL) processKey:(unichar)key modifiers:(NSUInteger)flags;
-#endif
 -(BOOL) isLineMode;
 -(NSInteger)selectionEnd;
 -(void) setNewSelectionEnd:(NSInteger)end;
 @end
 
-@interface XVimExModeHandler : XVimModeHandler
+@interface XVimExModeHandler : XVimModeHandler<NSTextFieldDelegate>
 @property (retain) NSString* lastSearch;
 @property (retain) NSString* lastCommand;
 @property (assign) BOOL lastSearchWasForwards;
