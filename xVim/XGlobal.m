@@ -71,12 +71,12 @@ void removeBridgeForView(NSTextView* tv)
 // Original methods:
 typedef void  (*O_Finalize)                  (void*, SEL);
 typedef void  (*O_Dealloc)                   (void*, SEL);
-
 typedef void  (*O__DrawInsertionPointInRect) (NSTextView*, SEL, NSRect, NSColor*); // This one is for private api.
 typedef void  (*O_DrawInsertionPointInRect)  (NSTextView*, SEL, NSRect, NSColor*, BOOL);
 typedef void* (*O_WillChangeSelection)       (void*, SEL, NSTextView*, NSArray* oldRanges, NSArray* newRanges);
 typedef void  (*O_TextViewDidChangeSelection)(void*, SEL, NSNotification*);
 typedef void* (*O_SelRangeForProposedRange)  (NSTextView*, SEL, NSRange, NSSelectionGranularity);
+typedef void  (*O_DidAddSubview)             (NSView*, SEL, NSView* subview);
 static O_Finalize                  orig_finalize            = 0;
 static O_Dealloc                   orig_dealloc             = 0;
 static O__DrawInsertionPointInRect orig_DIPIR_private       = 0;
@@ -84,6 +84,7 @@ static O_DrawInsertionPointInRect  orig_DIPIR               = 0;
 static O_WillChangeSelection       orig_willChangeSelection = 0;
 static O_TextViewDidChangeSelection orig_didChangeSelection = 0;
 static O_SelRangeForProposedRange  orig_selRangeForProposedRange = 0;
+static O_DidAddSubview             orig_didAddSubview       = 0;
 // Hijackers:
 static void  hj_finalize(void*, SEL);
 static void  hj_dealloc(void*, SEL);
@@ -93,6 +94,8 @@ static void  hj_DIPIR(NSTextView*, SEL, NSRect, NSColor*, BOOL);
 static void* hj_willChangeSelection(void*, SEL, NSTextView*, NSArray* oldRanges, NSArray* newRanges);
 static void  hj_didChangeSelection(void*, SEL, NSNotification*);
 static void* hj_selRangeForProposedRange(NSTextView*, SEL, NSRange, NSSelectionGranularity);
+static void  hj_didAddSubview(NSView*, SEL, NSView* subview);
+static NSInteger hj_tag(NSView*, SEL);
 
 
 O_KeyDown orig_keyDown = 0;
@@ -118,6 +121,7 @@ typedef struct s_HijackInfo {
     NSString* bridgeClassName;       // Can be nil
     NSString* textViewSubclassName;
     NSString* delegateClassName;     // Can be nil
+    NSString* cmdlineDepthClassName; // Can be nil
     
     void*     initHijackFunc;        // If this is nil, 
                                      // we create the bridge the first time we need it.
@@ -135,12 +139,14 @@ static HijackInfo s_hijackInfo_map[SUPPORTED_APP_COUNT] =
     {nil,
         @"DVTSourceTextView",
         @"IDESourceCodeEditor", 
+        @"DVTSourceTextScrollView",
         hj_initWithCoder, 
         @"initWithCoder:",
         @"com.apple.dt.Xcode"}, // XCode
     
     {nil,
         @"EKTextView",
+        nil,
         nil,
         hj_initWithFM,
         @"initWithFrame:makeFieldEditor:",
@@ -149,6 +155,7 @@ static HijackInfo s_hijackInfo_map[SUPPORTED_APP_COUNT] =
     {nil,
         @"CHFullTextView",
         @"CHTextViewController",
+        nil,
         nil,
         nil,
         @"com.chocolatapp.Chocolat"} // Chocolat use GC, but finalize never calls.
@@ -213,6 +220,7 @@ static HijackInfo s_hijackInfo_map[SUPPORTED_APP_COUNT] =
             orig_selRangeForProposedRange = methodSwizzle(tvSubClass,
                                                           @selector(selectionRangeForProposedRange:granularity:),
                                                           hj_selRangeForProposedRange);
+            methodSwizzle(tvSubClass, @selector(tag), hj_tag);
             
             if (info->delegateClassName == nil)
             {
@@ -226,6 +234,15 @@ static HijackInfo s_hijackInfo_map[SUPPORTED_APP_COUNT] =
                 orig_didChangeSelection = methodSwizzle(delegateClass, 
                                                         @selector(textViewDidChangeSelection:), 
                                                         hj_didChangeSelection);
+            }
+            
+            if (info->cmdlineDepthClassName != nil)
+            {
+                // Whenever the NSTextView is inserted into the editor,
+                // we insert a NSTextField as the cmdline.
+                orig_didAddSubview = methodSwizzle(NSClassFromString(info->cmdlineDepthClassName), 
+                                                   @selector(didAddSubview:), 
+                                                   hj_didAddSubview);
             }
             
             break;
@@ -340,6 +357,50 @@ void* hj_selRangeForProposedRange(NSTextView* self, SEL sel, NSRange proposed, N
 {
     [[getBridgeForView(self) vimController] selRangeForProposed:proposed];
     return orig_selRangeForProposedRange(self, sel, proposed, g);
+}
+
+NSInteger hj_tag(NSView* self, SEL sel)
+{
+    return XVimTag;
+}
+
+void hj_didAddSubview(NSView* self, SEL sel, NSView* view)
+{
+    DLog(@"Subview Added, current subviews: %@", [self subviews]);
+    
+    NSTextView* tv = (NSTextView*)[self viewWithTag:XVimTag];
+    if (tv == nil) { return; }
+    
+    XTextViewBridge*   bridge = getBridgeForView(tv);
+    XCmdlineTextField* tf     = bridge.cmdline;
+    
+    if (tf == nil)
+    {
+        // NSLayoutManager* m = [tv layoutManager];
+        NSFont*   font     = [tv font];
+        NSView*   parent   = [self superview];
+        NSInteger tfHeight = 21;// [m defaultLineHeightForFont:font] + 7;
+        NSSize    pSize    = [parent frame].size;
+        NSRect    tfFrame  = NSMakeRect(0, 0, pSize.width, tfHeight);
+        
+        tf = [[XCmdlineTextField alloc] initWithFrame:tfFrame];
+        bridge.cmdline = tf;
+        [tf setAutoresizingMask:NSViewWidthSizable];
+#ifndef CMDLINE_HAS_FOCUSRING
+        [tf setFocusRingType:NSFocusRingTypeNone];
+#endif
+        
+        [parent addSubview:tf];
+        [self setFrame:NSMakeRect(0, tfHeight, pSize.width, pSize.height - tfHeight)];
+        
+        [tf setBackgroundColor:[tv backgroundColor]];
+        [tf setTextColor:[tv textColor]];
+        [tf setFont:font];
+        [tf setBezeled:NO];
+        [[tf cell] setSendsActionOnEndEditing:YES];
+    }
+    
+    orig_didAddSubview(self, sel, view);
 }
 
 

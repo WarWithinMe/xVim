@@ -278,6 +278,8 @@ NSArray* keyStringTokeyArray(NSString* string)
     NSAssert(mode < VimModeCount, @"The vim mode is wrong");
     if (vi_mode == mode) { return; }
     
+    [bridge.cmdline setTitle:[handlers[mode] name]];
+    
     if (mode == ExMode) {
         // ExMode is not a proper mode as such, since the current mode remains active
         [handlers[mode] enterWith:sub];
@@ -304,6 +306,7 @@ NSArray* keyStringTokeyArray(NSString* string)
     }
     
     vi_mode = mode;
+    
     if (needToRedrawCaret) {
         [[bridge targetView] updateInsertionPointStateAndRestartTimer:YES];
     }

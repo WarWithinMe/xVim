@@ -111,6 +111,8 @@ typedef enum e_affect_range
     return NO;
 }
 
+-(NSString*) name { return @"-- Normal --  "; }
+
 -(NSArray*) selectionChangedFrom:(NSArray*)oldRanges to:(NSArray*)newRanges
 {
     if (dontCheckTrailingCR == YES) { return newRanges; }

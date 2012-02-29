@@ -7,6 +7,7 @@
 
 #include "XVimController.h"
 #include "XGlobal.h"
+#include "XTextViewBridge.h"
 
 @class XVimController;
 
@@ -33,9 +34,7 @@
 // event will be checked if it's part of a keymap.
 -(BOOL) forceIgnoreKeymap;
 
--(void) cmdlineTextChanged:(NSString*) newText;
--(void) cmdlineCanceled;
--(void) cmdlineAccepted:(NSTextView*) textView;
+-(NSString*) name;
 @end
 
 
@@ -51,17 +50,20 @@
 -(BOOL) isWaitingForMotion;
 -(NSArray*) selectionChangedFrom:(NSArray*)oldRanges to:(NSArray*)newRanges;
 -(BOOL) forceIgnoreKeymap;
+-(NSString*) name;
 @end
 
 
 @interface XVimInsertModeHandler : XVimModeHandler
 -(BOOL) processKey:(unichar)key modifiers:(NSUInteger)flags;
+-(NSString*) name;
 @end
 
 
 @interface XVimReplaceModeHandler : XVimModeHandler
 -(void) enterWith:(VimMode) submode;
 -(BOOL) processKey:(unichar)key modifiers:(NSUInteger)flags;
+-(NSString*) name;
 @end
 
 
@@ -72,9 +74,10 @@
 -(BOOL) isLineMode;
 -(NSInteger)selectionEnd;
 -(void) setNewSelectionEnd:(NSInteger)end;
+-(NSString*) name;
 @end
 
-@interface XVimExModeHandler : XVimModeHandler
+@interface XVimExModeHandler : XVimModeHandler<XCmdlineDelegate, NSTextFieldDelegate>
 @property (retain) NSString* lastSearch;
 @property (retain) NSString* lastCommand;
 @property (assign) BOOL lastSearchWasForwards;
@@ -82,7 +85,7 @@
 - (void)repeatSearch:(BOOL)reverse;
 - (void)repeatCommand;
 
--(void) cmdlineTextChanged:(NSString*) newText;
--(void) cmdlineCanceled;
--(void) cmdlineAccepted:(NSTextView*) textView;
+- (void) cmdlineTextDidChange:(NSString*) newStr;
+- (void) cmdlineCanceled;
+- (void) cmdlineAccepted:(NSString*) controlStr;
 @end

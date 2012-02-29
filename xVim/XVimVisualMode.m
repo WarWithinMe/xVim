@@ -34,6 +34,11 @@
 
 @implementation XVimVisualModeHandler
 
+-(NSString*) name 
+{
+    return isLineMode ? @"-- VisualLine --  " : @"-- Visual --  ";
+}
+
 -(NSRange) linewiseRange
 {
     NSInteger start, end;
@@ -328,6 +333,7 @@
             } else {
                 isLineMode = NO;
                 [hijackedView setSelectedRange:[self characterwiseRange]];
+                [[controller bridge].cmdline setTitle:[self name]];
             }
             break;
         case 'V':
@@ -336,6 +342,7 @@
             } else {
                 isLineMode = YES;
                 [hijackedView setSelectedRange:[self linewiseRange]];
+                [[controller bridge].cmdline setTitle:[self name]];
             }
             break;
         case 'r':

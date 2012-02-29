@@ -3,8 +3,27 @@
 //  Copyright (c) 2011年 http://warwithinme.com . All rights reserved.
 //
 
-@interface XCmdlineTextField : NSTextField
--(BOOL) resignFirstResponder;
+@protocol XCmdlineDelegate 
+- (void) cmdlineTextDidChange:(NSString*) newStr;
+- (void) cmdlineCanceled;
+- (void) cmdlineAccepted:(NSString*) controlStr;
+@end
+
+@interface XCmdlineTextField : NSTextField<NSTextFieldDelegate>
+
+- (id) initWithFrame:(NSRect) frame;
+
+// The XCmdlineTextField will never have focus by default.
+// Call this method to make it process key input.
+// Whenever the cmdline has finished editing (clicking outside of it,
+// pressing enter or esc), the textfield's delegate is reset to nil.
+// And its focus should be removed by the delegate. 
+- (void) setFocus:(id<XCmdlineDelegate>) delegate withText:(NSString*) str;
+// Call this method to notify the textfield its focus has been removed.
+- (void) focusRemoved;
+- (BOOL) hasFocus;
+- (void) setStringValue:(NSString*) str;
+- (void) setTitle:(NSString*) title;
 @end
 
 /*
@@ -18,7 +37,9 @@
  */
 @class XVimController;
 
-@interface XTextViewBridge : NSObject<NSTextFieldDelegate>
+@interface XTextViewBridge : NSObject
+
+@property (retain) XCmdlineTextField* cmdline;
 
 -(XTextViewBridge*) initWithTextView:(NSTextView*) view;
 -(void) dealloc;
@@ -27,14 +48,6 @@
 -(XVimController*) vimController;
 -(void) processKeyEvent:(NSEvent*) event;
 -(void) handleFakeKeyEvent:(NSEvent*) fakeEvent;
-
-// XTextViewBridge use NSTextField as cmdline.
-// The NSTextField's delegate will be replaced by this class.
--(void) setCmdlineTextField:(XCmdlineTextField*) tf;
--(XCmdlineTextField*) cmdlineTextField;
-
--(void)controlTextDidChange:(NSNotification*)obj;
--(BOOL)control:(NSControl *)control textView:(NSTextView *)textView doCommandBySelector:(SEL)command;
 
 // ====================
 // Subclass should override the methods below.
@@ -48,17 +61,6 @@
 // visual mode, since the user just want to type in something.
 -(BOOL) ignoreString:(NSString*) string selection:(NSRange) range;
 
-// Called by the controller when Vimmode is changed.
-// Override this method to display the title, e.g. "NORMAL INSERT REPLACE"
--(void) setModeTitle:(NSString*) modeTitle;
-
-// Called by XVimModeHandler to set string in the command line.
-// For example : 'd5d'. This should not trigger notifications.
--(void) setCmdString:(NSString*) cmd;
-
-// Called by XVimModeHanlder after entering Ex/Search mode, so that the
-// cmdline textfield grabs the keyboard inputs.
--(void) setFocusToCmdline;
 // --------------------
 @end
 

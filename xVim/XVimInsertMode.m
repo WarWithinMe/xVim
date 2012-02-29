@@ -10,6 +10,7 @@
 #import "vim.h"
 
 @implementation XVimInsertModeHandler
+-(NSString*) name { return @"-- Insert --"; }
 -(BOOL) processKey:(unichar)key modifiers:(NSUInteger)flags
 {
     // Ctrl + u : delete line before // a CR/LF is consider a line.
