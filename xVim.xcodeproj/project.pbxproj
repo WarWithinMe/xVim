@@ -74,7 +74,6 @@
 		A516505D14FCC1D6004E804D /* XTextViewBridge.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XTextViewBridge.m; sourceTree = "<group>"; };
 		A520764E14B0AB44005B8077 /* XVimVisualMode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XVimVisualMode.m; sourceTree = "<group>"; };
 		A52E943A1499A95F00FA6045 /* keymap-example */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "keymap-example"; path = "Resources/keymap-example"; sourceTree = "<group>"; };
-		A52EBFCE14FD343200EF514C /* View.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = View.xib; sourceTree = "<group>"; };
 		A543C398148FBBB10070E986 /* XVimController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XVimController.h; sourceTree = "<group>"; };
 		A543C399148FBBB10070E986 /* XVimController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XVimController.m; sourceTree = "<group>"; };
 		A55056BD14A19B4300067686 /* keymap */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = keymap; path = Resources/keymap; sourceTree = "<group>"; };
@@ -209,7 +208,6 @@
 				A520764E14B0AB44005B8077 /* XVimVisualMode.m */,
 				75DFE68314FBC86300FE9E1E /* XVimExMode.m */,
 				75E7988214F74F8100D94865 /* XClient.m */,
-				A52EBFCE14FD343200EF514C /* View.xib */,
 			);
 			name = Source;
 			sourceTree = "<group>";

@@ -16,7 +16,7 @@
                                 // bind 'ctrl + r' to redo.
 // #define MAKE_0_AS_CARET      // If defined, 0 acts as ^
 // #define VIM_COOPERATIVE      // Define this if someone dont want to compile it as SIMBL plugin.
-#define CMDLINE_HAS_FOCUSRING   // If defined, the cmdline will show a focus ring when it enters ex mode.
+// #define CMDLINE_HAS_FOCUSRING   // If defined, the cmdline will show a focus ring when it enters ex mode.
 // --------------------
 
 
