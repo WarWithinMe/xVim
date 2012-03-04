@@ -322,7 +322,8 @@ NSArray* keyStringTokeyArray(NSString* string)
     if (currentKeyEvent != nil)
     {
         // Process the currentKeyEvent.
-        unichar    ch   = [[currentKeyEvent charactersIgnoringModifiers] characterAtIndex:0];
+        NSString*  key  = [currentKeyEvent charactersIgnoringModifiers];
+        unichar    ch   = [key length] == 0 ? 0 : [key characterAtIndex:0];
         NSUInteger flag = [currentKeyEvent modifierFlags];
         if ((flag & XMaskCapLock) && ch >= 'a' && ch <= 'z') { ch = ch + 'A' - 'a'; }
         
@@ -372,9 +373,12 @@ NSArray* keyStringTokeyArray(NSString* string)
     
     
     NSString* key = [event charactersIgnoringModifiers];
-    if ([key length] == 0) { return; }
+    // Bug fix : we should never ingore these key events, since the user are
+    // intend to type it.
     
-    unichar    ch   = [key characterAtIndex:0];
+    // If the key is zero length string, we map it to '\0', which should ignore
+    // by all the mode and key-mapping, and send back directly to the NSTextView
+    unichar    ch   = [key length] == 0 ? 0 : [key characterAtIndex:0];
     NSUInteger flag = [event modifierFlags];
     if ((flag & XMaskCapLock) && ch >= 'a' && ch <= 'z') { ch = ch + 'A' - 'a'; }
     

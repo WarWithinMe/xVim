@@ -172,7 +172,25 @@ static HijackInfo s_hijackInfo_map[SUPPORTED_APP_COUNT] =
 @end
 @implementation XVimPlugin
 // The entry point of our plugin
+static XVimPlugin* theXVim = nil;
 +(void) load
+{
+    // We will put everything off until the app finish launching
+    if (theXVim == nil) {
+        theXVim = [[XVimPlugin alloc] init];
+#ifdef USING_SIMBL
+        [theXVim hook];
+#else
+        NSNotificationCenter* notificationCenter = [NSNotificationCenter defaultCenter];
+        [notificationCenter addObserver: theXVim
+                               selector: @selector( hook )
+                                   name: NSApplicationDidFinishLaunchingNotification
+                                 object: nil];
+#endif
+    }
+}
+
+-(void) hook
 {
 // Disable this code if this is being loaded into a cooperative editor
 #ifndef VIM_COOPERATIVE

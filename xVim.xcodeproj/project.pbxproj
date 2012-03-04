@@ -30,11 +30,26 @@
 		A5929E4514A428C0009AFACA /* XVimNormalMode.m in Sources */ = {isa = PBXBuildFile; fileRef = A58D5A7D149F491F00921622 /* XVimNormalMode.m */; };
 		A5929E4714A428C0009AFACA /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A56CE20F148F640100A06106 /* Cocoa.framework */; };
 		A5929E4914A428C0009AFACA /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = A56CE218148F640100A06106 /* InfoPlist.strings */; };
-		A5929E4A14A428C0009AFACA /* keymap-example in Resources */ = {isa = PBXBuildFile; fileRef = A52E943A1499A95F00FA6045 /* keymap-example */; };
 		A5929E4B14A428C0009AFACA /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = A504A451149DF9F40084C754 /* README.md */; };
 		A5929E4C14A428C0009AFACA /* keymap in Resources */ = {isa = PBXBuildFile; fileRef = A55056BD14A19B4300067686 /* keymap */; };
-		A598ED54148F798900C86EC9 /* xVim.bundle in CopyFiles */ = {isa = PBXBuildFile; fileRef = A56CE20C148F640100A06106 /* xVim.bundle */; };
+		A598ED54148F798900C86EC9 /* xVim.xcplugin in CopyFiles */ = {isa = PBXBuildFile; fileRef = A56CE20C148F640100A06106 /* xVim.xcplugin */; };
 		A5A905CC149C41C000810962 /* XGlobal.m in Sources */ = {isa = PBXBuildFile; fileRef = A5A905CB149C41C000810962 /* XGlobal.m */; };
+		A5AE52F315031F6600D032E7 /* XVimController.m in Sources */ = {isa = PBXBuildFile; fileRef = A543C399148FBBB10070E986 /* XVimController.m */; };
+		A5AE52F415031F6600D032E7 /* XGlobal.m in Sources */ = {isa = PBXBuildFile; fileRef = A5A905CB149C41C000810962 /* XGlobal.m */; };
+		A5AE52F515031F6600D032E7 /* vim.m in Sources */ = {isa = PBXBuildFile; fileRef = A5BD0F33149C598F0089BF5E /* vim.m */; };
+		A5AE52F615031F6600D032E7 /* XVimMode.m in Sources */ = {isa = PBXBuildFile; fileRef = A5DD1A95149DD112000AAE3D /* XVimMode.m */; };
+		A5AE52F715031F6600D032E7 /* NSStringHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = A56B36D9149F2A0A00AE44CC /* NSStringHelper.m */; };
+		A5AE52F815031F6600D032E7 /* XVimNormalMode.m in Sources */ = {isa = PBXBuildFile; fileRef = A58D5A7D149F491F00921622 /* XVimNormalMode.m */; };
+		A5AE52F915031F6600D032E7 /* XVimVisualMode.m in Sources */ = {isa = PBXBuildFile; fileRef = A520764E14B0AB44005B8077 /* XVimVisualMode.m */; };
+		A5AE52FA15031F6600D032E7 /* XVimInsertMode.m in Sources */ = {isa = PBXBuildFile; fileRef = A504238014C5B4AF009399E4 /* XVimInsertMode.m */; };
+		A5AE52FB15031F6600D032E7 /* XClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 75E7988214F74F8100D94865 /* XClient.m */; };
+		A5AE52FC15031F6600D032E7 /* XVimExMode.m in Sources */ = {isa = PBXBuildFile; fileRef = 75DFE68314FBC86300FE9E1E /* XVimExMode.m */; };
+		A5AE52FD15031F6600D032E7 /* XTextViewBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = A516505D14FCC1D6004E804D /* XTextViewBridge.m */; };
+		A5AE52FF15031F6600D032E7 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A56CE20F148F640100A06106 /* Cocoa.framework */; };
+		A5AE530115031F6600D032E7 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = A56CE218148F640100A06106 /* InfoPlist.strings */; };
+		A5AE530215031F6600D032E7 /* keymap-example in Resources */ = {isa = PBXBuildFile; fileRef = A52E943A1499A95F00FA6045 /* keymap-example */; };
+		A5AE530315031F6600D032E7 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = A504A451149DF9F40084C754 /* README.md */; };
+		A5AE5313150321CD00D032E7 /* xVim-SIMBL.bundle in CopyFiles */ = {isa = PBXBuildFile; fileRef = A5AE530B15031F6600D032E7 /* xVim-SIMBL.bundle */; };
 		A5BD0F34149C598F0089BF5E /* vim.m in Sources */ = {isa = PBXBuildFile; fileRef = A5BD0F33149C598F0089BF5E /* vim.m */; };
 		A5C7757014A42A4D006A23BB /* xVim-WWM.bundle in CopyFiles */ = {isa = PBXBuildFile; fileRef = A5929E5414A428C0009AFACA /* xVim-WWM.bundle */; };
 		A5C799F714FBDC2A008C1B8A /* XVimExMode.m in Sources */ = {isa = PBXBuildFile; fileRef = 75DFE68314FBC86300FE9E1E /* XVimExMode.m */; };
@@ -46,7 +61,7 @@
 		A5929E4D14A428C0009AFACA /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = "~/Library/Application Support/SIMBL/Plugins";
+			dstPath = "~/Library/Application Support/Developer/Shared/Xcode/Plug-ins";
 			dstSubfolderSpec = 0;
 			files = (
 				A5C7757014A42A4D006A23BB /* xVim-WWM.bundle in CopyFiles */,
@@ -56,10 +71,20 @@
 		A598ED53148F797600C86EC9 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
+			dstPath = "~/Library/Application Support/Developer/Shared/Xcode/Plug-ins";
+			dstSubfolderSpec = 0;
+			files = (
+				A598ED54148F798900C86EC9 /* xVim.xcplugin in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A5AE530415031F6600D032E7 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
 			dstPath = "~/Library/Application Support/SIMBL/Plugins";
 			dstSubfolderSpec = 0;
 			files = (
-				A598ED54148F798900C86EC9 /* xVim.bundle in CopyFiles */,
+				A5AE5313150321CD00D032E7 /* xVim-SIMBL.bundle in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -79,7 +104,7 @@
 		A55056BD14A19B4300067686 /* keymap */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = keymap; path = Resources/keymap; sourceTree = "<group>"; };
 		A56B36D8149F29FF00AE44CC /* NSStringHelper.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; path = NSStringHelper.h; sourceTree = "<group>"; };
 		A56B36D9149F2A0A00AE44CC /* NSStringHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSStringHelper.m; sourceTree = "<group>"; };
-		A56CE20C148F640100A06106 /* xVim.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = xVim.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
+		A56CE20C148F640100A06106 /* xVim.xcplugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = xVim.xcplugin; sourceTree = BUILT_PRODUCTS_DIR; };
 		A56CE20F148F640100A06106 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		A56CE212148F640100A06106 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		A56CE213148F640100A06106 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
@@ -88,11 +113,12 @@
 		A56CE219148F640100A06106 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		A56CE21B148F640100A06106 /* xVim-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "xVim-Prefix.pch"; sourceTree = "<group>"; };
 		A58D5A7D149F491F00921622 /* XVimNormalMode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XVimNormalMode.m; sourceTree = "<group>"; };
-		A5929E1514A4281F009AFACA /* xVim-Info-WWM.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "xVim-Info-WWM.plist"; sourceTree = "<group>"; };
 		A5929E5414A428C0009AFACA /* xVim-WWM.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "xVim-WWM.bundle"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A5A905CA149C41C000810962 /* XGlobal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XGlobal.h; sourceTree = "<group>"; };
 		A5A905CB149C41C000810962 /* XGlobal.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XGlobal.m; sourceTree = "<group>"; };
 		A5A905CD149C429300810962 /* XTextViewBridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XTextViewBridge.h; sourceTree = "<group>"; };
+		A5AE530B15031F6600D032E7 /* xVim-SIMBL.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "xVim-SIMBL.bundle"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A5AE53111503216B00D032E7 /* xVim-SIMBL-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "xVim-SIMBL-Info.plist"; sourceTree = "<group>"; };
 		A5BD0F32149C598F0089BF5E /* vim.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vim.h; sourceTree = "<group>"; };
 		A5BD0F33149C598F0089BF5E /* vim.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = vim.m; sourceTree = "<group>"; };
 		A5DD1A95149DD112000AAE3D /* XVimMode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XVimMode.m; sourceTree = "<group>"; };
@@ -116,6 +142,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A5AE52FE15031F6600D032E7 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A5AE52FF15031F6600D032E7 /* Cocoa.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -131,8 +165,9 @@
 		A56CE20D148F640100A06106 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				A56CE20C148F640100A06106 /* xVim.bundle */,
+				A56CE20C148F640100A06106 /* xVim.xcplugin */,
 				A5929E5414A428C0009AFACA /* xVim-WWM.bundle */,
+				A5AE530B15031F6600D032E7 /* xVim-SIMBL.bundle */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -173,7 +208,7 @@
 				A52E943A1499A95F00FA6045 /* keymap-example */,
 				A56CE218148F640100A06106 /* InfoPlist.strings */,
 				A56CE217148F640100A06106 /* xVim-Info.plist */,
-				A5929E1514A4281F009AFACA /* xVim-Info-WWM.plist */,
+				A5AE53111503216B00D032E7 /* xVim-SIMBL-Info.plist */,
 				A56CE21B148F640100A06106 /* xVim-Prefix.pch */,
 				A504A451149DF9F40084C754 /* README.md */,
 			);
@@ -232,7 +267,7 @@
 			);
 			name = xVim;
 			productName = xVim;
-			productReference = A56CE20C148F640100A06106 /* xVim.bundle */;
+			productReference = A56CE20C148F640100A06106 /* xVim.xcplugin */;
 			productType = "com.apple.product-type.bundle";
 		};
 		A5929E3E14A428C0009AFACA /* xVim-WWM */ = {
@@ -253,6 +288,26 @@
 			name = "xVim-WWM";
 			productName = xVim;
 			productReference = A5929E5414A428C0009AFACA /* xVim-WWM.bundle */;
+			productType = "com.apple.product-type.bundle";
+		};
+		A5AE52F115031F6600D032E7 /* xVim-SIMBL */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A5AE530815031F6600D032E7 /* Build configuration list for PBXNativeTarget "xVim-SIMBL" */;
+			buildPhases = (
+				A5AE52F215031F6600D032E7 /* Sources */,
+				A5AE52FE15031F6600D032E7 /* Frameworks */,
+				A5AE530015031F6600D032E7 /* Resources */,
+				A5AE530415031F6600D032E7 /* CopyFiles */,
+				A5AE530615031F6600D032E7 /* ShellScript */,
+				A5AE530715031F6600D032E7 /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "xVim-SIMBL";
+			productName = xVim;
+			productReference = A5AE530B15031F6600D032E7 /* xVim-SIMBL.bundle */;
 			productType = "com.apple.product-type.bundle";
 		};
 /* End PBXNativeTarget section */
@@ -277,6 +332,7 @@
 			targets = (
 				A56CE20B148F640100A06106 /* xVim */,
 				A5929E3E14A428C0009AFACA /* xVim-WWM */,
+				A5AE52F115031F6600D032E7 /* xVim-SIMBL */,
 			);
 		};
 /* End PBXProject section */
@@ -297,9 +353,18 @@
 			buildActionMask = 2147483647;
 			files = (
 				A5929E4914A428C0009AFACA /* InfoPlist.strings in Resources */,
-				A5929E4A14A428C0009AFACA /* keymap-example in Resources */,
 				A5929E4B14A428C0009AFACA /* README.md in Resources */,
 				A5929E4C14A428C0009AFACA /* keymap in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A5AE530015031F6600D032E7 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A5AE530115031F6600D032E7 /* InfoPlist.strings in Resources */,
+				A5AE530215031F6600D032E7 /* keymap-example in Resources */,
+				A5AE530315031F6600D032E7 /* README.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -333,6 +398,32 @@
 			shellScript = "KEYWORDS=\"TODO|FIXME|\\?\\?\\?:|\\!\\!\\!:\"\nfind \"${SRCROOT}\" \\( -name \"*.h\" -or -name \"*.m\" \\) -print0 | \\\nxargs -0 egrep --with-filename --line-number --only-matching \"($KEYWORDS).*\\$\" | \\\nperl -p -e \"s/($KEYWORDS)/ warning: \\$1/\"\n";
 		};
 		A5929E5014A428C0009AFACA /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /usr/bin/ruby;
+			shellScript = "def get_file_as_string(filename)\ndata = ''\nf = File.open(filename, \"r\") \nf.each_line do |line|\ndata += line\nend\nreturn data\nend\n\n\ndef handle_alpha_beta(old_value, letter, infoplist, start_of_value, end_of_value)\nparts = old_value.split(letter)\nversion_num = parts[0]\nalpha_num = parts[1].to_i\n\nalpha_num = alpha_num + 1\nnew_version = version_num.to_s + letter + alpha_num.to_s\nprint \"Assigning new version: \" + new_version + \"\\n\"\nnew_key = \"<string>#{new_version}</string>\"\n\npart_1 = infoplist[0, start_of_value - '<string>'.length];\npart_2 = new_key \npart_3 = infoplist[end_of_value + \"</string>\".length, infoplist.length - (end_of_value - start_of_value + (new_key.length - 1))]    \n\nnew_info_plist = part_1 + part_2 + part_3\nnew_info_plist\nend\n\ndef find_and_increment_version_number_with_key(key, infoplist)\n\nstart_of_key = infoplist.index(key)\nstart_of_value = infoplist.index(\"<string>\", start_of_key) + \"<string>\".length\nend_of_value = infoplist.index(\"</string>\", start_of_value)\nold_value = infoplist[start_of_value, end_of_value - start_of_value]\n\nprint \"Old version for \" + key + \": \" + old_value + \"\\n\"\nprint old_value.class.to_s + \"\\n\"\nold_value_int = old_value.to_i\nprint old_value_int.class.to_s + \"\\n\"\nif (old_value.index(\"a\") != nil) # alpha\ninfoplist = handle_alpha_beta(old_value, \"a\", infoplist, start_of_value, end_of_value)\nelsif (old_value.index(\"b\") != nil) # beta\ninfoplist = handle_alpha_beta(old_value, \"b\", infoplist, start_of_value, end_of_value)\nelsif (old_value.index(\".\") != nil) # release dot version\nparts = old_value.split(\".\")\nlast_part = parts.last.to_i\nlast_part = last_part + 1\nparts.delete(parts.last)\n\nnew_version = \"\"\nfirst = true\nparts.each do |one_part|\nif (first)\nfirst = false\nelse\nnew_version = new_version + \".\"\nend\nnew_version = new_version + one_part\nend\nnew_version = new_version.to_s + \".\" + last_part.to_s\nprint \"New version: \" + new_version.to_s + \"\\n\"\nnew_key = \"<string>#{new_version}</string>\"\ninfoplist = \"#{infoplist[0, start_of_value - '<string>'.length]}#{new_key}#{infoplist[end_of_value + '</string>'.length, infoplist.length - (end_of_value+1)]}\"\nelsif (old_value.to_i != nil) # straight integer build number\nnew_version = old_value.to_i + 1\nprint \"New version: \" + new_version.to_s + \"\\n\"\nnew_key = \"<string>#{new_version}</string>\"\n\npart_1 = infoplist[0, start_of_value - '<string>'.length]\npart_2 = new_key\npart_3 = infoplist[end_of_value + \"</string>\".length, infoplist.length - (end_of_value+1)]\ninfoplist = part_1 + part_2 + part_3\nend \ninfoplist\nend\n\n\n\nconfig = ENV['CONFIGURATION'].upcase\nconfig_build_dir = ENV['CONFIGURATION_BUILD_DIR']\n\narchive_action = false\nif (config_build_dir.include?(\"ArchiveIntermediates\"))\narchive_action = true\nend\n\nprint \"Archive: \" + archive_action.to_s + \"\\n\"\n\n\nprint config\n\nif (config == \"DEBUG\")\nprint \" incrementing build numbers\\n\"\nproject_dir = ENV['PROJECT_DIR']\ninfoplist_file = ENV['INFOPLIST_FILE']\nplist_filename = \"#{project_dir}/#{infoplist_file}\"\n\ninfoplist = get_file_as_string(plist_filename)\ninfoplist = find_and_increment_version_number_with_key(\"CFBundleVersion\", infoplist)\nif (archive_action)\ninfoplist = find_and_increment_version_number_with_key(\"CFBundleShortVersionString\", infoplist)\nend\nFile.open(plist_filename, 'w') {|f| f.write(infoplist) }\nelse\nprint \" not incrementing build numbers\"\nend";
+		};
+		A5AE530615031F6600D032E7 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 12;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "KEYWORDS=\"TODO|FIXME|\\?\\?\\?:|\\!\\!\\!:\"\nfind \"${SRCROOT}\" \\( -name \"*.h\" -or -name \"*.m\" \\) -print0 | \\\nxargs -0 egrep --with-filename --line-number --only-matching \"($KEYWORDS).*\\$\" | \\\nperl -p -e \"s/($KEYWORDS)/ warning: \\$1/\"\n";
+		};
+		A5AE530715031F6600D032E7 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -394,6 +485,24 @@
 				A5929E4514A428C0009AFACA /* XVimNormalMode.m in Sources */,
 				A520765014B0AB44005B8077 /* XVimVisualMode.m in Sources */,
 				A516505F14FCC1D7004E804D /* XTextViewBridge.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A5AE52F215031F6600D032E7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A5AE52F315031F6600D032E7 /* XVimController.m in Sources */,
+				A5AE52F415031F6600D032E7 /* XGlobal.m in Sources */,
+				A5AE52F515031F6600D032E7 /* vim.m in Sources */,
+				A5AE52F615031F6600D032E7 /* XVimMode.m in Sources */,
+				A5AE52F715031F6600D032E7 /* NSStringHelper.m in Sources */,
+				A5AE52F815031F6600D032E7 /* XVimNormalMode.m in Sources */,
+				A5AE52F915031F6600D032E7 /* XVimVisualMode.m in Sources */,
+				A5AE52FA15031F6600D032E7 /* XVimInsertMode.m in Sources */,
+				A5AE52FB15031F6600D032E7 /* XClient.m in Sources */,
+				A5AE52FC15031F6600D032E7 /* XVimExMode.m in Sources */,
+				A5AE52FD15031F6600D032E7 /* XTextViewBridge.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -467,7 +576,7 @@
 				INFOPLIST_FILE = "xVim/xVim-Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				WRAPPER_EXTENSION = bundle;
+				WRAPPER_EXTENSION = xcplugin;
 			};
 			name = Debug;
 		};
@@ -481,7 +590,7 @@
 				INFOPLIST_FILE = "xVim/xVim-Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				WRAPPER_EXTENSION = bundle;
+				WRAPPER_EXTENSION = xcplugin;
 			};
 			name = Release;
 		};
@@ -492,7 +601,7 @@
 				GCC_ENABLE_OBJC_GC = supported;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "xVim/xVim-Prefix.pch";
-				INFOPLIST_FILE = "xVim/xVim-Info-WWM.plist";
+				INFOPLIST_FILE = "xVim/xVim-Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
 				PRODUCT_NAME = "xVim-WWM";
 				WRAPPER_EXTENSION = bundle;
@@ -506,9 +615,45 @@
 				GCC_ENABLE_OBJC_GC = supported;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "xVim/xVim-Prefix.pch";
-				INFOPLIST_FILE = "xVim/xVim-Info-WWM.plist";
+				INFOPLIST_FILE = "xVim/xVim-Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
 				PRODUCT_NAME = "xVim-WWM";
+				WRAPPER_EXTENSION = bundle;
+			};
+			name = Release;
+		};
+		A5AE530915031F6600D032E7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				GCC_ENABLE_OBJC_GC = supported;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "xVim/xVim-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS_NOT_USED_IN_PRECOMPS = (
+					USING_SIMBL,
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = "xVim/xVim-SIMBL-Info.plist";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
+				PRODUCT_NAME = "xVim-SIMBL";
+				WRAPPER_EXTENSION = bundle;
+			};
+			name = Debug;
+		};
+		A5AE530A15031F6600D032E7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				GCC_ENABLE_OBJC_GC = supported;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "xVim/xVim-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS_NOT_USED_IN_PRECOMPS = (
+					USING_SIMBL,
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = "xVim/xVim-SIMBL-Info.plist";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
+				PRODUCT_NAME = "xVim-SIMBL";
 				WRAPPER_EXTENSION = bundle;
 			};
 			name = Release;
@@ -539,6 +684,15 @@
 			buildConfigurations = (
 				A5929E5214A428C0009AFACA /* Debug */,
 				A5929E5314A428C0009AFACA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A5AE530815031F6600D032E7 /* Build configuration list for PBXNativeTarget "xVim-SIMBL" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A5AE530915031F6600D032E7 /* Debug */,
+				A5AE530A15031F6600D032E7 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

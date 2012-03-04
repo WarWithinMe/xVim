@@ -14,7 +14,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "A56CE20B148F640100A06106"
-               BuildableName = "xVim.bundle"
+               BuildableName = "xVim.xcplugin"
                BlueprintName = "xVim"
                ReferencedContainer = "container:xVim.xcodeproj">
             </BuildableReference>

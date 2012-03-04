@@ -4,12 +4,12 @@
 <dict>
 	<key>SchemeUserState</key>
 	<dict>
-		<key>xVim-Debug.xcscheme</key>
+		<key>xVim-SIMBL-Debug.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>0</integer>
+			<integer>4</integer>
 		</dict>
-		<key>xVim-Release.xcscheme</key>
+		<key>xVim-SIMBL.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>1</integer>
@@ -17,12 +17,17 @@
 		<key>xVim-WWM-Debug.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>2</integer>
+			<integer>5</integer>
 		</dict>
-		<key>xVim-WWM-Release.xcscheme</key>
+		<key>xVim-WWM.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>3</integer>
+			<integer>2</integer>
+		</dict>
+		<key>xVim.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>0</integer>
 		</dict>
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
@@ -43,6 +48,11 @@
 			<true/>
 		</dict>
 		<key>A5929E3E14A428C0009AFACA</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>A5AE52F115031F6600D032E7</key>
 		<dict>
 			<key>primary</key>
 			<true/>

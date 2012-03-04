@@ -13,9 +13,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "A56CE20B148F640100A06106"
-               BuildableName = "xVim.bundle"
-               BlueprintName = "xVim"
+               BlueprintIdentifier = "A5AE52F115031F6600D032E7"
+               BuildableName = "xVim-SIMBL.bundle"
+               BlueprintName = "xVim-SIMBL"
                ReferencedContainer = "container:xVim.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -47,14 +47,14 @@
       shouldUseLaunchSchemeArgsEnv = "YES"
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
-      buildConfiguration = "Debug"
+      buildConfiguration = "Release"
       debugDocumentVersioning = "YES">
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">
    </AnalyzeAction>
    <ArchiveAction
-      buildConfiguration = "Debug"
+      buildConfiguration = "Release"
       revealArchiveInOrganizer = "YES">
    </ArchiveAction>
 </Scheme>
