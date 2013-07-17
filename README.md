@@ -2,7 +2,7 @@
 
 ## xVim for _xCode_ do not need [SIMBL](http://www.culater.net/software/SIMBL/SIMBL.php) any more
 
-* xVim is a plugin to provide vim key-binding for  Mac Apps. （See all currently supported appliction __[here](https://github.com/WarWithinMe/xVim/wiki/Supported-Application)__)
+* xVim is a plugin to provide vim key-binding for  Mac Apps. （See all currently supported applications __[here](https://github.com/WarWithinMe/xVim/wiki/Supported-Application)__)
 
 * Make sure you are checking xVim's github and stay updated.
 
